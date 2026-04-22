@@ -3,7 +3,6 @@ import { usePosaStore } from '../../store/posa-store';
 import { PreviewPanel } from '../preview/PreviewPanel';
 import { AdjustOrReplaceDialog } from '../shared/AdjustOrReplaceDialog';
 import { BreadcrumbStrip } from './BreadcrumbStrip';
-import { Inspector } from './Inspector';
 import { Z0Plane } from './Z0Plane';
 import { Z1Plane } from './Z1Plane';
 import { Z2Plane } from './Z2Plane';
@@ -56,7 +55,6 @@ export function ExplorationView() {
       <div className="hidden xl:block">
         <PreviewPanel />
       </div>
-      <Inspector />
       <AdjustOrReplaceDialog />
     </div>
   );

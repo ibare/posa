@@ -1,8 +1,14 @@
-import { useMemo, type KeyboardEvent } from 'react';
+import { useMemo, useRef, type KeyboardEvent } from 'react';
 import { resolveSlotColor } from '../../color/resolve';
 import { oklchToHex } from '../../color/oklch';
 import type { OKLCH } from '../../ir/types';
 import { usePosaStore } from '../../store/posa-store';
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+} from '../../components/ui/popover';
+import { InspectorBody } from '../shared/InspectorBody';
 import { Swatch } from '../shared/Swatch';
 
 export function Z2Plane() {
@@ -69,6 +75,7 @@ function StateCard({
   focused,
   onFocusToggle,
 }: StateCardProps) {
+  const anchorRef = useRef<HTMLDivElement>(null);
   const glow =
     focused && color ? `${oklchToHex(color.L, color.C, color.H)}55` : undefined;
 
@@ -80,37 +87,60 @@ function StateCard({
   };
 
   return (
-    <div
-      role="group"
-      tabIndex={0}
-      onClick={onFocusToggle}
-      onKeyDown={handleKey}
-      className={[
-        'flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/80 border transition-all duration-150',
-        focused
-          ? 'border-stone-700 -translate-y-px'
-          : 'border-stone-200 hover:border-stone-400 hover:-translate-y-px',
-        'focus-visible:outline-none focus-visible:border-stone-800 cursor-pointer',
-      ].join(' ')}
-      style={glow ? { boxShadow: `0 0 0 4px ${glow}` } : undefined}
+    <Popover
+      open={focused}
+      onOpenChange={(open) => {
+        if (!open && focused) onFocusToggle();
+      }}
     >
-      <Swatch color={color} size="md" />
-      <div className="min-w-0 flex-1">
-        <div className="font-mono text-sm text-stone-900">{state}</div>
-        <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400 mt-0.5">
-          {isDirect ? 'set directly' : 'inherited'}
+      <PopoverAnchor asChild>
+        <div
+          ref={anchorRef}
+          role="group"
+          tabIndex={0}
+          onClick={onFocusToggle}
+          onKeyDown={handleKey}
+          className={[
+            'flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/80 border transition-all duration-150',
+            focused
+              ? 'border-stone-700 -translate-y-px'
+              : 'border-stone-200 hover:border-stone-400 hover:-translate-y-px',
+            'focus-visible:outline-none focus-visible:border-stone-800 cursor-pointer',
+          ].join(' ')}
+          style={glow ? { boxShadow: `0 0 0 4px ${glow}` } : undefined}
+        >
+          <Swatch color={color} size="md" />
+          <div className="min-w-0 flex-1">
+            <div className="font-mono text-sm text-stone-900">{state}</div>
+            <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400 mt-0.5">
+              {isDirect ? 'set directly' : 'inherited'}
+            </div>
+          </div>
+          <span
+            className={[
+              'flex-none text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full',
+              isDirect
+                ? 'bg-stone-900 text-cream'
+                : 'bg-stone-100 text-stone-500',
+            ].join(' ')}
+          >
+            {isDirect ? 'set' : 'inherit'}
+          </span>
         </div>
-      </div>
-      <span
-        className={[
-          'flex-none text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full',
-          isDirect
-            ? 'bg-stone-900 text-cream'
-            : 'bg-stone-100 text-stone-500',
-        ].join(' ')}
+      </PopoverAnchor>
+      <PopoverContent
+        align="start"
+        sideOffset={6}
+        className="w-80 bg-white/95 backdrop-blur border-stone-200 text-stone-900 shadow-md"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onInteractOutside={(e) => {
+          if (anchorRef.current?.contains(e.target as Node)) {
+            e.preventDefault();
+          }
+        }}
       >
-        {isDirect ? 'set' : 'inherit'}
-      </span>
-    </div>
+        <InspectorBody />
+      </PopoverContent>
+    </Popover>
   );
 }

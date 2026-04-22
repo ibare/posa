@@ -1,9 +1,15 @@
-import { useMemo, type KeyboardEvent } from 'react';
+import { useMemo, useRef, type KeyboardEvent } from 'react';
 import { resolveRoleColor, resolveSlotColor } from '../../color/resolve';
 import { oklchToHex } from '../../color/oklch';
 import type { SlotDefinition } from '../../catalog/slots';
 import { usePosaStore } from '../../store/posa-store';
 import type { OKLCH } from '../../ir/types';
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+} from '../../components/ui/popover';
+import { InspectorBody } from '../shared/InspectorBody';
 import { Swatch } from '../shared/Swatch';
 
 export function Z1Plane() {
@@ -81,6 +87,7 @@ function SlotCard({
   onFocusToggle,
   onDescend,
 }: SlotCardProps) {
+  const anchorRef = useRef<HTMLDivElement>(null);
   const multiState = slot.states.length > 1;
   const glow =
     focused && color ? `${oklchToHex(color.L, color.C, color.H)}55` : undefined;
@@ -98,64 +105,87 @@ function SlotCard({
   };
 
   return (
-    <div
-      role="group"
-      tabIndex={0}
-      onKeyDown={handleKey}
-      onClick={onFocusToggle}
-      className={[
-        'flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/80 border transition-all duration-150',
-        focused
-          ? 'border-stone-700 -translate-y-px'
-          : 'border-stone-200 hover:border-stone-400 hover:-translate-y-px',
-        'focus-visible:outline-none focus-visible:border-stone-800 cursor-pointer',
-      ].join(' ')}
-      style={glow ? { boxShadow: `0 0 0 4px ${glow}` } : undefined}
+    <Popover
+      open={focused}
+      onOpenChange={(open) => {
+        if (!open && focused) onFocusToggle();
+      }}
     >
-      <Swatch color={color} size="md" />
-      <div className="min-w-0 flex-1">
-        <div className="font-mono text-sm text-stone-900 break-all">
-          {slot.id}
-        </div>
-        <div className="flex items-center gap-1.5 mt-1">
-          {slot.states.map((state) => (
-            <StateDot
-              key={state}
-              label={state}
-              filled={hasStateOverride(state)}
-            />
-          ))}
-          <span className="text-[10px] font-mono text-stone-400 ml-1 tabular-nums">
-            {setCount}/{slot.states.length}
-          </span>
-        </div>
-      </div>
-      {multiState && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDescend();
-          }}
-          className="flex-none inline-flex items-center gap-2 text-xs font-mono text-stone-600 px-2.5 py-1.5 rounded border border-stone-200 hover:border-stone-500 hover:text-stone-900 transition"
-          title="Descend to state layer (Enter)"
+      <PopoverAnchor asChild>
+        <div
+          ref={anchorRef}
+          role="group"
+          tabIndex={0}
+          onKeyDown={handleKey}
+          onClick={onFocusToggle}
+          className={[
+            'flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/80 border transition-all duration-150',
+            focused
+              ? 'border-stone-700 -translate-y-px'
+              : 'border-stone-200 hover:border-stone-400 hover:-translate-y-px',
+            'focus-visible:outline-none focus-visible:border-stone-800 cursor-pointer',
+          ].join(' ')}
+          style={glow ? { boxShadow: `0 0 0 4px ${glow}` } : undefined}
         >
-          <span>states</span>
-          <svg
-            viewBox="0 0 12 12"
-            className="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <polyline points="4,2 8,6 4,10" />
-          </svg>
-        </button>
-      )}
-    </div>
+          <Swatch color={color} size="md" />
+          <div className="min-w-0 flex-1">
+            <div className="font-mono text-sm text-stone-900 break-all">
+              {slot.id}
+            </div>
+            <div className="flex items-center gap-1.5 mt-1">
+              {slot.states.map((state) => (
+                <StateDot
+                  key={state}
+                  label={state}
+                  filled={hasStateOverride(state)}
+                />
+              ))}
+              <span className="text-[10px] font-mono text-stone-400 ml-1 tabular-nums">
+                {setCount}/{slot.states.length}
+              </span>
+            </div>
+          </div>
+          {multiState && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDescend();
+              }}
+              className="flex-none inline-flex items-center gap-2 text-xs font-mono text-stone-600 px-2.5 py-1.5 rounded border border-stone-200 hover:border-stone-500 hover:text-stone-900 transition"
+              title="Descend to state layer (Enter)"
+            >
+              <span>states</span>
+              <svg
+                viewBox="0 0 12 12"
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <polyline points="4,2 8,6 4,10" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </PopoverAnchor>
+      <PopoverContent
+        align="start"
+        sideOffset={6}
+        className="w-80 bg-white/95 backdrop-blur border-stone-200 text-stone-900 shadow-md"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onInteractOutside={(e) => {
+          if (anchorRef.current?.contains(e.target as Node)) {
+            e.preventDefault();
+          }
+        }}
+      >
+        <InspectorBody />
+      </PopoverContent>
+    </Popover>
   );
 }
 
