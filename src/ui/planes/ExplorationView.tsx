@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { usePosaStore } from '../../store/posa-store';
+import { PreviewPanel } from '../preview/PreviewPanel';
 import { AdjustOrReplaceDialog } from '../shared/AdjustOrReplaceDialog';
 import { BreadcrumbStrip } from './BreadcrumbStrip';
 import { Inspector } from './Inspector';
@@ -43,12 +44,17 @@ export function ExplorationView() {
   const planeKey = `${layer}-${selectedRole ?? ''}-${selectedSlot ?? ''}`;
 
   return (
-    <div>
-      <BreadcrumbStrip />
-      <div key={planeKey} className={animClass}>
-        {layer === 'z0' && <Z0Plane />}
-        {layer === 'z1' && <Z1Plane />}
-        {layer === 'z2' && <Z2Plane />}
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="min-w-0">
+        <BreadcrumbStrip />
+        <div key={planeKey} className={animClass}>
+          {layer === 'z0' && <Z0Plane />}
+          {layer === 'z1' && <Z1Plane />}
+          {layer === 'z2' && <Z2Plane />}
+        </div>
+      </div>
+      <div className="hidden xl:block">
+        <PreviewPanel />
       </div>
       <Inspector />
       <AdjustOrReplaceDialog />
