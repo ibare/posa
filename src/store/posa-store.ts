@@ -1,6 +1,23 @@
 import { create } from 'zustand';
+import {
+  addPrimitive,
+  adjustPrimitiveAnchor,
+  findNearestPrimitive,
+  findNearestShade,
+  isWithinScale,
+  replaceRolePrimitive,
+} from '../color/primitive-ops';
 import { deriveUniverse, type Universe } from '../catalog/universe';
-import type { IR, OKLCH, RoleId, SlotId } from '../ir/types';
+import type {
+  IR,
+  OKLCH,
+  PrimitiveId,
+  RoleId,
+  ShadeIndex,
+  SlotAssignment,
+  SlotId,
+  StateId,
+} from '../ir/types';
 
 /**
  * Posa 인스턴스의 런타임 상태.
@@ -11,6 +28,13 @@ export type Phase = 'onboarding' | 'exploration' | 'export';
 export type Layer = 'z0' | 'z1' | 'z2';
 export type LayerDirection = 'ascend' | 'descend' | 'neutral';
 
+export type PendingPrimitiveDecision = {
+  roleId: RoleId;
+  newAnchor: OKLCH;
+  currentPrimitiveId: PrimitiveId;
+  shadeForAnchor: ShadeIndex;
+};
+
 type PosaState = {
   phase: Phase;
   universe: Universe | null;
@@ -20,6 +44,7 @@ type PosaState = {
   selectedSlot: SlotId | null;
   focusedNode: string | null;
   lastDirection: LayerDirection;
+  pendingPrimitiveDecision: PendingPrimitiveDecision | null;
 
   startWithComponents: (componentIds: string[]) => void;
   resetAll: () => void;
@@ -30,6 +55,13 @@ type PosaState = {
   setFocus: (nodeId: string | null) => void;
 
   setRoleColor: (roleId: RoleId, color: OKLCH | null) => void;
+  setSlotStateColor: (
+    slotId: SlotId,
+    state: StateId,
+    color: OKLCH | null,
+  ) => void;
+  resolvePendingPrimitive: (choice: 'adjust' | 'replace') => void;
+  cancelPendingPrimitive: () => void;
 };
 
 const IR_VERSION = '1.0';
@@ -61,6 +93,41 @@ function createInitialIR(universe: Universe): IR {
   };
 }
 
+function roleDefaultShade(universe: Universe | null, roleId: RoleId): ShadeIndex {
+  const role = universe?.roles.find((r) => r.id === roleId);
+  return role?.defaultShade ?? 500;
+}
+
+function slotShadeFor(
+  universe: Universe | null,
+  slotId: SlotId,
+  fallback: ShadeIndex,
+): ShadeIndex {
+  const slot = universe?.slots.find((s) => s.id === slotId);
+  if (slot?.shadeOverride) return slot.shadeOverride;
+  if (slot) return roleDefaultShade(universe, slot.role);
+  return fallback;
+}
+
+function ensureSlotShell(
+  ir: IR,
+  slotId: SlotId,
+  universe: Universe | null,
+): { ir: IR; slot: SlotAssignment } {
+  const existing = ir.slots[slotId];
+  if (existing) return { ir, slot: existing };
+  const slotDef = universe?.slots.find((s) => s.id === slotId);
+  const role = slotDef?.role ?? '';
+  const fresh: SlotAssignment = { role, states: {} };
+  return {
+    ir: {
+      ...ir,
+      slots: { ...ir.slots, [slotId]: fresh },
+    },
+    slot: fresh,
+  };
+}
+
 export const usePosaStore = create<PosaState>((set, get) => ({
   phase: 'onboarding',
   universe: null,
@@ -70,6 +137,7 @@ export const usePosaStore = create<PosaState>((set, get) => ({
   selectedSlot: null,
   focusedNode: null,
   lastDirection: 'neutral',
+  pendingPrimitiveDecision: null,
 
   startWithComponents: (componentIds) => {
     const universe = deriveUniverse(componentIds);
@@ -82,6 +150,7 @@ export const usePosaStore = create<PosaState>((set, get) => ({
       selectedSlot: null,
       focusedNode: null,
       lastDirection: 'neutral',
+      pendingPrimitiveDecision: null,
     });
   },
 
@@ -95,6 +164,7 @@ export const usePosaStore = create<PosaState>((set, get) => ({
       selectedSlot: null,
       focusedNode: null,
       lastDirection: 'neutral',
+      pendingPrimitiveDecision: null,
     });
   },
 
@@ -158,9 +228,175 @@ export const usePosaStore = create<PosaState>((set, get) => ({
 
   setFocus: (nodeId) => set({ focusedNode: nodeId }),
 
-  setRoleColor: (_roleId, _color) => {
-    // Prompt 04에서 primitive 자동 생성 + role assign 로직과 함께 완성된다.
-    // 지금은 skeleton만 둔다.
-    console.warn('setRoleColor: primitive 생성 로직은 Prompt 04에서 연결됩니다.');
+  setRoleColor: (roleId, color) => {
+    const { ir, universe } = get();
+
+    // Clear: role 참조만 제거. primitive는 보존.
+    if (color === null) {
+      if (!ir.roles[roleId]) return;
+      const nextRoles = { ...ir.roles };
+      delete nextRoles[roleId];
+      set({
+        ir: {
+          ...ir,
+          roles: nextRoles,
+          meta: { ...ir.meta, updatedAt: Date.now() },
+        },
+      });
+      return;
+    }
+
+    const shade = roleDefaultShade(universe, roleId);
+    const current = ir.roles[roleId];
+
+    // 최초 할당 — 새 primitive 생성.
+    if (!current) {
+      const { ir: next, primitiveId } = addPrimitive(ir, color, shade);
+      set({
+        ir: {
+          ...next,
+          roles: {
+            ...next.roles,
+            [roleId]: { primitive: primitiveId, shade },
+          },
+          meta: { ...next.meta, updatedAt: Date.now() },
+        },
+      });
+      return;
+    }
+
+    const primitive = ir.primitives[current.primitive];
+
+    // Primitive가 없어진 비정상 상태 — 새로 생성하고 붙인다.
+    if (!primitive) {
+      const { ir: next, primitiveId } = addPrimitive(ir, color, shade);
+      set({
+        ir: {
+          ...next,
+          roles: {
+            ...next.roles,
+            [roleId]: { primitive: primitiveId, shade },
+          },
+          meta: { ...next.meta, updatedAt: Date.now() },
+        },
+      });
+      return;
+    }
+
+    // Scale 내부 → anchor 조정.
+    if (isWithinScale(color, primitive)) {
+      const next = adjustPrimitiveAnchor(ir, primitive.id, color);
+      set({ ir: next });
+      return;
+    }
+
+    // Scale 외부 → 사용자에게 물어봄.
+    set({
+      pendingPrimitiveDecision: {
+        roleId,
+        newAnchor: color,
+        currentPrimitiveId: primitive.id,
+        shadeForAnchor: shade,
+      },
+    });
   },
+
+  setSlotStateColor: (slotId, state, color) => {
+    const { ir, universe } = get();
+    const { ir: withShell, slot } = ensureSlotShell(ir, slotId, universe);
+
+    // Clear: 해당 state의 override만 제거.
+    if (color === null) {
+      if (!slot.states[state]) return;
+      const nextStates = { ...slot.states };
+      delete nextStates[state];
+      set({
+        ir: {
+          ...withShell,
+          slots: {
+            ...withShell.slots,
+            [slotId]: { ...slot, states: nextStates },
+          },
+          meta: { ...withShell.meta, updatedAt: Date.now() },
+        },
+      });
+      return;
+    }
+
+    const fallbackShade = slotShadeFor(universe, slotId, 500);
+
+    // 가장 가까운 기존 primitive를 찾아 재사용. 없으면 새로 만든다.
+    const nearest = findNearestPrimitive(withShell, color);
+
+    if (nearest) {
+      // 가장 가까운 기존 primitive의 scale에서 L이 가장 가까운 shade를 선택.
+      const shade = findNearestShade(nearest, color.L);
+      set({
+        ir: {
+          ...withShell,
+          slots: {
+            ...withShell.slots,
+            [slotId]: {
+              ...slot,
+              states: {
+                ...slot.states,
+                [state]: { primitive: nearest.id, shade },
+              },
+            },
+          },
+          meta: { ...withShell.meta, updatedAt: Date.now() },
+        },
+      });
+      return;
+    }
+
+    // 새 primitive 생성.
+    const { ir: withNew, primitiveId } = addPrimitive(
+      withShell,
+      color,
+      fallbackShade,
+    );
+    set({
+      ir: {
+        ...withNew,
+        slots: {
+          ...withNew.slots,
+          [slotId]: {
+            ...slot,
+            states: {
+              ...slot.states,
+              [state]: { primitive: primitiveId, shade: fallbackShade },
+            },
+          },
+        },
+        meta: { ...withNew.meta, updatedAt: Date.now() },
+      },
+    });
+  },
+
+  resolvePendingPrimitive: (choice) => {
+    const { pendingPrimitiveDecision: pending, ir } = get();
+    if (!pending) return;
+
+    if (choice === 'adjust') {
+      const next = adjustPrimitiveAnchor(
+        ir,
+        pending.currentPrimitiveId,
+        pending.newAnchor,
+      );
+      set({ ir: next, pendingPrimitiveDecision: null });
+      return;
+    }
+
+    // replace — 새 primitive 만들고 role이 그것을 참조하도록.
+    const next = replaceRolePrimitive(
+      ir,
+      pending.roleId,
+      pending.newAnchor,
+      pending.shadeForAnchor,
+    );
+    set({ ir: next, pendingPrimitiveDecision: null });
+  },
+
+  cancelPendingPrimitive: () => set({ pendingPrimitiveDecision: null }),
 }));
