@@ -131,7 +131,7 @@ function StateCard({
       <PopoverContent
         align="start"
         sideOffset={6}
-        className="w-80 bg-white/95 backdrop-blur border-stone-200 text-stone-900 shadow-md"
+        className="w-80 max-h-[calc(100vh-8rem)] overflow-y-auto bg-white/95 backdrop-blur border-stone-200 text-stone-900 shadow-md"
         onOpenAutoFocus={(e) => e.preventDefault()}
         onInteractOutside={(e) => {
           if (anchorRef.current?.contains(e.target as Node)) {

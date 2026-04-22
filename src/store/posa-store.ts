@@ -16,6 +16,7 @@ import type {
   IR,
   OKLCH,
   PrimitiveId,
+  RoleAssignment,
   RoleId,
   ShadeIndex,
   SlotAssignment,
@@ -59,6 +60,8 @@ type PosaState = {
   setFocus: (nodeId: string | null) => void;
 
   setRoleColor: (roleId: RoleId, color: OKLCH | null) => void;
+  setRoleShade: (roleId: RoleId, shade: ShadeIndex) => void;
+  setRoleAssignment: (roleId: RoleId, assignment: RoleAssignment) => void;
   setSlotStateColor: (
     slotId: SlotId,
     state: StateId,
@@ -305,6 +308,41 @@ export const usePosaStore = create<PosaState>((set, get) => ({
         newAnchor: color,
         currentPrimitiveId: primitive.id,
         shadeForAnchor: shade,
+      },
+    });
+  },
+
+  // Role이 같은 primitive를 계속 참조하되 shade만 바꾼다. primitive는 건드리지 않음.
+  setRoleShade: (roleId, shade) => {
+    const { ir } = get();
+    const current = ir.roles[roleId];
+    if (!current) return;
+    if (current.shade === shade) return;
+    set({
+      ir: {
+        ...ir,
+        roles: {
+          ...ir.roles,
+          [roleId]: { ...current, shade },
+        },
+        meta: { ...ir.meta, updatedAt: Date.now() },
+      },
+    });
+  },
+
+  // Role을 명시적으로 특정 primitive + shade로 포인팅 변경.
+  // primitive가 없는 경우 no-op — 호출자는 존재하는 primitive만 전달해야 한다.
+  setRoleAssignment: (roleId, assignment) => {
+    const { ir } = get();
+    if (!ir.primitives[assignment.primitive]) return;
+    set({
+      ir: {
+        ...ir,
+        roles: {
+          ...ir.roles,
+          [roleId]: assignment,
+        },
+        meta: { ...ir.meta, updatedAt: Date.now() },
       },
     });
   },

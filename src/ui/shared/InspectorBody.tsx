@@ -1,15 +1,17 @@
 import { useMemo } from 'react';
 import { resolveRoleColor, resolveSlotColor } from '../../color/resolve';
-import type { OKLCH } from '../../ir/types';
+import { computeUsedShadesByPrimitive } from '../../ir/selectors';
+import type { OKLCH, ShadeIndex } from '../../ir/types';
 import { usePosaStore } from '../../store/posa-store';
+import { ColorExplorer } from './ColorExplorer';
 import { ColorPicker } from './ColorPicker';
 
 /**
  * Inspector의 본문 — 플레인 카드 바로 아래에 popover로 뜬다.
  * Layer별로 바인딩되는 setter가 달라진다:
- *   Z0 → setRoleColor(roleId, ...)
- *   Z1 → setSlotStateColor(slotId, "default", ...)
- *   Z2 → setSlotStateColor(selectedSlot, state, ...)
+ *   Z0 → setRoleColor(roleId, ...)  — ColorExplorer 사용
+ *   Z1 → setSlotStateColor(slotId, "default", ...) — ColorPicker 사용
+ *   Z2 → setSlotStateColor(selectedSlot, state, ...) — ColorPicker 사용
  */
 export function InspectorBody() {
   const layer = usePosaStore((s) => s.layer);
@@ -17,18 +19,28 @@ export function InspectorBody() {
   const selectedSlot = usePosaStore((s) => s.selectedSlot);
   const ir = usePosaStore((s) => s.ir);
   const setRoleColor = usePosaStore((s) => s.setRoleColor);
+  const setRoleShade = usePosaStore((s) => s.setRoleShade);
+  const setRoleAssignment = usePosaStore((s) => s.setRoleAssignment);
   const setSlotStateColor = usePosaStore((s) => s.setSlotStateColor);
   const descendTo = usePosaStore((s) => s.descendTo);
   const universe = usePosaStore((s) => s.universe);
+
+  const usedShadesByPrimitive = useMemo(
+    () => computeUsedShadesByPrimitive(ir),
+    [ir],
+  );
 
   const context = useMemo(() => {
     if (!focusedNode) return null;
     if (layer === 'z0') {
       return {
+        kind: 'role' as const,
         label: 'role',
         nodeLabel: focusedNode,
         color: resolveRoleColor(ir, focusedNode),
         isDirect: Boolean(ir.roles[focusedNode]),
+        roleId: focusedNode,
+        assignment: ir.roles[focusedNode] ?? null,
         onChange: (c: OKLCH) => setRoleColor(focusedNode, c),
         onClear: () => setRoleColor(focusedNode, null),
         canDescend: true,
@@ -39,6 +51,7 @@ export function InspectorBody() {
       const slotDef = universe?.slots.find((s) => s.id === focusedNode);
       const hasMultipleStates = (slotDef?.states.length ?? 1) > 1;
       return {
+        kind: 'slot' as const,
         label: 'slot · default',
         nodeLabel: focusedNode,
         color: resolveSlotColor(ir, focusedNode, 'default'),
@@ -48,11 +61,11 @@ export function InspectorBody() {
         canDescend: hasMultipleStates,
       };
     }
-    // z2
     if (!selectedSlot) return null;
     const state = focusedNode;
     const isDirect = Boolean(ir.slots[selectedSlot]?.states[state]);
     return {
+      kind: 'state' as const,
       label: `state · ${state}`,
       nodeLabel: `${selectedSlot} / ${state}`,
       color: resolveSlotColor(ir, selectedSlot, state),
@@ -86,11 +99,42 @@ export function InspectorBody() {
         </div>
       </header>
 
-      <ColorPicker
-        value={context.color}
-        onChange={context.onChange}
-        onClear={context.isDirect ? context.onClear : undefined}
-      />
+      {context.kind === 'role' ? (
+        <ColorExplorer
+          roleId={context.roleId}
+          value={context.color}
+          onChange={context.onChange}
+          assignment={context.assignment}
+          primitives={ir.primitives}
+          usedShadesByPrimitive={usedShadesByPrimitive}
+          onSelectShade={(shade: ShadeIndex) =>
+            setRoleShade(context.roleId, shade)
+          }
+          onSelectPrimitive={(primitiveId, shade) =>
+            setRoleAssignment(context.roleId, {
+              primitive: primitiveId,
+              shade,
+            })
+          }
+          ir={ir}
+        />
+      ) : (
+        <ColorPicker
+          value={context.color}
+          onChange={context.onChange}
+          onClear={context.isDirect ? context.onClear : undefined}
+        />
+      )}
+
+      {context.kind === 'role' && context.isDirect && (
+        <button
+          type="button"
+          onClick={context.onClear}
+          className="text-xs text-stone-500 hover:text-stone-800 underline underline-offset-2 self-start"
+        >
+          Clear (inherit)
+        </button>
+      )}
 
       {context.canDescend && (
         <button
