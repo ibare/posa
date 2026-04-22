@@ -146,7 +146,7 @@ function RoleCard({
           onDescend();
         }}
         className="flex-none inline-flex items-center gap-2 text-xs font-mono text-stone-600 px-2.5 py-1.5 rounded border border-stone-200 hover:border-stone-500 hover:text-stone-900 transition"
-        title="slot 층으로 내려가기 (Enter)"
+        title="Descend to slot layer (Enter)"
       >
         <span className="tabular-nums">{slotCount}</span>
         <span className="text-stone-400">slots</span>

@@ -24,7 +24,7 @@ export function BreadcrumbStrip() {
           type="button"
           onClick={() => jumpToLayer('z0')}
           className="group flex items-center gap-2 px-2 py-1 rounded hover:bg-stone-200/60 transition"
-          title="Z0로 돌아가기"
+          title="Back to Z0"
         >
           <MiniZ0 />
           <span className="text-[10px] font-mono uppercase tracking-wider text-stone-500 group-hover:text-stone-800">
@@ -40,7 +40,7 @@ export function BreadcrumbStrip() {
             type="button"
             onClick={() => jumpToLayer('z1')}
             className="group flex items-center gap-2 px-2 py-1 rounded hover:bg-stone-200/60 transition"
-            title="Z1로 돌아가기"
+            title="Back to Z1"
           >
             <MiniZ1 />
             <span className="text-[10px] font-mono uppercase tracking-wider text-stone-500 group-hover:text-stone-800">

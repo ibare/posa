@@ -56,7 +56,7 @@ export function Z1Plane() {
         ))}
         {slots.length === 0 && (
           <div className="col-span-full p-8 text-center text-sm text-stone-500 border border-dashed border-stone-300 rounded-lg">
-            이 role을 참조하는 slot이 universe에 없습니다.
+            No slots in the universe reference this role.
           </div>
         )}
       </div>
@@ -138,7 +138,7 @@ function SlotCard({
             onDescend();
           }}
           className="flex-none inline-flex items-center gap-2 text-xs font-mono text-stone-600 px-2.5 py-1.5 rounded border border-stone-200 hover:border-stone-500 hover:text-stone-900 transition"
-          title="state 층으로 내려가기 (Enter)"
+          title="Descend to state layer (Enter)"
         >
           <span>states</span>
           <svg

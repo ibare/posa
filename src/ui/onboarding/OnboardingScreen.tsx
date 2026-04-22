@@ -76,10 +76,10 @@ export function OnboardingScreen() {
     <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10">
       <div>
         <header className="mb-8">
-          <h2 className="font-display text-4xl leading-tight">무엇을 만드시나요?</h2>
+          <h2 className="font-display text-4xl leading-tight">What are you building?</h2>
           <p className="text-sm text-stone-600 mt-2 max-w-xl leading-relaxed">
-            필요한 UI 컴포넌트만 선택하세요. 선택한 것들에서 필요한 색이 자동으로
-            결정됩니다.
+            Pick only the UI components you need. The colors required are derived
+            automatically from your selection.
           </p>
         </header>
 
@@ -131,9 +131,9 @@ export function OnboardingScreen() {
       <aside className="lg:sticky lg:top-20 lg:self-start bg-white/70 border border-stone-200 rounded-lg p-5 space-y-4 text-sm shadow-[0_1px_0_rgba(0,0,0,0.02)]">
         <div>
           <div className="font-display italic text-2xl leading-tight">
-            탐색 범위 미리보기
+            Exploration scope preview
           </div>
-          <div className="text-xs text-stone-500 mt-1">선택에 따라 실시간 갱신</div>
+          <div className="text-xs text-stone-500 mt-1">Updates live as you select</div>
         </div>
         <div className="space-y-1.5 text-stone-700">
           <MetricRow label="role" value={preview.roles.length} />
@@ -141,8 +141,8 @@ export function OnboardingScreen() {
           <MetricRow label="state" value={preview.states.size} />
         </div>
         <div className="pt-2 border-t border-stone-200 text-xs text-stone-500 leading-relaxed">
-          "아, 이만큼만 정하면 되겠군" — 시작 전에 결정의 총량이 눈에 보이는 것이
-          Posa의 기본 감각이다.
+          "Ah, this is all I need to decide" — seeing the total volume of decisions
+          up front is the core feel of Posa.
         </div>
         <button
           type="button"
@@ -150,11 +150,11 @@ export function OnboardingScreen() {
           onClick={() => startWithComponents(selectedArr)}
           className="w-full mt-2 py-2.5 rounded-md bg-stone-900 text-stone-50 text-sm font-medium hover:bg-stone-800 transition disabled:bg-stone-300 disabled:text-stone-500 disabled:cursor-not-allowed"
         >
-          시작하기
+          Get started
         </button>
         {!userChoseSomething && (
           <div className="text-[11px] text-stone-400 text-center">
-            컴포넌트를 1개 이상 선택하세요
+            Select at least one component
           </div>
         )}
       </aside>

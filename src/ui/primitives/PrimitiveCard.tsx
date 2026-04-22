@@ -38,14 +38,14 @@ export function PrimitiveCard({
 
   const handleRemove = () => {
     if (refCount > 0) return;
-    if (!window.confirm(`${primitive.id}을(를) 제거하시겠습니까?`)) return;
+    if (!window.confirm(`Remove ${primitive.id}?`)) return;
     removePrimitive(primitive.id);
   };
 
   const handleMergeInto = () => {
     if (!mergeSource) return;
     const ok = window.confirm(
-      `${mergeSource}의 모든 참조를 ${primitive.id}(으)로 옮기고 ${mergeSource}을(를) 제거합니다. 계속할까요?`,
+      `All references from ${mergeSource} will be moved to ${primitive.id}, and ${mergeSource} will be removed. Continue?`,
     );
     if (!ok) return;
     mergePrimitive(mergeSource, primitive.id);
@@ -122,7 +122,7 @@ export function PrimitiveCard({
           onClick={() => setExpanded((v) => !v)}
           className="text-xs text-stone-600 hover:text-stone-900 underline underline-offset-2"
         >
-          {expanded ? '참조 숨기기' : '참조 보기'}
+          {expanded ? 'Hide references' : 'Show references'}
         </button>
       )}
 
@@ -154,7 +154,7 @@ export function PrimitiveCard({
             onClick={handleMergeInto}
             className="text-xs px-3 py-1.5 rounded border border-stone-900 bg-stone-900 text-cream hover:opacity-90 transition"
           >
-            여기로 병합
+            Merge here
           </button>
         ) : (
           <button
@@ -166,11 +166,11 @@ export function PrimitiveCard({
             className="text-xs px-3 py-1.5 rounded border border-stone-200 text-stone-700 hover:border-stone-500 hover:text-stone-900 disabled:opacity-40 disabled:cursor-not-allowed transition"
             title={
               Object.keys(ir.primitives).length < 2
-                ? '병합하려면 다른 primitive가 필요합니다'
-                : '다른 primitive로 병합 시작'
+                ? 'Merging requires another primitive'
+                : 'Start merging into another primitive'
             }
           >
-            {isMergeSource ? '병합 취소' : 'Merge…'}
+            {isMergeSource ? 'Cancel merge' : 'Merge…'}
           </button>
         )}
         <button
@@ -178,7 +178,7 @@ export function PrimitiveCard({
           onClick={handleRemove}
           disabled={refCount > 0}
           className="text-xs px-3 py-1.5 rounded border border-stone-200 text-stone-700 hover:border-red-400 hover:text-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
-          title={refCount > 0 ? '여전히 참조 중 (삭제 불가)' : '제거'}
+          title={refCount > 0 ? 'Still in use (cannot remove)' : 'Remove'}
         >
           Remove
         </button>

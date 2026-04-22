@@ -53,7 +53,7 @@ export function Shell({ children }: Props) {
             <ProgressBadge
               filled={filledRoles}
               total={totalRoles}
-              label="색이 지정된 role"
+              label="colored roles"
             />
             <button
               type="button"

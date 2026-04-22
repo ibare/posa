@@ -22,7 +22,7 @@ export function ExplorationView() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
-      if (pendingPrimitiveDecision) return; // 다이얼로그가 자체 처리.
+      if (pendingPrimitiveDecision) return; // Dialog handles its own keys.
       if (focusedNode) {
         setFocus(null);
       } else {

@@ -24,8 +24,8 @@ export function Swatch({ color, size = 'md', dim = false, title }: Props) {
         className={`${SIZE_CLASS[size]} rounded-md border border-dashed border-stone-300 ${
           dim ? 'opacity-40' : ''
         }`}
-        title={title ?? '색 미지정'}
-        aria-label={title ?? '색 미지정'}
+        title={title ?? 'no color'}
+        aria-label={title ?? 'no color'}
       />
     );
   }
@@ -45,8 +45,8 @@ export function Swatch({ color, size = 'md', dim = false, title }: Props) {
       {!inGamut && (
         <span
           className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-white"
-          title="sRGB gamut 밖"
-          aria-label="sRGB gamut 밖"
+          title="outside sRGB gamut"
+          aria-label="outside sRGB gamut"
         />
       )}
     </div>

@@ -98,7 +98,7 @@ function StateCard({
       <div className="min-w-0 flex-1">
         <div className="font-mono text-sm text-stone-900">{state}</div>
         <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400 mt-0.5">
-          {isDirect ? '직접 설정' : '상속됨'}
+          {isDirect ? 'set directly' : 'inherited'}
         </div>
       </div>
       <span

@@ -49,10 +49,10 @@ export function ExportView() {
     return (
       <div className="mx-auto max-w-3xl p-10 text-center border border-dashed border-stone-300 rounded-lg">
         <div className="font-display italic text-xl text-stone-700">
-          내보낼 내용이 없습니다
+          Nothing to export
         </div>
         <p className="text-sm text-stone-500 mt-2">
-          최소 하나의 role에 색을 할당한 후 export할 수 있습니다.
+          Assign a color to at least one role before you can export.
         </p>
       </div>
     );
@@ -93,7 +93,7 @@ export function ExportView() {
 
         <div className="mt-4 p-3 rounded border border-stone-200 bg-white/60 text-xs text-stone-600 space-y-1">
           <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
-            이 export는 현재 IR의 스냅샷입니다
+            This export is a snapshot of the current IR
           </div>
           <div className="font-mono tabular-nums">
             primitives <span className="text-stone-900">{primitiveCount}</span>

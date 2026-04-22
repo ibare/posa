@@ -41,7 +41,7 @@ export function ColorPicker({ value, onChange, onClear }: Props) {
       <div
         className="h-20 w-full rounded-md ring-1 ring-stone-200 shadow-inner"
         style={{ backgroundColor: hex }}
-        aria-label={`현재 색상 ${hex}`}
+        aria-label={`current color ${hex}`}
       />
 
       <SliderRow

@@ -71,22 +71,23 @@ export function AdjustOrReplaceDialog() {
       >
         <header className="px-6 pt-6 pb-3">
           <h2 className="font-display italic text-xl text-stone-900 leading-tight">
-            이 색은 기존 {currentFamily} 팔레트에서 벗어나 있습니다
+            This color is outside the existing {currentFamily} palette
           </h2>
-          <p className="text-sm text-stone-500 mt-1">어떻게 처리할까요?</p>
+          <p className="text-sm text-stone-500 mt-1">How would you like to handle it?</p>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-6 pb-4">
           <OptionCard
             badge="A"
             title={`Adjust ${currentFamily}`}
-            description={`기존 ${primitive.id}의 anchor를 새 색으로 조정합니다. 같은 scale의 다른 shade들도 함께 재계산됩니다. 이 primitive를 참조하는 다른 slot들도 영향을 받습니다.`}
+            description={`Adjust the anchor of existing ${primitive.id}. Other shades in the same scale will be recalculated. Slots referencing this primitive will be affected automatically.`}
             before={primitive.scale}
             after={newScale}
             footer={
               <>
-                <span className="text-stone-500">참조 중인 slot</span>{' '}
-                <span className="tabular-nums text-stone-800">{refCount}</span>
+                <span className="text-stone-500">Referenced by</span>{' '}
+                <span className="tabular-nums text-stone-800">{refCount}</span>{' '}
+                <span className="text-stone-500">slot{refCount === 1 ? '' : 's'}</span>
               </>
             }
             onClick={() => resolve('adjust')}
@@ -94,22 +95,22 @@ export function AdjustOrReplaceDialog() {
           <OptionCard
             badge="B"
             title={`Replace with new ${family}`}
-            description="새 primitive를 생성합니다. 현재 role은 새 primitive를 참조하고, 기존 primitive는 이전 상태 그대로 보존됩니다. 다른 slot의 참조는 영향받지 않습니다."
+            description="Create a new primitive. This role will point to the new primitive, and the existing primitive stays intact. Slots still referencing the old one are unaffected."
             after={newScale}
             footer={
               otherRefCount > 0 ? (
                 <>
                   <span className="text-stone-500">
-                    기존 {primitive.id}는 여전히{' '}
+                    Existing {primitive.id} is still referenced in{' '}
                   </span>
                   <span className="tabular-nums text-stone-800">
                     {otherRefCount}
                   </span>{' '}
-                  <span className="text-stone-500">곳에서 참조됨</span>
+                  <span className="text-stone-500">place{otherRefCount === 1 ? '' : 's'}</span>
                 </>
               ) : (
                 <span className="text-amber-700">
-                  기존 {primitive.id}는 고아 primitive가 됩니다
+                  Existing {primitive.id} will become an orphan primitive
                 </span>
               )
             }
@@ -119,14 +120,14 @@ export function AdjustOrReplaceDialog() {
 
         <footer className="flex items-center justify-between px-6 py-4 border-t border-stone-100">
           <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
-            A · Adjust · Enter &nbsp; B · Replace &nbsp; Esc · 취소
+            A · Adjust · Enter &nbsp; B · Replace &nbsp; Esc · Cancel
           </div>
           <button
             type="button"
             onClick={cancel}
             className="text-xs px-3 py-1.5 rounded border border-stone-200 text-stone-600 hover:border-stone-500 hover:text-stone-900"
           >
-            취소
+            Cancel
           </button>
         </footer>
       </div>

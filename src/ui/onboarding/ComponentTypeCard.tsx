@@ -45,7 +45,7 @@ export function ComponentTypeCard({ component, selected, required, onToggle }: P
           </span>
           {required && (
             <span className="block text-[10px] font-mono uppercase tracking-wider text-stone-400 mt-1">
-              자동 포함
+              auto-included
             </span>
           )}
         </span>

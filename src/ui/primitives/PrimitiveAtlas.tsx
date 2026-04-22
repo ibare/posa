@@ -46,10 +46,10 @@ export function PrimitiveAtlas() {
     return (
       <div className="mx-auto max-w-3xl p-10 text-center border border-dashed border-stone-300 rounded-lg">
         <div className="font-display italic text-xl text-stone-700">
-          아직 생성된 primitive가 없습니다
+          No primitives have been created yet
         </div>
         <p className="text-sm text-stone-500 mt-2">
-          Exploration에서 role에 색을 고르면 primitive가 여기에 나타납니다.
+          Pick a color for a role in Exploration and the primitive will appear here.
         </p>
       </div>
     );
@@ -63,8 +63,7 @@ export function PrimitiveAtlas() {
             Primitive Atlas
           </div>
           <div className="font-display italic text-2xl text-stone-900 mt-0.5">
-            총 {primitives.length}개 primitive, 사용 중 {usedCount}개, 고아{' '}
-            {orphanIds.size}개
+            {primitives.length} primitive{primitives.length === 1 ? '' : 's'} total, {usedCount} in use, {orphanIds.size} orphan{orphanIds.size === 1 ? '' : 's'}
           </div>
           <div className="text-xs text-stone-500 mt-1 font-mono tabular-nums">
             {hueSpread.toFixed(0)}° spread across {families.size} hue famil
@@ -73,13 +72,13 @@ export function PrimitiveAtlas() {
         </div>
         {mergeSource && (
           <div className="text-xs text-stone-600 font-mono">
-            병합 대상 선택 중 · source: <b>{mergeSource}</b>
+            Selecting merge target · source: <b>{mergeSource}</b>
             <button
               type="button"
               onClick={() => setMergeSource(null)}
               className="ml-2 underline underline-offset-2 text-stone-500 hover:text-stone-900"
             >
-              취소
+              Cancel
             </button>
           </div>
         )}
