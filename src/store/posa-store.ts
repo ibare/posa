@@ -1,5 +1,9 @@
 import { create } from 'zustand';
 import {
+  mergePrimitive as mergePrimitiveOp,
+  removePrimitive as removePrimitiveOp,
+} from '../color/atlas-ops';
+import {
   addPrimitive,
   adjustPrimitiveAnchor,
   findNearestPrimitive,
@@ -24,7 +28,7 @@ import type {
  * IR(사용자 결정)과 탐색 컨텍스트(layer, 선택, focus)를 모두 담지만, 카탈로그(마스터 그래프)는 건드리지 않는다.
  */
 
-export type Phase = 'onboarding' | 'exploration' | 'export';
+export type Phase = 'onboarding' | 'exploration' | 'atlas' | 'export';
 export type Layer = 'z0' | 'z1' | 'z2';
 export type LayerDirection = 'ascend' | 'descend' | 'neutral';
 
@@ -62,6 +66,10 @@ type PosaState = {
   ) => void;
   resolvePendingPrimitive: (choice: 'adjust' | 'replace') => void;
   cancelPendingPrimitive: () => void;
+
+  goToPhase: (phase: Phase) => void;
+  removePrimitive: (primitiveId: PrimitiveId) => void;
+  mergePrimitive: (sourceId: PrimitiveId, targetId: PrimitiveId) => void;
 };
 
 const IR_VERSION = '1.0';
@@ -399,4 +407,28 @@ export const usePosaStore = create<PosaState>((set, get) => ({
   },
 
   cancelPendingPrimitive: () => set({ pendingPrimitiveDecision: null }),
+
+  goToPhase: (phase) => {
+    const { universe } = get();
+    if (phase !== 'onboarding' && !universe) return;
+    set({ phase, focusedNode: null, pendingPrimitiveDecision: null });
+  },
+
+  removePrimitive: (primitiveId) => {
+    const { ir } = get();
+    try {
+      set({ ir: removePrimitiveOp(ir, primitiveId) });
+    } catch {
+      // 참조가 남아있거나 존재하지 않음 — 조용히 무시. UI가 사전 차단 중.
+    }
+  },
+
+  mergePrimitive: (sourceId, targetId) => {
+    const { ir } = get();
+    try {
+      set({ ir: mergePrimitiveOp(ir, sourceId, targetId) });
+    } catch {
+      // 동일 primitive이거나 존재하지 않음 — 조용히 무시.
+    }
+  },
 }));

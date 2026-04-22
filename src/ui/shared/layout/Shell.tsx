@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { usePosaStore } from '../../../store/posa-store';
+import { usePosaStore, type Phase } from '../../../store/posa-store';
 import { ProgressBadge } from '../ProgressBadge';
 
 type Props = { children: ReactNode };
@@ -9,6 +9,7 @@ export function Shell({ children }: Props) {
   const universe = usePosaStore((s) => s.universe);
   const ir = usePosaStore((s) => s.ir);
   const resetAll = usePosaStore((s) => s.resetAll);
+  const goToPhase = usePosaStore((s) => s.goToPhase);
 
   const totalRoles = universe?.roles.length ?? 0;
   const filledRoles = universe
@@ -24,6 +25,28 @@ export function Shell({ children }: Props) {
         <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
           {phase}
         </span>
+        {phase !== 'onboarding' && universe && (
+          <nav className="flex items-center gap-1">
+            <PhaseButton
+              label="Explore"
+              phase="exploration"
+              current={phase}
+              onClick={() => goToPhase('exploration')}
+            />
+            <PhaseButton
+              label="Atlas"
+              phase="atlas"
+              current={phase}
+              onClick={() => goToPhase('atlas')}
+            />
+            <PhaseButton
+              label="Export"
+              phase="export"
+              current={phase}
+              onClick={() => goToPhase('export')}
+            />
+          </nav>
+        )}
         <div className="flex-1" />
         {phase !== 'onboarding' && universe && (
           <>
@@ -44,5 +67,33 @@ export function Shell({ children }: Props) {
       </header>
       <main className="px-6 py-6">{children}</main>
     </div>
+  );
+}
+
+function PhaseButton({
+  label,
+  phase,
+  current,
+  onClick,
+}: {
+  label: string;
+  phase: Phase;
+  current: Phase;
+  onClick: () => void;
+}) {
+  const active = phase === current;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'text-xs px-2.5 py-1 rounded border transition',
+        active
+          ? 'border-stone-900 bg-stone-900 text-cream'
+          : 'border-stone-200 text-stone-600 hover:border-stone-400 hover:text-stone-900',
+      ].join(' ')}
+    >
+      {label}
+    </button>
   );
 }

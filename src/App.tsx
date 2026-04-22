@@ -1,6 +1,8 @@
 import { usePosaStore } from './store/posa-store';
+import { ExportView } from './ui/export/ExportView';
 import { OnboardingScreen } from './ui/onboarding/OnboardingScreen';
 import { ExplorationView } from './ui/planes/ExplorationView';
+import { PrimitiveAtlas } from './ui/primitives/PrimitiveAtlas';
 import { Shell } from './ui/shared/layout/Shell';
 
 export default function App() {
@@ -10,15 +12,8 @@ export default function App() {
     <Shell>
       {phase === 'onboarding' && <OnboardingScreen />}
       {phase === 'exploration' && <ExplorationView />}
-      {phase === 'export' && <ExportPlaceholder />}
+      {phase === 'atlas' && <PrimitiveAtlas />}
+      {phase === 'export' && <ExportView />}
     </Shell>
-  );
-}
-
-function ExportPlaceholder() {
-  return (
-    <div className="mx-auto max-w-3xl p-10 text-center text-sm text-stone-500">
-      Export 뷰는 Prompt 05에서 구현됩니다.
-    </div>
   );
 }
