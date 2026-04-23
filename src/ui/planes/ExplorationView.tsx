@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PreviewPanel } from '../../preview';
 import { usePosaStore } from '../../store/posa-store';
 import { BreadcrumbStrip } from './BreadcrumbStrip';
@@ -9,6 +10,7 @@ import { ZXGroupPlane } from './ZXGroupPlane';
 import { ZXPlane } from './ZXPlane';
 
 export function ExplorationView() {
+  const activeCount = usePosaStore((s) => s.activeComponentIds.length);
   const layer = usePosaStore((s) => s.layer);
   const selectedAttributeId = usePosaStore((s) => s.selectedAttributeId);
   const selectedSlotId = usePosaStore((s) => s.selectedSlotId);
@@ -22,6 +24,7 @@ export function ExplorationView() {
     (s) => s.clearSelectedComponent,
   );
   const clearSelectedGroup = usePosaStore((s) => s.clearSelectedGroup);
+  const { t } = useTranslation('planes');
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -54,6 +57,17 @@ export function ExplorationView() {
     clearSelectedComponent,
     clearSelectedGroup,
   ]);
+
+  if (activeCount === 0) {
+    return (
+      <div className="mx-auto max-w-3xl p-10 text-center border border-dashed border-stone-300 rounded-lg">
+        <div className="font-display italic text-xl text-stone-700">
+          {t('empty.title')}
+        </div>
+        <p className="text-sm text-stone-500 mt-2">{t('empty.description')}</p>
+      </div>
+    );
+  }
 
   const animClass =
     lastDirection === 'descend'

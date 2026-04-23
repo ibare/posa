@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import {
   mergePrimitive as mergePrimitiveOp,
   removePrimitive as removePrimitiveOp,
@@ -10,7 +11,10 @@ import {
   isWithinScale,
   pruneOrphanPrimitives,
 } from '../color/primitive-ops';
-import type { ComponentGroupId } from '../catalog/components';
+import {
+  COMPONENT_DEFINITIONS,
+  type ComponentGroupId,
+} from '../catalog/components';
 import { DEFAULT_LOCALE, i18n, type Locale } from '../i18n';
 import {
   createEmptyIR,
@@ -63,7 +67,8 @@ type PosaState = {
 
   // Lifecycle
   startFresh: () => void;
-  setActiveComponents: (ids: ComponentId[]) => void;
+  addActiveComponents: (ids: ComponentId[]) => void;
+  removeActiveComponents: (ids: ComponentId[]) => void;
   setLocale: (locale: Locale) => void;
 
   // Symbol assignment
@@ -194,7 +199,9 @@ function ensureSlot(ir: IR, slotId: SlotId): IR {
 // Store
 // ──────────────────────────────────────────────────────────────────────────
 
-export const usePosaStore = create<PosaState>((set, get) => ({
+export const usePosaStore = create<PosaState>()(
+  persist(
+    (set, get) => ({
   activeComponentIds: [],
   ir: createEmptyIR(),
   layer: 'z0',
@@ -225,19 +232,46 @@ export const usePosaStore = create<PosaState>((set, get) => ({
     });
   },
 
-  setActiveComponents: (ids) => {
-    // 온보딩에서 새 스코프 확정. 기존 IR/네비게이션 모두 리셋 — 스코프 밖 slot의
-    // 할당이 유령처럼 남는 것을 방지.
+  addActiveComponents: (ids) => {
+    // 카탈로그 순서로 정규화 — selector·프리뷰가 이 순서대로 순회한다.
+    const { activeComponentIds } = get();
+    const union = new Set<ComponentId>([...activeComponentIds, ...ids]);
+    const ordered = COMPONENT_DEFINITIONS.map((c) => c.id).filter((id) =>
+      union.has(id),
+    );
+    if (ordered.length === activeComponentIds.length) return;
+    set({ activeComponentIds: ordered });
+  },
+
+  removeActiveComponents: (ids) => {
+    const { activeComponentIds, ir } = get();
+    const removeSet = new Set(ids);
+    const nextIds = activeComponentIds.filter((id) => !removeSet.has(id));
+    if (nextIds.length === activeComponentIds.length) return;
+
+    // 해당 컴포넌트가 소유한 slot만 정리 — primitives/symbols/attributes는 보존.
+    // Orphan이 된 primitive는 뒤이어 prune.
+    const nextSlots: typeof ir.slots = {};
+    for (const [slotId, slot] of Object.entries(ir.slots)) {
+      const owner = slotId.split('.')[0];
+      if (!removeSet.has(owner)) {
+        nextSlots[slotId] = slot;
+      }
+    }
+    const nextIr = pruneOrphanPrimitives(
+      bumpMeta({ ...ir, slots: nextSlots }),
+    );
+
     set({
-      activeComponentIds: ids,
-      ir: createEmptyIR(),
-      layer: 'z0',
-      selectedAttributeId: null,
-      selectedSlotId: null,
-      selectedComponentId: null,
-      selectedGroupId: null,
+      activeComponentIds: nextIds,
+      ir: nextIr,
+      // 제거된 컴포넌트를 가리키던 네비게이션 컨텍스트는 무의미해지므로 정리.
+      selectedComponentId:
+        get().selectedComponentId && removeSet.has(get().selectedComponentId!)
+          ? null
+          : get().selectedComponentId,
+      selectedGroupId: get().selectedGroupId,
       focusedNode: null,
-      lastDirection: 'neutral',
     });
   },
 
@@ -565,4 +599,21 @@ export const usePosaStore = create<PosaState>((set, get) => ({
       // 존재하지 않거나 동일 — 무시.
     }
   },
-}));
+    }),
+    {
+      name: 'posa-store',
+      version: 1,
+      storage: createJSONStorage(() => localStorage),
+      // IR·스코프·locale만 영속화. 네비게이션 컨텍스트(layer/selected*/focus)는
+      // 세션 스코프 — 새로고침 시 Z0에서 시작하도록 의도적으로 제외.
+      partialize: (s) => ({
+        activeComponentIds: s.activeComponentIds,
+        ir: s.ir,
+        locale: s.locale,
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) void i18n.changeLanguage(state.locale);
+      },
+    },
+  ),
+);

@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { usePosaStore } from '../../../store/posa-store';
+import { ConfirmDialog } from '../ConfirmDialog';
 import { PaletteRibbon } from '../PaletteRibbon';
 import { LocaleToggle } from './LocaleToggle';
 
@@ -18,6 +19,13 @@ export function Shell({ children }: Props) {
   const startFresh = usePosaStore((s) => s.startFresh);
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+
+  const confirmReset = () => {
+    startFresh();
+    setResetConfirmOpen(false);
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen bg-cream text-stone-900 font-body antialiased">
@@ -48,16 +56,29 @@ export function Shell({ children }: Props) {
         <LocaleToggle />
         <button
           type="button"
-          onClick={() => {
-            startFresh();
-            navigate('/');
-          }}
+          onClick={() => navigate('/')}
+          className="text-xs text-stone-600 hover:text-stone-900 px-2.5 py-1 rounded border border-stone-200 hover:border-stone-400 transition"
+        >
+          {t('nav.editComponents')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setResetConfirmOpen(true)}
           className="text-xs text-stone-500 hover:text-stone-900 px-2.5 py-1 rounded border border-stone-200 hover:border-stone-400 transition"
         >
           {t('action.reset')}
         </button>
       </header>
       <main className="px-6 py-6">{children}</main>
+      <ConfirmDialog
+        open={resetConfirmOpen}
+        destructive
+        title={t('confirm.reset.title')}
+        description={t('confirm.reset.description')}
+        confirmLabel={t('confirm.reset.confirm')}
+        onConfirm={confirmReset}
+        onCancel={() => setResetConfirmOpen(false)}
+      />
     </div>
   );
 }

@@ -6,7 +6,8 @@
     "explore": "탐색",
     "atlas": "아틀라스",
     "review": "리뷰",
-    "export": "내보내기"
+    "export": "내보내기",
+    "editComponents": "컴포넌트 편집"
   },
   "action": {
     "reset": "초기화",
@@ -14,7 +15,15 @@
     "continue": "계속",
     "copy": "복사",
     "copied": "복사됨!",
-    "download": "다운로드"
+    "download": "다운로드",
+    "remove": "제거"
+  },
+  "confirm": {
+    "reset": {
+      "title": "모두 초기화할까요?",
+      "description": "선택한 컴포넌트, 지정한 컬러, 프리미티브·심볼·어트리뷰트가 모두 사라집니다. 되돌릴 수 없습니다.",
+      "confirm": "모두 초기화"
+    }
   },
   "locale": {
     "en": "EN",

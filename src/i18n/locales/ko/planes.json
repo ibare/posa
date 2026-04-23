@@ -56,5 +56,9 @@
     "noVariantsExamples": "primary",
     "noVariantsExamplesAlt": "secondary",
     "noVariantsSuffix": " 등이 나타납니다."
+  },
+  "empty": {
+    "title": "선택한 컴포넌트가 없습니다",
+    "description": "상단 '컴포넌트 편집'에서 색을 지정할 컴포넌트를 고르세요."
   }
 }

@@ -6,7 +6,8 @@
     "explore": "Explore",
     "atlas": "Atlas",
     "review": "Review",
-    "export": "Export"
+    "export": "Export",
+    "editComponents": "Edit components"
   },
   "action": {
     "reset": "Reset",
@@ -14,7 +15,15 @@
     "continue": "Continue",
     "copy": "Copy",
     "copied": "Copied!",
-    "download": "Download"
+    "download": "Download",
+    "remove": "Remove"
+  },
+  "confirm": {
+    "reset": {
+      "title": "Reset everything?",
+      "description": "All selected components, assigned colors, primitives, symbols and attributes will be wiped. This cannot be undone.",
+      "confirm": "Reset all"
+    }
   },
   "locale": {
     "en": "EN",

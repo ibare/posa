@@ -1,6 +1,4 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import type { ReactNode } from 'react';
-import { usePosaStore } from './store/posa-store';
 import { ReviewView } from './ui/review/ReviewView';
 import { OnboardingScreen } from './ui/onboarding/OnboardingScreen';
 import { ExplorationView } from './ui/planes/ExplorationView';
@@ -14,44 +12,28 @@ export default function App() {
       <Route
         path="/explore"
         element={
-          <RequireActive>
-            <Shell>
-              <ExplorationView />
-            </Shell>
-          </RequireActive>
+          <Shell>
+            <ExplorationView />
+          </Shell>
         }
       />
       <Route
         path="/atlas"
         element={
-          <RequireActive>
-            <Shell>
-              <PrimitiveAtlas />
-            </Shell>
-          </RequireActive>
+          <Shell>
+            <PrimitiveAtlas />
+          </Shell>
         }
       />
       <Route
         path="/review"
         element={
-          <RequireActive>
-            <Shell>
-              <ReviewView />
-            </Shell>
-          </RequireActive>
+          <Shell>
+            <ReviewView />
+          </Shell>
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
-}
-
-/**
- * 온보딩 미완료 상태에서 하위 화면 진입 차단.
- * activeComponentIds가 비어있으면 무조건 온보딩으로 리다이렉트.
- */
-function RequireActive({ children }: { children: ReactNode }) {
-  const hasActive = usePosaStore((s) => s.activeComponentIds.length > 0);
-  if (!hasActive) return <Navigate to="/" replace />;
-  return <>{children}</>;
 }

@@ -56,5 +56,9 @@
     "noVariantsExamples": "primary",
     "noVariantsExamplesAlt": "secondary",
     "noVariantsSuffix": ", etc."
+  },
+  "empty": {
+    "title": "No components selected",
+    "description": "Open 'Edit components' at the top to pick what you want to color."
   }
 }

@@ -6,6 +6,7 @@
   "clear": "초기화",
   "selected": "선택됨",
   "start": "시작 →",
+  "continue": "계속 →",
   "selectGroup": "그룹 선택",
   "deselectGroup": "그룹 해제",
   "componentCount_one": "컴포넌트 {{count}}개",
@@ -14,5 +15,21 @@
     "attr": "어트리뷰트",
     "state": "상태",
     "var": "변형"
+  },
+  "confirm": {
+    "removeComponent": {
+      "title": "{{component}}를 제거할까요?",
+      "description_one": "이 컴포넌트에 지정된 컬러 {{count}}개가 사라집니다.",
+      "description_other": "이 컴포넌트에 지정된 컬러 {{count}}개가 사라집니다."
+    },
+    "removeGroup": {
+      "title": "컴포넌트 {{count}}개를 제거할까요?",
+      "description_one": "이 범위에서 지정된 컬러 {{count}}개가 사라집니다.",
+      "description_other": "이 범위에서 지정된 컬러 {{count}}개가 사라집니다."
+    },
+    "removeAll": {
+      "title": "모두 제거할까요?",
+      "description": "마지막 컴포넌트까지 제거하면 프리미티브·심볼·어트리뷰트도 함께 사라집니다. 유지하려면 취소하세요."
+    }
   }
 }
