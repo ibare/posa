@@ -15,3 +15,7 @@ export { ContextMenuShape } from './ContextMenuShape';
 export { MenubarShape } from './MenubarShape';
 export { NavigationMenuShape } from './NavigationMenuShape';
 export { CommandShape } from './CommandShape';
+export { CheckboxShape } from './CheckboxShape';
+export { RadioGroupShape } from './RadioGroupShape';
+export { SwitchShape } from './SwitchShape';
+export { ToggleShape } from './ToggleShape';

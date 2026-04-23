@@ -20,6 +20,7 @@ import {
   BadgeShape,
   ButtonShape,
   CardShape,
+  CheckboxShape,
   CommandShape,
   ContextMenuShape,
   DialogShape,
@@ -30,8 +31,11 @@ import {
   MenubarShape,
   NavigationMenuShape,
   PopoverShape,
+  RadioGroupShape,
   SheetShape,
+  SwitchShape,
   ToastShape,
+  ToggleShape,
   TooltipShape,
   type BadgeVariant,
   type ButtonVariant,
@@ -90,6 +94,27 @@ const SIMPLE_ENTRIES: SimplePreviewEntry[] = [
     id: 'command',
     title: 'Command',
     render: (state) => <CommandShape state={state} />,
+  },
+  // Form Control 4종
+  {
+    id: 'checkbox',
+    title: 'Checkbox',
+    render: (state) => <CheckboxShape state={state} />,
+  },
+  {
+    id: 'radio-group',
+    title: 'Radio Group',
+    render: (state) => <RadioGroupShape state={state} />,
+  },
+  {
+    id: 'switch',
+    title: 'Switch',
+    render: (state) => <SwitchShape state={state} />,
+  },
+  {
+    id: 'toggle',
+    title: 'Toggle',
+    render: (state) => <ToggleShape state={state} />,
   },
 ];
 

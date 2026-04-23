@@ -161,6 +161,35 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     attributes: ['background', 'text', 'border', 'muted', 'icon', 'placeholder'],
     states: ['default', 'hover', 'active', 'disabled'],
   },
+  // ===== Form Control 계열 =====
+  {
+    id: 'checkbox',
+    label: 'Checkbox',
+    description: 'Binary on/off box with check mark',
+    attributes: ['background', 'border', 'mark'],
+    states: ['default', 'hover', 'focus', 'disabled', 'checked'],
+  },
+  {
+    id: 'radio-group',
+    label: 'Radio Group',
+    description: 'One-of-many selection with dot marker',
+    attributes: ['background', 'border', 'mark'],
+    states: ['default', 'hover', 'focus', 'disabled', 'checked'],
+  },
+  {
+    id: 'switch',
+    label: 'Switch',
+    description: 'On/off toggle with track and thumb',
+    attributes: ['track', 'thumb', 'border'],
+    states: ['default', 'hover', 'focus', 'disabled', 'checked'],
+  },
+  {
+    id: 'toggle',
+    label: 'Toggle',
+    description: 'Pressable button with on/off state',
+    attributes: ['background', 'text', 'border'],
+    states: ['default', 'hover', 'active', 'disabled'],
+  },
 ];
 
 export function findComponent(componentId: ComponentId): ComponentDefinition | undefined {
