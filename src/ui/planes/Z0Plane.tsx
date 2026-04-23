@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { ATTRIBUTE_DEFINITIONS } from '../../catalog/attributes';
-import { SYMBOL_DEFINITIONS } from '../../catalog/symbols';
+import type { AttributeDefinition } from '../../catalog/attributes';
+import type { SymbolDefinition } from '../../catalog/symbols';
 import { oklchToHex } from '../../color/oklch';
 import {
   enumerateActiveSlotIds,
@@ -9,8 +9,11 @@ import {
   resolveAttributeColor,
   resolveSymbolColor,
 } from '../../ir/selectors';
-import type { AttributeId, SymbolId } from '../../ir/types';
-import { useActiveComponentDefs } from '../../store/hooks';
+import {
+  useActiveAttributeDefs,
+  useActiveComponentDefs,
+  useActiveSymbolDefs,
+} from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
 import { InspectorBody } from '../shared/InspectorBody';
 import { Swatch, checkerboardStyle } from '../shared/Swatch';
@@ -26,6 +29,8 @@ export function Z0Plane() {
   const setFocus = usePosaStore((s) => s.setFocus);
   const descendToAttribute = usePosaStore((s) => s.descendToAttribute);
   const components = useActiveComponentDefs();
+  const activeAttributes = useActiveAttributeDefs();
+  const activeSymbols = useActiveSymbolDefs();
 
   const slotCountByAttribute = useMemo(() => {
     const m: Record<string, number> = {};
@@ -38,59 +43,63 @@ export function Z0Plane() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-10">
-      <section>
-        <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400 mb-2">
-          Symbols
-        </div>
-        <div className="text-xs text-stone-500 mb-3">
-          Standalone signature colors. Define only the ones you need.
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {SYMBOL_DEFINITIONS.map((sym) => (
-            <SymbolChip
-              key={sym.id}
-              symbol={sym}
-              focused={focusedNode === `sym:${sym.id}`}
-              onFocusToggle={() =>
-                setFocus(
-                  focusedNode === `sym:${sym.id}` ? null : `sym:${sym.id}`,
-                )
-              }
-            />
-          ))}
-        </div>
-      </section>
+      {activeSymbols.length > 0 && (
+        <section>
+          <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400 mb-2">
+            Symbols
+          </div>
+          <div className="text-xs text-stone-500 mb-3">
+            Standalone signature colors. Define only the ones you need.
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {activeSymbols.map((sym) => (
+              <SymbolChip
+                key={sym.id}
+                symbol={sym}
+                focused={focusedNode === `sym:${sym.id}`}
+                onFocusToggle={() =>
+                  setFocus(
+                    focusedNode === `sym:${sym.id}` ? null : `sym:${sym.id}`,
+                  )
+                }
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
-      <section>
-        <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400 mb-2">
-          Attributes
-        </div>
-        <div className="text-xs text-stone-500 mb-3">
-          Universal visual properties every component may expose.
-        </div>
-        <div className="flex flex-col gap-2">
-          {ATTRIBUTE_DEFINITIONS.map((attr) => (
-            <AttributeRow
-              key={attr.id}
-              attr={attr}
-              slotCount={slotCountByAttribute[attr.id] ?? 0}
-              focused={focusedNode === `attr:${attr.id}`}
-              onFocusToggle={() =>
-                setFocus(
-                  focusedNode === `attr:${attr.id}` ? null : `attr:${attr.id}`,
-                )
-              }
-              onDescend={() => descendToAttribute(attr.id)}
-            />
-          ))}
-        </div>
-      </section>
+      {activeAttributes.length > 0 && (
+        <section>
+          <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400 mb-2">
+            Attributes
+          </div>
+          <div className="text-xs text-stone-500 mb-3">
+            Universal visual properties every component may expose.
+          </div>
+          <div className="flex flex-col gap-2">
+            {activeAttributes.map((attr) => (
+              <AttributeRow
+                key={attr.id}
+                attr={attr}
+                slotCount={slotCountByAttribute[attr.id] ?? 0}
+                focused={focusedNode === `attr:${attr.id}`}
+                onFocusToggle={() =>
+                  setFocus(
+                    focusedNode === `attr:${attr.id}` ? null : `attr:${attr.id}`,
+                  )
+                }
+                onDescend={() => descendToAttribute(attr.id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
 
 type SymbolChipProps = {
-  symbol: { id: SymbolId; label: string; description: string };
+  symbol: SymbolDefinition;
   focused: boolean;
   onFocusToggle: () => void;
 };
@@ -134,7 +143,7 @@ function SymbolChip({ symbol, focused, onFocusToggle }: SymbolChipProps) {
 }
 
 type AttributeRowProps = {
-  attr: { id: AttributeId; label: string; description: string };
+  attr: AttributeDefinition;
   slotCount: number;
   focused: boolean;
   onFocusToggle: () => void;

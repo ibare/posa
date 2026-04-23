@@ -5,16 +5,16 @@ import {
   countPrimitiveSlotReferences,
   resolveSymbolColor,
 } from '../../../ir/selectors';
-import {
-  SYMBOL_IDS,
-  type ColorRef,
-  type IR,
-  type OKLCH,
-  type PrimitiveId,
-  type PrimitiveScale,
-  type ShadeIndex,
-  type SymbolId,
+import type {
+  ColorRef,
+  IR,
+  OKLCH,
+  PrimitiveId,
+  PrimitiveScale,
+  ShadeIndex,
+  SymbolId,
 } from '../../../ir/types';
+import { useActiveSymbolIds } from '../../../store/hooks';
 import { FineTune } from './FineTune';
 import { MyPrimitive } from './MyPrimitive';
 import { OtherPrimitives } from './OtherPrimitives';
@@ -117,13 +117,16 @@ export function ColorExplorer({
     }));
   }, [myPrimitive, primitives, ir]);
 
+  const activeSymbolIds = useActiveSymbolIds();
   const definedSymbols = useMemo(
     () =>
-      SYMBOL_IDS.filter((id) => ir.symbols[id] !== null).map((id) => ({
-        id,
-        color: resolveSymbolColor(ir, id),
-      })),
-    [ir],
+      activeSymbolIds
+        .filter((id) => ir.symbols[id] != null)
+        .map((id) => ({
+          id,
+          color: resolveSymbolColor(ir, id),
+        })),
+    [activeSymbolIds, ir],
   );
 
   const suggestedHeading = assignment

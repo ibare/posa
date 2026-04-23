@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
-import { ATTRIBUTE_DEFINITIONS } from '../../catalog/attributes';
 import {
   getSlotsByAttribute,
   resolveAttributeColor,
 } from '../../ir/selectors';
-import { useActiveComponentDefs } from '../../store/hooks';
+import {
+  useActiveComponentDefs,
+  useAttributeLabel,
+} from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
 import { SlotCard } from '../shared/SlotCard';
 import { Swatch } from '../shared/Swatch';
@@ -15,6 +17,7 @@ export function Z1Plane() {
   const focusedNode = usePosaStore((s) => s.focusedNode);
   const setFocus = usePosaStore((s) => s.setFocus);
   const components = useActiveComponentDefs();
+  const attrLabel = useAttributeLabel(selectedAttributeId);
 
   const slotIds = useMemo(() => {
     if (!selectedAttributeId) return [];
@@ -23,9 +26,6 @@ export function Z1Plane() {
 
   if (!selectedAttributeId) return null;
 
-  const attrDef = ATTRIBUTE_DEFINITIONS.find(
-    (a) => a.id === selectedAttributeId,
-  );
   const attrColor = resolveAttributeColor(ir, selectedAttributeId);
 
   return (
@@ -36,9 +36,7 @@ export function Z1Plane() {
           <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
             Z1 · attribute
           </div>
-          <div className="font-mono text-lg text-stone-900">
-            {attrDef?.label ?? selectedAttributeId}
-          </div>
+          <div className="font-mono text-lg text-stone-900">{attrLabel}</div>
           <div className="text-xs text-stone-500 mt-0.5">
             {slotIds.length} slot{slotIds.length === 1 ? '' : 's'} across all components
           </div>

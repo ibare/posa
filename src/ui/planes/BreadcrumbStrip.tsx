@@ -1,5 +1,5 @@
-import { ATTRIBUTE_DEFINITIONS } from '../../catalog/attributes';
 import { COMPONENT_GROUPS } from '../../catalog/components';
+import { useAttributeLabel } from '../../store/hooks';
 import { usePosaStore, type Layer } from '../../store/posa-store';
 
 const LAYER_LABEL: Record<Layer, string> = {
@@ -19,9 +19,7 @@ export function BreadcrumbStrip() {
   );
   const clearSelectedGroup = usePosaStore((s) => s.clearSelectedGroup);
 
-  const attrLabel =
-    ATTRIBUTE_DEFINITIONS.find((a) => a.id === selectedAttributeId)?.label ??
-    selectedAttributeId;
+  const attrLabel = useAttributeLabel(selectedAttributeId);
   const groupLabel = selectedGroupId
     ? COMPONENT_GROUPS.find((g) => g.id === selectedGroupId)?.label ??
       selectedGroupId

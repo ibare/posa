@@ -1,26 +1,15 @@
 import { useMemo } from 'react';
-import { ATTRIBUTE_DEFINITIONS } from '../../catalog/attributes';
 import {
   COMPONENT_DEFINITIONS,
   type ComponentDefinition,
 } from '../../catalog/components';
-import { SYMBOL_IDS, type AttributeId, type IR, type SymbolId } from '../../ir/types';
+import {
+  getAttributeDefinition,
+  getVisibleVariants,
+} from '../../ir/selectors';
+import type { AttributeId, IR } from '../../ir/types';
 import { usePosaStore } from '../../store/posa-store';
 import { SlotCard } from '../shared/SlotCard';
-
-const SYMBOL_ID_SET: Set<string> = new Set(SYMBOL_IDS);
-
-const ATTR_LABEL: Record<string, string> = Object.fromEntries(
-  ATTRIBUTE_DEFINITIONS.map((a) => [a.id, a.label]),
-);
-
-function visibleVariantsOf(component: ComponentDefinition, ir: IR) {
-  const variants = component.variants ?? [];
-  return variants.filter((v) => {
-    if (!SYMBOL_ID_SET.has(v.id)) return true;
-    return ir.symbols[v.id as SymbolId] != null;
-  });
-}
 
 /**
  * 한 컴포넌트의 variant × attribute slot 그리드. ZXPlane 단일, ZXGroupPlane 반복용.
@@ -37,7 +26,7 @@ export function ComponentSlotGrid({
   setFocus: (nodeId: string | null) => void;
   ir: IR;
 }) {
-  const visibleVariants = visibleVariantsOf(component, ir);
+  const visibleVariants = getVisibleVariants(component, ir);
   const hasVariants = (component.variants?.length ?? 0) > 0;
 
   if (!hasVariants) {
@@ -178,7 +167,7 @@ function VariantSection({
           return (
             <div key={slotId} className="space-y-1">
               <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400 pl-1">
-                {ATTR_LABEL[attr] ?? attr}
+                {getAttributeDefinition(attr)?.label ?? attr}
               </div>
               <SlotCard
                 slotId={slotId}

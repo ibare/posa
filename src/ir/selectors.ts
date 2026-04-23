@@ -127,6 +127,30 @@ export function enumerateAllSlotIds(
 }
 
 /**
+ * Variant가 symbol-bound인지 판정. 즉 variant.id가 SymbolId와 일치하고
+ * 그 symbol에 할당이 없다면 이 variant는 "비활성 — symbol 정의 필요" 상태.
+ */
+export function isSymbolVariantId(variantId: string): variantId is SymbolId {
+  return SYMBOL_ID_SET.has(variantId);
+}
+
+/**
+ * 컴포넌트의 variant 중 "지금 보일 수 있는" 것들만 골라낸다.
+ * symbol-bound variant는 그 symbol이 IR에 할당된 경우에만 노출,
+ * 그 외 variant는 항상 노출.
+ */
+export function getVisibleVariants(
+  component: ComponentDefinition,
+  ir: IR,
+): NonNullable<ComponentDefinition['variants']> {
+  const variants = component.variants ?? [];
+  return variants.filter((v) => {
+    if (!isSymbolVariantId(v.id)) return true;
+    return ir.symbols[v.id] != null;
+  });
+}
+
+/**
  * Variant 이름이 SymbolId와 동일한 slot은 그 symbol에 primitive가 할당된 경우에만 활성.
  * (예: primary symbol 미할당 시 button.primary.* 전부 비노출.)
  * Posa 정책상 모든 variant id는 SymbolId와 일치한다 — 일치하지 않는 variant는
