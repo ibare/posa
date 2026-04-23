@@ -1,5 +1,9 @@
 import { useMemo, useState } from 'react';
-import { listPrimitiveReferences, shadeUsage } from '../../color/atlas-ops';
+import {
+  listPrimitiveReferences,
+  shadeUsage,
+  type PrimitiveReferenceLocation,
+} from '../../color/atlas-ops';
 import { oklchToCssString, oklchToHex } from '../../color/oklch';
 import { SHADE_INDICES, type PrimitiveScale } from '../../ir/types';
 import { usePosaStore } from '../../store/posa-store';
@@ -30,6 +34,7 @@ export function PrimitiveCard({
     () => listPrimitiveReferences(ir, primitive.id),
     [ir, primitive.id],
   );
+  const refGroups = useMemo(() => groupRefs(refs), [refs]);
   const usage = useMemo(() => shadeUsage(ir, primitive.id), [ir, primitive.id]);
 
   const isMergeTargetCandidate =
@@ -128,19 +133,35 @@ export function PrimitiveCard({
 
       {expanded && (
         <div className="text-xs font-mono space-y-1.5 pt-2 border-t border-stone-100">
-          {refs.roles.length > 0 && (
+          {refGroups.symbols.length > 0 && (
             <div>
-              <span className="text-stone-400">roles: </span>
-              <span className="text-stone-800">{refs.roles.join(', ')}</span>
+              <span className="text-stone-400">symbols: </span>
+              <span className="text-stone-800">
+                {refGroups.symbols.join(', ')}
+              </span>
             </div>
           )}
-          {refs.slotStates.length > 0 && (
+          {refGroups.attributes.length > 0 && (
+            <div>
+              <span className="text-stone-400">attributes: </span>
+              <span className="text-stone-800">
+                {refGroups.attributes.join(', ')}
+              </span>
+            </div>
+          )}
+          {refGroups.slots.length > 0 && (
+            <div>
+              <span className="text-stone-400">slots: </span>
+              <span className="text-stone-800">
+                {refGroups.slots.join(', ')}
+              </span>
+            </div>
+          )}
+          {refGroups.slotStates.length > 0 && (
             <div>
               <span className="text-stone-400">slot states: </span>
               <span className="text-stone-800">
-                {refs.slotStates
-                  .map((r) => `${r.slotId} (${r.state})`)
-                  .join(', ')}
+                {refGroups.slotStates.join(', ')}
               </span>
             </div>
           )}
@@ -185,4 +206,18 @@ export function PrimitiveCard({
       </footer>
     </div>
   );
+}
+
+function groupRefs(refs: PrimitiveReferenceLocation[]) {
+  const symbols: string[] = [];
+  const attributes: string[] = [];
+  const slots: string[] = [];
+  const slotStates: string[] = [];
+  for (const r of refs) {
+    if (r.kind === 'symbol') symbols.push(r.symbolId);
+    else if (r.kind === 'attribute') attributes.push(r.attributeId);
+    else if (r.kind === 'slot') slots.push(r.slotId);
+    else slotStates.push(`${r.slotId} (${r.state})`);
+  }
+  return { symbols, attributes, slots, slotStates };
 }

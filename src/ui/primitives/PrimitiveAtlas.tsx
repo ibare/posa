@@ -49,7 +49,7 @@ export function PrimitiveAtlas() {
           No primitives have been created yet
         </div>
         <p className="text-sm text-stone-500 mt-2">
-          Pick a color for a role in Exploration and the primitive will appear here.
+          Pick a color for a symbol, attribute, or slot in Exploration and the primitive will appear here.
         </p>
       </div>
     );

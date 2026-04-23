@@ -8,19 +8,8 @@ import {
   hueFamily,
   isWithinScale,
   nextPrimitiveId,
-  replaceRolePrimitive,
 } from '../src/color/primitive-ops';
-import type { IR } from '../src/ir/types';
-
-function emptyIR(): IR {
-  const now = 0;
-  return {
-    meta: { version: '1.0', createdAt: now, updatedAt: now, componentTypes: [] },
-    primitives: {},
-    roles: {},
-    slots: {},
-  };
-}
+import { createEmptyIR, type IR } from '../src/ir/types';
 
 describe('hueFamily', () => {
   it('chroma가 임계치보다 낮으면 neutral', () => {
@@ -57,19 +46,19 @@ describe('hueDistance', () => {
 
 describe('nextPrimitiveId', () => {
   it('빈 IR에서 첫 id는 "-a"', () => {
-    const ir = emptyIR();
+    const ir = createEmptyIR();
     expect(nextPrimitiveId(ir, 'green')).toBe('green-a');
   });
 
   it('기존 primitive가 있으면 다음 알파벳을 할당', () => {
-    const ir = emptyIR();
+    const ir = createEmptyIR();
     const { ir: ir1 } = addPrimitive(ir, { L: 0.6, C: 0.15, H: 140 }, 500);
     const { ir: ir2 } = addPrimitive(ir1, { L: 0.7, C: 0.16, H: 145 }, 500);
     expect(nextPrimitiveId(ir2, 'green')).toBe('green-c');
   });
 
   it('다른 family는 서로 간섭하지 않음', () => {
-    const ir = emptyIR();
+    const ir = createEmptyIR();
     const { ir: ir1 } = addPrimitive(ir, { L: 0.6, C: 0.15, H: 140 }, 500);
     expect(nextPrimitiveId(ir1, 'red')).toBe('red-a');
   });
@@ -77,7 +66,7 @@ describe('nextPrimitiveId', () => {
 
 describe('addPrimitive', () => {
   it('primitive가 IR에 추가되고 유니크 id를 가짐', () => {
-    const ir = emptyIR();
+    const ir = createEmptyIR();
     const { ir: ir1, primitiveId: p1 } = addPrimitive(
       ir,
       { L: 0.6, C: 0.15, H: 140 },
@@ -95,7 +84,7 @@ describe('addPrimitive', () => {
 
 describe('adjustPrimitiveAnchor', () => {
   it('지정한 primitive만 변경하고 다른 primitive는 그대로', () => {
-    const ir = emptyIR();
+    const ir = createEmptyIR();
     const { ir: ir1, primitiveId: p1 } = addPrimitive(
       ir,
       { L: 0.6, C: 0.15, H: 140 },
@@ -113,7 +102,7 @@ describe('adjustPrimitiveAnchor', () => {
   });
 
   it('anchorShade는 유지', () => {
-    const ir = emptyIR();
+    const ir = createEmptyIR();
     const { ir: ir1, primitiveId: p1 } = addPrimitive(
       ir,
       { L: 0.45, C: 0.2, H: 29 },
@@ -124,33 +113,9 @@ describe('adjustPrimitiveAnchor', () => {
   });
 });
 
-describe('replaceRolePrimitive', () => {
-  it('새 primitive를 만들고 role이 그것을 참조. 기존은 IR에 남음', () => {
-    const ir0 = emptyIR();
-    const { ir: ir1, primitiveId: oldId } = addPrimitive(
-      ir0,
-      { L: 0.6, C: 0.15, H: 140 },
-      500,
-    );
-    const withRole: IR = {
-      ...ir1,
-      roles: { primary: { primitive: oldId, shade: 500 } },
-    };
-    const after = replaceRolePrimitive(
-      withRole,
-      'primary',
-      { L: 0.55, C: 0.18, H: 20 },
-      500,
-    );
-    expect(after.primitives[oldId]).toBeDefined();
-    expect(Object.keys(after.primitives).length).toBe(2);
-    expect(after.roles['primary'].primitive).not.toBe(oldId);
-  });
-});
-
 describe('countPrimitiveReferences', () => {
-  it('role과 slot.state override를 모두 카운트', () => {
-    const ir0 = emptyIR();
+  it('symbol / attribute / slot.ref / slot.state override를 모두 카운트', () => {
+    const ir0 = createEmptyIR();
     const { ir: ir1, primitiveId: pid } = addPrimitive(
       ir0,
       { L: 0.6, C: 0.15, H: 140 },
@@ -158,24 +123,31 @@ describe('countPrimitiveReferences', () => {
     );
     const ir2: IR = {
       ...ir1,
-      roles: { primary: { primitive: pid, shade: 500 } },
+      symbols: {
+        ...ir1.symbols,
+        primary: { primitive: pid, shade: 500 },
+      },
+      attributes: {
+        ...ir1.attributes,
+        background: { kind: 'primitive', primitive: pid, shade: 50 },
+      },
       slots: {
-        'button.primary.bg': {
-          role: 'primary',
+        'button.primary.background': {
+          ref: { kind: 'primitive', primitive: pid, shade: 500 },
           states: {
-            hover: { primitive: pid, shade: 600 },
-            active: { primitive: pid, shade: 700 },
+            hover: { kind: 'primitive', primitive: pid, shade: 600 },
+            active: { kind: 'primitive', primitive: pid, shade: 700 },
           },
         },
       },
     };
-    expect(countPrimitiveReferences(ir2, pid)).toBe(3);
+    expect(countPrimitiveReferences(ir2, pid)).toBe(5);
   });
 });
 
 describe('findOrphanPrimitives', () => {
   it('참조 수 0인 primitive id들만 반환', () => {
-    const ir0 = emptyIR();
+    const ir0 = createEmptyIR();
     const { ir: ir1, primitiveId: p1 } = addPrimitive(
       ir0,
       { L: 0.6, C: 0.15, H: 140 },
@@ -188,7 +160,10 @@ describe('findOrphanPrimitives', () => {
     );
     const ir3: IR = {
       ...ir2,
-      roles: { primary: { primitive: p1, shade: 500 } },
+      symbols: {
+        ...ir2.symbols,
+        primary: { primitive: p1, shade: 500 },
+      },
     };
     expect(findOrphanPrimitives(ir3)).toEqual([p2]);
   });
@@ -196,7 +171,7 @@ describe('findOrphanPrimitives', () => {
 
 describe('isWithinScale', () => {
   it('같은 hue·비슷한 chroma는 within', () => {
-    const ir = emptyIR();
+    const ir = createEmptyIR();
     const { ir: ir1, primitiveId: pid } = addPrimitive(
       ir,
       { L: 0.6, C: 0.15, H: 140 },
@@ -208,7 +183,7 @@ describe('isWithinScale', () => {
   });
 
   it('hue가 크게 다르면 out', () => {
-    const ir = emptyIR();
+    const ir = createEmptyIR();
     const { ir: ir1, primitiveId: pid } = addPrimitive(
       ir,
       { L: 0.6, C: 0.15, H: 140 },
@@ -220,7 +195,7 @@ describe('isWithinScale', () => {
   });
 
   it('chroma 차이가 크면 out', () => {
-    const ir = emptyIR();
+    const ir = createEmptyIR();
     const { ir: ir1, primitiveId: pid } = addPrimitive(
       ir,
       { L: 0.6, C: 0.15, H: 140 },

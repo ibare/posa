@@ -1,12 +1,10 @@
 import { useEffect, useMemo } from 'react';
+import { listPrimitiveReferences } from '../../color/atlas-ops';
 import { oklchToHex } from '../../color/oklch';
 import { deriveScale } from '../../color/primitive';
-import {
-  countPrimitiveReferences,
-  hueFamily,
-} from '../../color/primitive-ops';
+import { hueFamily } from '../../color/primitive-ops';
 import { SHADE_INDICES, type OKLCH, type ShadeIndex } from '../../ir/types';
-import { usePosaStore } from '../../store/posa-store';
+import { usePosaStore, type PendingPrimitiveTarget } from '../../store/posa-store';
 
 export function AdjustOrReplaceDialog() {
   const pending = usePosaStore((s) => s.pendingPrimitiveDecision);
@@ -21,18 +19,19 @@ export function AdjustOrReplaceDialog() {
     return deriveScale(pending.newAnchor, primitive.anchorShade);
   }, [pending, primitive]);
 
-  const refCount = useMemo(() => {
-    if (!pending) return 0;
-    return countPrimitiveReferences(ir, pending.currentPrimitiveId);
+  const refs = useMemo(() => {
+    if (!pending) return [];
+    return listPrimitiveReferences(ir, pending.currentPrimitiveId);
   }, [ir, pending]);
 
-  // 이 role을 제외한 나머지 참조 수 — replace 시 기존 primitive를 계속 참조할 slot의 수.
+  const refCount = refs.length;
+
   const otherRefCount = useMemo(() => {
     if (!pending) return 0;
-    const selfIsRole =
-      ir.roles[pending.roleId]?.primitive === pending.currentPrimitiveId;
-    return refCount - (selfIsRole ? 1 : 0);
-  }, [ir, pending, refCount]);
+    const selfId = targetRefId(pending.target);
+    const selfCount = refs.filter((r) => refRefId(r) === selfId).length;
+    return refCount - selfCount;
+  }, [pending, refs, refCount]);
 
   useEffect(() => {
     if (!pending) return;
@@ -56,12 +55,10 @@ export function AdjustOrReplaceDialog() {
 
   const family = hueFamily(pending.newAnchor);
   const currentFamily = hueFamily(primitive.anchor);
+  const targetLabel = describeTarget(pending.target);
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Adjust or Replace"
       className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-stone-900/30 backdrop-blur-sm"
       onClick={cancel}
     >
@@ -73,21 +70,23 @@ export function AdjustOrReplaceDialog() {
           <h2 className="font-display italic text-xl text-stone-900 leading-tight">
             This color is outside the existing {currentFamily} palette
           </h2>
-          <p className="text-sm text-stone-500 mt-1">How would you like to handle it?</p>
+          <p className="text-sm text-stone-500 mt-1">
+            Pick how this {targetLabel} should handle it.
+          </p>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-6 pb-4">
           <OptionCard
             badge="A"
             title={`Adjust ${currentFamily}`}
-            description={`Adjust the anchor of existing ${primitive.id}. Other shades in the same scale will be recalculated. Slots referencing this primitive will be affected automatically.`}
+            description={`Adjust the anchor of existing ${primitive.id}. Other shades in the same scale will be recalculated. Everything currently referencing this primitive will shift together.`}
             before={primitive.scale}
             after={newScale}
             footer={
               <>
                 <span className="text-stone-500">Referenced by</span>{' '}
                 <span className="tabular-nums text-stone-800">{refCount}</span>{' '}
-                <span className="text-stone-500">slot{refCount === 1 ? '' : 's'}</span>
+                <span className="text-stone-500">place{refCount === 1 ? '' : 's'}</span>
               </>
             }
             onClick={() => resolve('adjust')}
@@ -95,7 +94,7 @@ export function AdjustOrReplaceDialog() {
           <OptionCard
             badge="B"
             title={`Replace with new ${family}`}
-            description="Create a new primitive. This role will point to the new primitive, and the existing primitive stays intact. Slots still referencing the old one are unaffected."
+            description={`Create a new primitive. This ${targetLabel} will point to the new primitive; the existing primitive stays intact. Other references to the old one are unaffected.`}
             after={newScale}
             footer={
               otherRefCount > 0 ? (
@@ -133,6 +132,29 @@ export function AdjustOrReplaceDialog() {
       </div>
     </div>
   );
+}
+
+function describeTarget(target: PendingPrimitiveTarget): string {
+  if (target.kind === 'symbol') return `symbol ${target.symbolId}`;
+  if (target.kind === 'attribute') return `attribute ${target.attributeId}`;
+  if (target.kind === 'slot') return `slot ${target.slotId}`;
+  return `${target.slotId} · ${target.state}`;
+}
+
+function targetRefId(target: PendingPrimitiveTarget): string {
+  if (target.kind === 'symbol') return `symbol:${target.symbolId}`;
+  if (target.kind === 'attribute') return `attribute:${target.attributeId}`;
+  if (target.kind === 'slot') return `slot:${target.slotId}`;
+  return `slot-state:${target.slotId}:${target.state}`;
+}
+
+type RefLoc = ReturnType<typeof listPrimitiveReferences>[number];
+
+function refRefId(ref: RefLoc): string {
+  if (ref.kind === 'symbol') return `symbol:${ref.symbolId}`;
+  if (ref.kind === 'attribute') return `attribute:${ref.attributeId}`;
+  if (ref.kind === 'slot') return `slot:${ref.slotId}`;
+  return `slot-state:${ref.slotId}:${ref.state}`;
 }
 
 type OptionCardProps = {

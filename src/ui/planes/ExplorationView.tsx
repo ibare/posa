@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
+import { PreviewPanel } from '../../preview';
 import { usePosaStore } from '../../store/posa-store';
-import { PreviewPanel } from '../preview/PreviewPanel';
 import { AdjustOrReplaceDialog } from '../shared/AdjustOrReplaceDialog';
 import { BreadcrumbStrip } from './BreadcrumbStrip';
 import { Z0Plane } from './Z0Plane';
@@ -9,8 +9,8 @@ import { Z2Plane } from './Z2Plane';
 
 export function ExplorationView() {
   const layer = usePosaStore((s) => s.layer);
-  const selectedRole = usePosaStore((s) => s.selectedRole);
-  const selectedSlot = usePosaStore((s) => s.selectedSlot);
+  const selectedAttributeId = usePosaStore((s) => s.selectedAttributeId);
+  const selectedSlotId = usePosaStore((s) => s.selectedSlotId);
   const focusedNode = usePosaStore((s) => s.focusedNode);
   const lastDirection = usePosaStore((s) => s.lastDirection);
   const pendingPrimitiveDecision = usePosaStore(
@@ -22,7 +22,7 @@ export function ExplorationView() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
-      if (pendingPrimitiveDecision) return; // Dialog handles its own keys.
+      if (pendingPrimitiveDecision) return;
       if (focusedNode) {
         setFocus(null);
       } else {
@@ -40,7 +40,7 @@ export function ExplorationView() {
         ? 'plane-ascend'
         : '';
 
-  const planeKey = `${layer}-${selectedRole ?? ''}-${selectedSlot ?? ''}`;
+  const planeKey = `${layer}-${selectedAttributeId ?? ''}-${selectedSlotId ?? ''}`;
 
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">

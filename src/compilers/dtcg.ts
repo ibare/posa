@@ -1,11 +1,20 @@
 import { oklchToCssString } from '../color/oklch';
-import { SHADE_INDICES, type IR } from '../ir/types';
+import {
+  ATTRIBUTE_IDS,
+  SHADE_INDICES,
+  SYMBOL_IDS,
+  type ColorRef,
+  type IR,
+  type PrimitiveId,
+  type ShadeIndex,
+  type SymbolId,
+} from '../ir/types';
 import type { Compiler } from './types';
 
 /**
  * Design Tokens Community Group 포맷.
- * - primitive scale은 "color.<family>.<shade>"로 중첩.
- * - role / slot는 reference alias로 primitive를 가리킨다 — 존재하지 않는 키를 참조하지 않도록 주의.
+ * - primitive scale은 `color.<family>.<shade>`로 중첩.
+ * - symbol/attribute/slot은 alias로 primitive나 symbol을 가리킨다.
  */
 
 type ColorNode = {
@@ -14,11 +23,27 @@ type ColorNode = {
   [key: string]: unknown;
 };
 
-function toRefPath(primitiveId: string, shade: number): string {
+function primitiveRef(primitiveId: PrimitiveId, shade: ShadeIndex): string {
   return `{color.${primitiveId}.${shade}}`;
 }
 
-function ensureObject(root: Record<string, unknown>, path: string[]): Record<string, unknown> {
+function symbolRef(symbolId: SymbolId): string {
+  return `{color.symbols.${symbolId}}`;
+}
+
+function colorRefToAlias(ir: IR, ref: ColorRef): string | null {
+  if (ref.kind === 'primitive') {
+    if (!ir.primitives[ref.primitive]) return null;
+    return primitiveRef(ref.primitive, ref.shade);
+  }
+  if (!ir.symbols[ref.symbol]) return null;
+  return symbolRef(ref.symbol);
+}
+
+function ensureObject(
+  root: Record<string, unknown>,
+  path: string[],
+): Record<string, unknown> {
   let cur: Record<string, unknown> = root;
   for (const seg of path) {
     const existing = cur[seg];
@@ -46,7 +71,6 @@ export const dtcgCompiler: Compiler = {
 
     const colorRoot = out.color as Record<string, unknown>;
 
-    // Primitive scales
     const primEntries = Object.values(ir.primitives).sort(
       (a, b) => a.createdAt - b.createdAt,
     );
@@ -54,39 +78,65 @@ export const dtcgCompiler: Compiler = {
       const family = ensureObject(colorRoot, [p.id]);
       for (const shade of SHADE_INDICES) {
         const c = p.scale[shade];
-        const leaf: ColorNode = {
+        family[String(shade)] = {
           $value: oklchToCssString(c),
           $type: 'color',
-        };
-        family[String(shade)] = leaf;
+        } satisfies ColorNode;
       }
     }
 
-    // Roles → alias
-    for (const [roleId, assign] of Object.entries(ir.roles)) {
-      if (!ir.primitives[assign.primitive]) continue;
-      colorRoot[roleId] = {
-        $value: toRefPath(assign.primitive, assign.shade),
+    const symbolsRoot: Record<string, unknown> = {};
+    for (const id of SYMBOL_IDS) {
+      const sym = ir.symbols[id];
+      if (!sym) continue;
+      if (!ir.primitives[sym.primitive]) continue;
+      symbolsRoot[id] = {
+        $value: primitiveRef(sym.primitive, sym.shade),
         $type: 'color',
       } satisfies ColorNode;
     }
+    if (Object.keys(symbolsRoot).length > 0) {
+      colorRoot.symbols = symbolsRoot;
+    }
 
-    // Slot state overrides — color.slots.<slot-id>.<state>
-    const slotEntries = Object.entries(ir.slots).filter(
-      ([, s]) => Object.keys(s.states).length > 0,
-    );
+    const attributesRoot: Record<string, unknown> = {};
+    for (const id of ATTRIBUTE_IDS) {
+      const attr = ir.attributes[id];
+      if (!attr) continue;
+      const alias = colorRefToAlias(ir, attr);
+      if (!alias) continue;
+      attributesRoot[id] = {
+        $value: alias,
+        $type: 'color',
+      } satisfies ColorNode;
+    }
+    if (Object.keys(attributesRoot).length > 0) {
+      colorRoot.attributes = attributesRoot;
+    }
+
+    const slotEntries = Object.entries(ir.slots).filter(([, s]) => {
+      if (s.ref) return true;
+      return Object.values(s.states).some((v) => v);
+    });
     if (slotEntries.length > 0) {
       const slotsRoot = ensureObject(colorRoot, ['slots']);
       for (const [slotId, slot] of slotEntries) {
-        const slotGroup = ensureObject(
-          slotsRoot,
-          slotId.split('.'),
-        );
+        const slotGroup = ensureObject(slotsRoot, slotId.split('.'));
+        if (slot.ref) {
+          const alias = colorRefToAlias(ir, slot.ref);
+          if (alias) {
+            slotGroup.default = {
+              $value: alias,
+              $type: 'color',
+            } satisfies ColorNode;
+          }
+        }
         for (const [state, override] of Object.entries(slot.states)) {
           if (!override) continue;
-          if (!ir.primitives[override.primitive]) continue;
+          const alias = colorRefToAlias(ir, override);
+          if (!alias) continue;
           slotGroup[state] = {
-            $value: toRefPath(override.primitive, override.shade),
+            $value: alias,
             $type: 'color',
           } satisfies ColorNode;
         }

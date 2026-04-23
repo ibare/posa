@@ -96,7 +96,7 @@ export function MyPrimitive({
       </div>
 
       <p className="text-[11px] text-stone-600 mt-2 leading-snug">
-        Change this role's shade — click any position above. Primitive stays intact.
+        Pick a different shade — click any position above. Primitive stays intact.
       </p>
     </div>
   );

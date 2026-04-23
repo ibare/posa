@@ -1,87 +1,225 @@
 import { useMemo } from 'react';
-import { resolveRoleColor, resolveSlotColor } from '../../color/resolve';
-import { computeUsedShadesByPrimitive } from '../../ir/selectors';
-import type { OKLCH, ShadeIndex } from '../../ir/types';
+import { findComponentBySlotId } from '../../catalog/components';
+import {
+  computeUsedShadesByPrimitive,
+  getAttributeFromSlotId,
+  resolveAttributeColor,
+  resolveSlotStateColor,
+  resolveSymbolColor,
+} from '../../ir/selectors';
+import {
+  type AttributeId,
+  type ColorRef,
+  type OKLCH,
+  type ShadeIndex,
+  type SlotId,
+  type StateId,
+  type SymbolId,
+} from '../../ir/types';
 import { usePosaStore } from '../../store/posa-store';
 import { ColorExplorer } from './ColorExplorer';
-import { ColorPicker } from './ColorPicker';
 
 /**
- * Inspector의 본문 — 플레인 카드 바로 아래에 popover로 뜬다.
- * Layer별로 바인딩되는 setter가 달라진다:
- *   Z0 → setRoleColor(roleId, ...)  — ColorExplorer 사용
- *   Z1 → setSlotStateColor(slotId, "default", ...) — ColorPicker 사용
- *   Z2 → setSlotStateColor(selectedSlot, state, ...) — ColorPicker 사용
+ * Inspector body. 현재 focus된 node의 타입(symbol / attribute / slot / slot-state)을
+ * 찾아 ColorExplorer에 binding한다. Focus id 관례:
+ *   Z0 attributes 섹션 → `attr:<attributeId>`
+ *   Z0 symbols 섹션    → `sym:<symbolId>`
+ *   Z1 slot card       → `slot:<slotId>`
+ *   Z2 state card      → `state:<state>` (selectedSlotId가 컨텍스트)
  */
 export function InspectorBody() {
   const layer = usePosaStore((s) => s.layer);
   const focusedNode = usePosaStore((s) => s.focusedNode);
-  const selectedSlot = usePosaStore((s) => s.selectedSlot);
+  const selectedSlotId = usePosaStore((s) => s.selectedSlotId);
   const ir = usePosaStore((s) => s.ir);
-  const setRoleColor = usePosaStore((s) => s.setRoleColor);
-  const setRoleShade = usePosaStore((s) => s.setRoleShade);
-  const setRoleAssignment = usePosaStore((s) => s.setRoleAssignment);
+
+  const setSymbolColor = usePosaStore((s) => s.setSymbolColor);
+  const setSymbolShade = usePosaStore((s) => s.setSymbolShade);
+  const setSymbolAssignment = usePosaStore((s) => s.setSymbolAssignment);
+
+  const setAttributeColor = usePosaStore((s) => s.setAttributeColor);
+  const setAttributeShade = usePosaStore((s) => s.setAttributeShade);
+  const setAttributeAssignment = usePosaStore((s) => s.setAttributeAssignment);
+  const setAttributeSymbol = usePosaStore((s) => s.setAttributeSymbol);
+
+  const setSlotColor = usePosaStore((s) => s.setSlotColor);
+  const setSlotShade = usePosaStore((s) => s.setSlotShade);
+  const setSlotAssignment = usePosaStore((s) => s.setSlotAssignment);
+  const setSlotSymbol = usePosaStore((s) => s.setSlotSymbol);
+
   const setSlotStateColor = usePosaStore((s) => s.setSlotStateColor);
-  const descendTo = usePosaStore((s) => s.descendTo);
-  const universe = usePosaStore((s) => s.universe);
+  const setSlotStateShade = usePosaStore((s) => s.setSlotStateShade);
+  const setSlotStateAssignment = usePosaStore((s) => s.setSlotStateAssignment);
+  const setSlotStateSymbol = usePosaStore((s) => s.setSlotStateSymbol);
+
+  const descendToSlot = usePosaStore((s) => s.descendToSlot);
 
   const usedShadesByPrimitive = useMemo(
     () => computeUsedShadesByPrimitive(ir),
     [ir],
   );
 
-  const context = useMemo(() => {
+  type Context = {
+    label: string;
+    nodeLabel: string;
+    seaKey: string;
+    color: OKLCH | null;
+    assignment: ColorRef | null;
+    isDirect: boolean;
+    canClear: boolean;
+    supportsSymbolRef: boolean;
+    onChange: (c: OKLCH) => void;
+    onClear: () => void;
+    onSelectShade: (shade: ShadeIndex) => void;
+    onSelectPrimitive: (primitiveId: string, shade: ShadeIndex) => void;
+    onSelectSymbol?: (symbolId: SymbolId) => void;
+    descendSlot?: SlotId;
+  };
+
+  const context = useMemo<Context | null>(() => {
     if (!focusedNode) return null;
+
+    // Z0: symbol | attribute
     if (layer === 'z0') {
-      return {
-        kind: 'role' as const,
-        label: 'role',
-        nodeLabel: focusedNode,
-        color: resolveRoleColor(ir, focusedNode),
-        isDirect: Boolean(ir.roles[focusedNode]),
-        roleId: focusedNode,
-        assignment: ir.roles[focusedNode] ?? null,
-        onChange: (c: OKLCH) => setRoleColor(focusedNode, c),
-        onClear: () => setRoleColor(focusedNode, null),
-        canDescend: true,
-      };
+      if (focusedNode.startsWith('sym:')) {
+        const symbolId = focusedNode.slice(4) as SymbolId;
+        const assignment = ir.symbols[symbolId];
+        const ref: ColorRef | null = assignment
+          ? { kind: 'primitive', primitive: assignment.primitive, shade: assignment.shade }
+          : null;
+        return {
+          label: 'symbol',
+          nodeLabel: symbolId,
+          seaKey: symbolId,
+          color: resolveSymbolColor(ir, symbolId),
+          assignment: ref,
+          isDirect: Boolean(assignment),
+          canClear: Boolean(assignment),
+          supportsSymbolRef: false,
+          onChange: (c) => setSymbolColor(symbolId, c),
+          onClear: () => setSymbolColor(symbolId, null),
+          onSelectShade: (shade) => setSymbolShade(symbolId, shade),
+          onSelectPrimitive: (primitiveId, shade) =>
+            setSymbolAssignment(symbolId, primitiveId, shade),
+        };
+      }
+      if (focusedNode.startsWith('attr:')) {
+        const attrId = focusedNode.slice(5) as AttributeId;
+        const assignment = ir.attributes[attrId] ?? null;
+        return {
+          label: 'attribute',
+          nodeLabel: attrId,
+          seaKey: attrId,
+          color: resolveAttributeColor(ir, attrId),
+          assignment,
+          isDirect: assignment !== null,
+          canClear: assignment !== null,
+          supportsSymbolRef: true,
+          onChange: (c) => setAttributeColor(attrId, c),
+          onClear: () => setAttributeColor(attrId, null),
+          onSelectShade: (shade) => setAttributeShade(attrId, shade),
+          onSelectPrimitive: (primitiveId, shade) =>
+            setAttributeAssignment(attrId, primitiveId, shade),
+          onSelectSymbol: (symbolId) => setAttributeSymbol(attrId, symbolId),
+        };
+      }
+      return null;
     }
+
+    // Z1: slot default
     if (layer === 'z1') {
-      const isDirect = Boolean(ir.slots[focusedNode]?.states['default']);
-      const slotDef = universe?.slots.find((s) => s.id === focusedNode);
-      const hasMultipleStates = (slotDef?.states.length ?? 1) > 1;
+      if (!focusedNode.startsWith('slot:')) return null;
+      const slotId = focusedNode.slice(5);
+      const slot = ir.slots[slotId];
+      const assignment = slot?.ref ?? null;
+      const component = findComponentBySlotId(slotId);
+      const hasMultipleStates = (component?.states.length ?? 0) > 1;
+      const attrId = getAttributeFromSlotId(slotId);
       return {
-        kind: 'slot' as const,
-        label: 'slot · default',
-        nodeLabel: focusedNode,
-        color: resolveSlotColor(ir, focusedNode, 'default'),
-        isDirect,
-        onChange: (c: OKLCH) => setSlotStateColor(focusedNode, 'default', c),
-        onClear: () => setSlotStateColor(focusedNode, 'default', null),
-        canDescend: hasMultipleStates,
+        label: 'slot',
+        nodeLabel: slotId,
+        seaKey: attrId,
+        color: resolveSlotStateColor(ir, slotId, 'default'),
+        assignment,
+        isDirect: assignment !== null,
+        canClear: assignment !== null,
+        supportsSymbolRef: true,
+        onChange: (c) => setSlotColor(slotId, c),
+        onClear: () => setSlotColor(slotId, null),
+        onSelectShade: (shade) => setSlotShade(slotId, shade),
+        onSelectPrimitive: (primitiveId, shade) =>
+          setSlotAssignment(slotId, primitiveId, shade),
+        onSelectSymbol: (symbolId) => setSlotSymbol(slotId, symbolId),
+        descendSlot: hasMultipleStates ? slotId : undefined,
       };
     }
-    if (!selectedSlot) return null;
-    const state = focusedNode;
-    const isDirect = Boolean(ir.slots[selectedSlot]?.states[state]);
+
+    // Z2: slot state (default uses setSlot*, non-default uses setSlotState*)
+    if (!selectedSlotId || !focusedNode.startsWith('state:')) return null;
+    const state = focusedNode.slice(6) as StateId;
+    const slot = ir.slots[selectedSlotId];
+    const attrId = getAttributeFromSlotId(selectedSlotId);
+
+    if (state === 'default') {
+      const assignment = slot?.ref ?? null;
+      return {
+        label: 'state · default',
+        nodeLabel: `${selectedSlotId} / default`,
+        seaKey: attrId,
+        color: resolveSlotStateColor(ir, selectedSlotId, 'default'),
+        assignment,
+        isDirect: assignment !== null,
+        canClear: assignment !== null,
+        supportsSymbolRef: true,
+        onChange: (c) => setSlotColor(selectedSlotId, c),
+        onClear: () => setSlotColor(selectedSlotId, null),
+        onSelectShade: (shade) => setSlotShade(selectedSlotId, shade),
+        onSelectPrimitive: (primitiveId, shade) =>
+          setSlotAssignment(selectedSlotId, primitiveId, shade),
+        onSelectSymbol: (symbolId) => setSlotSymbol(selectedSlotId, symbolId),
+      };
+    }
+
+    const nonDefault = state as Exclude<StateId, 'default'>;
+    const override = slot?.states?.[nonDefault] ?? null;
     return {
-      kind: 'state' as const,
       label: `state · ${state}`,
-      nodeLabel: `${selectedSlot} / ${state}`,
-      color: resolveSlotColor(ir, selectedSlot, state),
-      isDirect,
-      onChange: (c: OKLCH) => setSlotStateColor(selectedSlot, state, c),
-      onClear: () => setSlotStateColor(selectedSlot, state, null),
-      canDescend: false,
+      nodeLabel: `${selectedSlotId} / ${state}`,
+      seaKey: attrId,
+      color: resolveSlotStateColor(ir, selectedSlotId, state),
+      assignment: override,
+      isDirect: override !== null && override !== undefined,
+      canClear: override !== null && override !== undefined,
+      supportsSymbolRef: true,
+      onChange: (c) => setSlotStateColor(selectedSlotId, nonDefault, c),
+      onClear: () => setSlotStateColor(selectedSlotId, nonDefault, null),
+      onSelectShade: (shade) =>
+        setSlotStateShade(selectedSlotId, nonDefault, shade),
+      onSelectPrimitive: (primitiveId, shade) =>
+        setSlotStateAssignment(selectedSlotId, nonDefault, primitiveId, shade),
+      onSelectSymbol: (symbolId) =>
+        setSlotStateSymbol(selectedSlotId, nonDefault, symbolId),
     };
   }, [
     focusedNode,
     layer,
-    selectedSlot,
+    selectedSlotId,
     ir,
-    universe,
-    setRoleColor,
+    setSymbolColor,
+    setSymbolShade,
+    setSymbolAssignment,
+    setAttributeColor,
+    setAttributeShade,
+    setAttributeAssignment,
+    setAttributeSymbol,
+    setSlotColor,
+    setSlotShade,
+    setSlotAssignment,
+    setSlotSymbol,
     setSlotStateColor,
+    setSlotStateShade,
+    setSlotStateAssignment,
+    setSlotStateSymbol,
   ]);
 
   if (!focusedNode || !context) return null;
@@ -99,34 +237,20 @@ export function InspectorBody() {
         </div>
       </header>
 
-      {context.kind === 'role' ? (
-        <ColorExplorer
-          roleId={context.roleId}
-          value={context.color}
-          onChange={context.onChange}
-          assignment={context.assignment}
-          primitives={ir.primitives}
-          usedShadesByPrimitive={usedShadesByPrimitive}
-          onSelectShade={(shade: ShadeIndex) =>
-            setRoleShade(context.roleId, shade)
-          }
-          onSelectPrimitive={(primitiveId, shade) =>
-            setRoleAssignment(context.roleId, {
-              primitive: primitiveId,
-              shade,
-            })
-          }
-          ir={ir}
-        />
-      ) : (
-        <ColorPicker
-          value={context.color}
-          onChange={context.onChange}
-          onClear={context.isDirect ? context.onClear : undefined}
-        />
-      )}
+      <ColorExplorer
+        seaKey={context.seaKey}
+        value={context.color}
+        onChange={context.onChange}
+        assignment={context.assignment}
+        primitives={ir.primitives}
+        usedShadesByPrimitive={usedShadesByPrimitive}
+        onSelectShade={context.onSelectShade}
+        onSelectPrimitive={context.onSelectPrimitive}
+        onSelectSymbol={context.supportsSymbolRef ? context.onSelectSymbol : undefined}
+        ir={ir}
+      />
 
-      {context.kind === 'role' && context.isDirect && (
+      {context.canClear && (
         <button
           type="button"
           onClick={context.onClear}
@@ -136,13 +260,13 @@ export function InspectorBody() {
         </button>
       )}
 
-      {context.canDescend && (
+      {context.descendSlot && (
         <button
           type="button"
-          onClick={() => descendTo(focusedNode)}
+          onClick={() => descendToSlot(context.descendSlot!)}
           className="w-full inline-flex items-center justify-center gap-2 text-xs font-mono text-stone-700 px-3 py-2 rounded border border-stone-200 hover:border-stone-500 hover:text-stone-900 transition"
         >
-          <span>Descend ({layer === 'z0' ? 'slots' : 'states'})</span>
+          <span>Descend (states)</span>
           <svg
             viewBox="0 0 12 12"
             className="w-3 h-3"
@@ -151,7 +275,6 @@ export function InspectorBody() {
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            aria-hidden
           >
             <polyline points="4,2 8,6 4,10" />
           </svg>

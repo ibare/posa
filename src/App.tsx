@@ -1,6 +1,5 @@
 import { usePosaStore } from './store/posa-store';
 import { ExportView } from './ui/export/ExportView';
-import { OnboardingScreen } from './ui/onboarding/OnboardingScreen';
 import { ExplorationView } from './ui/planes/ExplorationView';
 import { PrimitiveAtlas } from './ui/primitives/PrimitiveAtlas';
 import { Shell } from './ui/shared/layout/Shell';
@@ -10,7 +9,6 @@ export default function App() {
 
   return (
     <Shell>
-      {phase === 'onboarding' && <OnboardingScreen />}
       {phase === 'exploration' && <ExplorationView />}
       {phase === 'atlas' && <PrimitiveAtlas />}
       {phase === 'export' && <ExportView />}

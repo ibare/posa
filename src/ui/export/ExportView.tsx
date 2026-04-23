@@ -16,12 +16,15 @@ export function ExportView() {
   );
 
   const primitiveCount = Object.keys(ir.primitives).length;
-  const roleCount = Object.keys(ir.roles).length;
+  const symbolCount = Object.values(ir.symbols).filter((s) => s !== null).length;
+  const attributeCount = Object.values(ir.attributes).filter(
+    (a) => a !== null,
+  ).length;
   const slotCount = Object.values(ir.slots).filter(
-    (s) => Object.keys(s.states).length > 0,
+    (s) => s.ref !== null || Object.keys(s.states).length > 0,
   ).length;
 
-  const isEmpty = primitiveCount === 0 && roleCount === 0;
+  const isEmpty = primitiveCount === 0;
 
   const handleCopy = async () => {
     try {
@@ -52,7 +55,7 @@ export function ExportView() {
           Nothing to export
         </div>
         <p className="text-sm text-stone-500 mt-2">
-          Assign a color to at least one role before you can export.
+          Define at least one symbol, attribute, or slot before you can export.
         </p>
       </div>
     );
@@ -99,10 +102,13 @@ export function ExportView() {
             primitives <span className="text-stone-900">{primitiveCount}</span>
           </div>
           <div className="font-mono tabular-nums">
-            roles <span className="text-stone-900">{roleCount}</span>
+            symbols <span className="text-stone-900">{symbolCount}</span>
           </div>
           <div className="font-mono tabular-nums">
-            slots w/ state <span className="text-stone-900">{slotCount}</span>
+            attributes <span className="text-stone-900">{attributeCount}</span>
+          </div>
+          <div className="font-mono tabular-nums">
+            slots assigned <span className="text-stone-900">{slotCount}</span>
           </div>
         </div>
       </aside>

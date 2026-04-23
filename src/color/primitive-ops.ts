@@ -1,9 +1,9 @@
 import type {
+  ColorRef,
   IR,
   OKLCH,
   PrimitiveId,
   PrimitiveScale,
-  RoleId,
   ShadeIndex,
 } from '../ir/types';
 import { createPrimitive } from './primitive';
@@ -30,7 +30,6 @@ export type HueFamily =
   | 'pink'
   | 'neutral';
 
-/** OKLCH 색의 hue family를 결정. chroma가 매우 낮으면 neutral. */
 export function hueFamily(color: OKLCH): HueFamily {
   if (color.C < NEUTRAL_FAMILY_CHROMA) return 'neutral';
   const h = ((color.H % 360) + 360) % 360;
@@ -45,13 +44,11 @@ export function hueFamily(color: OKLCH): HueFamily {
   return 'pink';
 }
 
-/** 두 hue 간 원형 거리(0~180°). */
 export function hueDistance(a: number, b: number): number {
   const diff = (((a - b) % 360) + 360) % 360;
   return Math.min(diff, 360 - diff);
 }
 
-/** anchor가 기존 primitive의 scale 범주 안에 있는지. chroma가 양쪽 다 neutral 수준이면 hue 무시. */
 export function isWithinScale(anchor: OKLCH, primitive: PrimitiveScale): boolean {
   const bothNeutral =
     anchor.C < NEUTRAL_FAMILY_CHROMA && primitive.anchor.C < NEUTRAL_FAMILY_CHROMA;
@@ -62,17 +59,13 @@ export function isWithinScale(anchor: OKLCH, primitive: PrimitiveScale): boolean
   return hueOk && chromaOk;
 }
 
-/** 알파벳 suffix 생성: 0→"a", 25→"z", 26→"aa", 27→"ab", ... */
 function letterSuffix(index: number): string {
   if (index < 26) return String.fromCharCode(97 + index);
   const first = Math.floor(index / 26) - 1;
   const second = index % 26;
-  return (
-    String.fromCharCode(97 + first) + String.fromCharCode(97 + second)
-  );
+  return String.fromCharCode(97 + first) + String.fromCharCode(97 + second);
 }
 
-/** 지정 family의 다음 id ("green-a", "green-b", ...). 기존 IR을 스캔해 충돌 없는 값 선택. */
 export function nextPrimitiveId(ir: IR, family: string): PrimitiveId {
   const prefix = `${family}-`;
   const used = new Set<string>();
@@ -83,11 +76,9 @@ export function nextPrimitiveId(ir: IR, family: string): PrimitiveId {
     const candidate = `${prefix}${letterSuffix(i)}`;
     if (!used.has(candidate)) return candidate;
   }
-  // 현실적으로 도달 불가 — 같은 family로 1024개 이상을 만들 일은 없다.
   return `${prefix}${letterSuffix(Object.keys(ir.primitives).length)}`;
 }
 
-/** IR에 primitive 추가. family는 anchor의 hue로 결정. */
 export function addPrimitive(
   ir: IR,
   anchor: OKLCH,
@@ -104,7 +95,6 @@ export function addPrimitive(
   return { ir: nextIr, primitiveId: id };
 }
 
-/** 기존 primitive의 anchor만 교체. anchorShade는 유지. */
 export function adjustPrimitiveAnchor(
   ir: IR,
   primitiveId: PrimitiveId,
@@ -117,7 +107,6 @@ export function adjustPrimitiveAnchor(
     newAnchor,
     existing.anchorShade,
   );
-  // createdAt는 원본 그대로 유지 — primitive의 탄생 시점은 바뀌지 않는다.
   const preserved: PrimitiveScale = {
     ...replaced,
     createdAt: existing.createdAt,
@@ -129,47 +118,42 @@ export function adjustPrimitiveAnchor(
   };
 }
 
-/**
- * Role이 가리키는 primitive를 신규 primitive로 대체.
- * 기존 primitive는 IR에 그대로 남는다 (다른 slot이 참조 중일 수 있음).
- */
-export function replaceRolePrimitive(
+// ──────────────────────────────────────────────────────────────────────────
+// ColorRef 순회 (orphan 판정 / 카운트 / merge에서 공통 사용)
+// ──────────────────────────────────────────────────────────────────────────
+
+function forEachDirectPrimitiveRef(
   ir: IR,
-  roleId: RoleId,
-  newAnchor: OKLCH,
-  shadeForAnchor: ShadeIndex,
-): IR {
-  const { ir: withNew, primitiveId } = addPrimitive(ir, newAnchor, shadeForAnchor);
-  const existingRole = withNew.roles[roleId];
-  const shade = existingRole?.shade ?? shadeForAnchor;
-  return {
-    ...withNew,
-    roles: {
-      ...withNew.roles,
-      [roleId]: { primitive: primitiveId, shade },
-    },
-    meta: { ...withNew.meta, updatedAt: Date.now() },
-  };
+  visit: (ref: { primitive: PrimitiveId; shade: ShadeIndex }) => void,
+) {
+  // Symbol은 primitive를 직접 가리킴.
+  for (const sym of Object.values(ir.symbols)) {
+    if (sym) visit(sym);
+  }
+  // Attribute는 ColorRef. primitive kind만 primitive 참조.
+  for (const attr of Object.values(ir.attributes)) {
+    if (attr && attr.kind === 'primitive') visit(attr);
+  }
+  // Slot ref + state overrides. primitive kind만.
+  for (const slot of Object.values(ir.slots)) {
+    if (slot.ref && slot.ref.kind === 'primitive') visit(slot.ref);
+    for (const override of Object.values(slot.states)) {
+      if (override && override.kind === 'primitive') visit(override);
+    }
+  }
 }
 
-/** 특정 primitive를 참조하는 role / slot(default or state override) 총 개수. */
 export function countPrimitiveReferences(
   ir: IR,
   primitiveId: PrimitiveId,
 ): number {
-  let count = 0;
-  for (const role of Object.values(ir.roles)) {
-    if (role.primitive === primitiveId) count++;
-  }
-  for (const slot of Object.values(ir.slots)) {
-    for (const override of Object.values(slot.states)) {
-      if (override && override.primitive === primitiveId) count++;
-    }
-  }
-  return count;
+  let n = 0;
+  forEachDirectPrimitiveRef(ir, (ref) => {
+    if (ref.primitive === primitiveId) n++;
+  });
+  return n;
 }
 
-/** 참조 수가 0인 primitive id들. */
 export function findOrphanPrimitives(ir: IR): PrimitiveId[] {
   const orphans: PrimitiveId[] = [];
   for (const id of Object.keys(ir.primitives)) {
@@ -178,10 +162,18 @@ export function findOrphanPrimitives(ir: IR): PrimitiveId[] {
   return orphans;
 }
 
-/**
- * anchor와 가장 가까운 primitive를 찾는다. hue + chroma 차이의 간단한 합으로 거리 측정.
- * 없으면 null.
- */
+export function pruneOrphanPrimitives(ir: IR): IR {
+  const orphans = findOrphanPrimitives(ir);
+  if (orphans.length === 0) return ir;
+  const nextPrimitives = { ...ir.primitives };
+  for (const id of orphans) delete nextPrimitives[id];
+  return {
+    ...ir,
+    primitives: nextPrimitives,
+    meta: { ...ir.meta, updatedAt: Date.now() },
+  };
+}
+
 export function findNearestPrimitive(
   ir: IR,
   anchor: OKLCH,
@@ -201,7 +193,6 @@ export function findNearestPrimitive(
   return best;
 }
 
-/** primitive의 scale에서 target L에 가장 가까운 shade를 찾는다. */
 export function findNearestShade(
   primitive: PrimitiveScale,
   targetL: number,
@@ -216,4 +207,33 @@ export function findNearestShade(
     }
   }
   return bestShade;
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// ColorRef rebind helpers
+// ──────────────────────────────────────────────────────────────────────────
+
+/**
+ * 사용자가 고른 색 → ColorRef를 돌려준다. 가까운 primitive를 찾으면 그 안 shade,
+ * 없으면 새 primitive 생성 후 그것을 참조.
+ * 호출자는 반환된 IR로 state를 갈아끼운 뒤 ColorRef를 symbol/attribute/slot에 꽂는다.
+ */
+export function colorToRef(
+  ir: IR,
+  color: OKLCH,
+  fallbackShade: ShadeIndex,
+): { ir: IR; ref: ColorRef } {
+  const nearest = findNearestPrimitive(ir, color);
+  if (nearest) {
+    const shade = findNearestShade(nearest, color.L);
+    return {
+      ir,
+      ref: { kind: 'primitive', primitive: nearest.id, shade },
+    };
+  }
+  const { ir: next, primitiveId } = addPrimitive(ir, color, fallbackShade);
+  return {
+    ir: next,
+    ref: { kind: 'primitive', primitive: primitiveId, shade: fallbackShade },
+  };
 }

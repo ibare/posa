@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { SYMBOL_IDS } from '../../../ir/types';
 import { usePosaStore, type Phase } from '../../../store/posa-store';
 import { ProgressBadge } from '../ProgressBadge';
 
@@ -6,15 +7,12 @@ type Props = { children: ReactNode };
 
 export function Shell({ children }: Props) {
   const phase = usePosaStore((s) => s.phase);
-  const universe = usePosaStore((s) => s.universe);
   const ir = usePosaStore((s) => s.ir);
-  const resetAll = usePosaStore((s) => s.resetAll);
+  const startFresh = usePosaStore((s) => s.startFresh);
   const goToPhase = usePosaStore((s) => s.goToPhase);
 
-  const totalRoles = universe?.roles.length ?? 0;
-  const filledRoles = universe
-    ? universe.roles.filter((r) => ir.roles[r.id] !== undefined).length
-    : 0;
+  const totalSymbols = SYMBOL_IDS.length;
+  const filledSymbols = SYMBOL_IDS.filter((id) => ir.symbols[id] !== null).length;
 
   return (
     <div className="min-h-screen bg-cream text-stone-900 font-body antialiased">
@@ -25,45 +23,39 @@ export function Shell({ children }: Props) {
         <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
           {phase}
         </span>
-        {phase !== 'onboarding' && universe && (
-          <nav className="flex items-center gap-1">
-            <PhaseButton
-              label="Explore"
-              phase="exploration"
-              current={phase}
-              onClick={() => goToPhase('exploration')}
-            />
-            <PhaseButton
-              label="Atlas"
-              phase="atlas"
-              current={phase}
-              onClick={() => goToPhase('atlas')}
-            />
-            <PhaseButton
-              label="Export"
-              phase="export"
-              current={phase}
-              onClick={() => goToPhase('export')}
-            />
-          </nav>
-        )}
+        <nav className="flex items-center gap-1">
+          <PhaseButton
+            label="Explore"
+            phase="exploration"
+            current={phase}
+            onClick={() => goToPhase('exploration')}
+          />
+          <PhaseButton
+            label="Atlas"
+            phase="atlas"
+            current={phase}
+            onClick={() => goToPhase('atlas')}
+          />
+          <PhaseButton
+            label="Export"
+            phase="export"
+            current={phase}
+            onClick={() => goToPhase('export')}
+          />
+        </nav>
         <div className="flex-1" />
-        {phase !== 'onboarding' && universe && (
-          <>
-            <ProgressBadge
-              filled={filledRoles}
-              total={totalRoles}
-              label="colored roles"
-            />
-            <button
-              type="button"
-              onClick={resetAll}
-              className="text-xs text-stone-500 hover:text-stone-900 px-2.5 py-1 rounded border border-stone-200 hover:border-stone-400 transition"
-            >
-              Reset
-            </button>
-          </>
-        )}
+        <ProgressBadge
+          filled={filledSymbols}
+          total={totalSymbols}
+          label="defined symbols"
+        />
+        <button
+          type="button"
+          onClick={startFresh}
+          className="text-xs text-stone-500 hover:text-stone-900 px-2.5 py-1 rounded border border-stone-200 hover:border-stone-400 transition"
+        >
+          Reset
+        </button>
       </header>
       <main className="px-6 py-6">{children}</main>
     </div>

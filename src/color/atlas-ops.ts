@@ -1,9 +1,13 @@
 import {
   SHADE_INDICES,
+  type ColorRef,
   type IR,
   type PrimitiveId,
   type PrimitiveScale,
   type ShadeIndex,
+  type SlotId,
+  type StateId,
+  type SymbolAssignment,
 } from '../ir/types';
 import { countPrimitiveReferences, findNearestShade } from './primitive-ops';
 
@@ -14,9 +18,6 @@ import { countPrimitiveReferences, findNearestShade } from './primitive-ops';
 
 export class AtlasOpError extends Error {}
 
-/**
- * 고아(참조 0) primitive만 제거한다. 참조가 남아있는 경우 에러.
- */
 export function removePrimitive(ir: IR, primitiveId: PrimitiveId): IR {
   if (!ir.primitives[primitiveId]) {
     throw new AtlasOpError(`primitive ${primitiveId} does not exist`);
@@ -33,10 +34,6 @@ export function removePrimitive(ir: IR, primitiveId: PrimitiveId): IR {
   };
 }
 
-/**
- * source primitive의 모든 참조를 target primitive로 옮기고 source를 제거한다.
- * 리매핑된 shade는 원래 shade가 아니라 target primitive에서 L이 가장 가까운 shade.
- */
 export function mergePrimitive(
   ir: IR,
   sourceId: PrimitiveId,
@@ -56,29 +53,49 @@ export function mergePrimitive(
     return findNearestShade(target, originalL);
   };
 
-  const nextRoles = { ...ir.roles };
-  for (const [roleId, assign] of Object.entries(ir.roles)) {
-    if (assign.primitive !== sourceId) continue;
-    nextRoles[roleId] = {
+  const remapRef = (ref: ColorRef | null | undefined): ColorRef | null | undefined => {
+    if (!ref) return ref;
+    if (ref.kind !== 'primitive') return ref;
+    if (ref.primitive !== sourceId) return ref;
+    return { kind: 'primitive', primitive: targetId, shade: remapShade(ref.shade) };
+  };
+
+  const nextSymbols = { ...ir.symbols };
+  for (const [symId, assign] of Object.entries(ir.symbols)) {
+    if (!assign || assign.primitive !== sourceId) continue;
+    const next: SymbolAssignment = {
       primitive: targetId,
       shade: remapShade(assign.shade),
     };
+    nextSymbols[symId as keyof IR['symbols']] = next;
+  }
+
+  const nextAttributes = { ...ir.attributes };
+  for (const [attrId, assign] of Object.entries(ir.attributes)) {
+    const remapped = remapRef(assign);
+    if (remapped !== assign) {
+      nextAttributes[attrId as keyof IR['attributes']] = remapped ?? null;
+    }
   }
 
   const nextSlots = { ...ir.slots };
   for (const [slotId, slot] of Object.entries(ir.slots)) {
-    let changed = false;
+    const newRef = remapRef(slot.ref);
     const nextStates = { ...slot.states };
+    let statesChanged = false;
     for (const [state, override] of Object.entries(slot.states)) {
-      if (!override || override.primitive !== sourceId) continue;
-      nextStates[state] = {
-        primitive: targetId,
-        shade: remapShade(override.shade),
-      };
-      changed = true;
+      const remapped = remapRef(override);
+      if (remapped !== override) {
+        nextStates[state as Exclude<StateId, 'default'>] = remapped ?? null;
+        statesChanged = true;
+      }
     }
-    if (changed) {
-      nextSlots[slotId] = { ...slot, states: nextStates };
+    if (newRef !== slot.ref || statesChanged) {
+      nextSlots[slotId] = {
+        ...slot,
+        ref: newRef ?? null,
+        states: nextStates,
+      };
     }
   }
 
@@ -88,36 +105,47 @@ export function mergePrimitive(
   return {
     ...ir,
     primitives: nextPrimitives,
-    roles: nextRoles,
+    symbols: nextSymbols,
+    attributes: nextAttributes,
     slots: nextSlots,
     meta: { ...ir.meta, updatedAt: Date.now() },
   };
 }
 
-/** 특정 primitive를 참조하는 role id와 slot(state 포함) 목록을 돌려준다. UI 표시용. */
+export type PrimitiveReferenceLocation =
+  | { kind: 'symbol'; symbolId: string }
+  | { kind: 'attribute'; attributeId: string }
+  | { kind: 'slot'; slotId: SlotId }
+  | { kind: 'slot-state'; slotId: SlotId; state: StateId };
+
 export function listPrimitiveReferences(
   ir: IR,
   primitiveId: PrimitiveId,
-): {
-  roles: string[];
-  slotStates: { slotId: string; state: string }[];
-} {
-  const roles: string[] = [];
-  for (const [roleId, assign] of Object.entries(ir.roles)) {
-    if (assign.primitive === primitiveId) roles.push(roleId);
+): PrimitiveReferenceLocation[] {
+  const out: PrimitiveReferenceLocation[] = [];
+  for (const [symId, assign] of Object.entries(ir.symbols)) {
+    if (assign && assign.primitive === primitiveId) {
+      out.push({ kind: 'symbol', symbolId: symId });
+    }
   }
-  const slotStates: { slotId: string; state: string }[] = [];
+  for (const [attrId, assign] of Object.entries(ir.attributes)) {
+    if (assign && assign.kind === 'primitive' && assign.primitive === primitiveId) {
+      out.push({ kind: 'attribute', attributeId: attrId });
+    }
+  }
   for (const [slotId, slot] of Object.entries(ir.slots)) {
+    if (slot.ref && slot.ref.kind === 'primitive' && slot.ref.primitive === primitiveId) {
+      out.push({ kind: 'slot', slotId });
+    }
     for (const [state, override] of Object.entries(slot.states)) {
-      if (override && override.primitive === primitiveId) {
-        slotStates.push({ slotId, state });
+      if (override && override.kind === 'primitive' && override.primitive === primitiveId) {
+        out.push({ kind: 'slot-state', slotId, state: state as StateId });
       }
     }
   }
-  return { roles, slotStates };
+  return out;
 }
 
-/** 어떤 shade가 몇 번 참조되는지 count (Atlas 사용률 시각화용). */
 export function shadeUsage(
   ir: IR,
   primitiveId: PrimitiveId,
@@ -128,12 +156,20 @@ export function shadeUsage(
   for (const shade of SHADE_INDICES) {
     usage[shade] = 0;
   }
-  for (const assign of Object.values(ir.roles)) {
-    if (assign.primitive === primitiveId) usage[assign.shade]++;
+  for (const assign of Object.values(ir.symbols)) {
+    if (assign && assign.primitive === primitiveId) usage[assign.shade]++;
+  }
+  for (const assign of Object.values(ir.attributes)) {
+    if (assign && assign.kind === 'primitive' && assign.primitive === primitiveId) {
+      usage[assign.shade]++;
+    }
   }
   for (const slot of Object.values(ir.slots)) {
+    if (slot.ref && slot.ref.kind === 'primitive' && slot.ref.primitive === primitiveId) {
+      usage[slot.ref.shade]++;
+    }
     for (const override of Object.values(slot.states)) {
-      if (override && override.primitive === primitiveId) {
+      if (override && override.kind === 'primitive' && override.primitive === primitiveId) {
         usage[override.shade]++;
       }
     }
@@ -141,5 +177,4 @@ export function shadeUsage(
   return usage;
 }
 
-// PrimitiveScale는 타입 참조만으로도 쓰이도록 re-export.
 export type { PrimitiveScale };
