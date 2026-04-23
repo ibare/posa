@@ -40,7 +40,6 @@ export function InspectorBody() {
   const setAttributeColor = usePosaStore((s) => s.setAttributeColor);
   const setAttributeShade = usePosaStore((s) => s.setAttributeShade);
   const setAttributeAssignment = usePosaStore((s) => s.setAttributeAssignment);
-  const setAttributeSymbol = usePosaStore((s) => s.setAttributeSymbol);
 
   const setSlotColor = usePosaStore((s) => s.setSlotColor);
   const setSlotShade = usePosaStore((s) => s.setSlotShade);
@@ -106,21 +105,30 @@ export function InspectorBody() {
       if (focusedNode.startsWith('attr:')) {
         const attrId = focusedNode.slice(5) as AttributeId;
         const assignment = ir.attributes[attrId] ?? null;
+        const ref: ColorRef | null = assignment
+          ? { kind: 'primitive', primitive: assignment.primitive, shade: assignment.shade }
+          : null;
         return {
           label: 'attribute',
           nodeLabel: attrId,
           seaKey: attrId,
           color: resolveAttributeColor(ir, attrId),
-          assignment,
+          assignment: ref,
           isDirect: assignment !== null,
           canClear: assignment !== null,
+          // attribute는 라이브 링크는 못 갖지만, "이 symbol의 현재 색을 가져오기"
+          // 어포던스는 유지. 클릭 시 그 시점 primitive로 스냅샷 저장.
           supportsSymbolRef: true,
           onChange: (c) => setAttributeColor(attrId, c),
           onClear: () => setAttributeColor(attrId, null),
           onSelectShade: (shade) => setAttributeShade(attrId, shade),
           onSelectPrimitive: (primitiveId, shade) =>
             setAttributeAssignment(attrId, primitiveId, shade),
-          onSelectSymbol: (symbolId) => setAttributeSymbol(attrId, symbolId),
+          onSelectSymbol: (symbolId) => {
+            const sa = ir.symbols[symbolId];
+            if (!sa) return;
+            setAttributeAssignment(attrId, sa.primitive, sa.shade);
+          },
         };
       }
       return null;
@@ -211,7 +219,6 @@ export function InspectorBody() {
     setAttributeColor,
     setAttributeShade,
     setAttributeAssignment,
-    setAttributeSymbol,
     setSlotColor,
     setSlotShade,
     setSlotAssignment,

@@ -43,10 +43,31 @@ describe('enumerateAllSlotIds', () => {
 });
 
 describe('getSlotsByAttribute', () => {
-  it('주어진 attribute로 끝나는 slot만 반환', () => {
-    const slots = getSlotsByAttribute('background');
+  it('주어진 attribute로 끝나는 활성 slot만 반환', () => {
+    const { ir } = seed();
+    const slots = getSlotsByAttribute('background', ir);
     for (const s of slots) expect(s.endsWith('.background')).toBe(true);
     expect(slots.length).toBeGreaterThan(0);
+  });
+
+  it('symbol 미할당 시 그 symbol을 이름으로 가진 variant slot은 제외된다', () => {
+    const ir = createEmptyIR();
+    const slots = getSlotsByAttribute('background', ir);
+    expect(slots).not.toContain('button.primary.background');
+    expect(slots).not.toContain('badge.destructive.background');
+    // symbol과 무관한 variant·varient 없는 컴포넌트는 남는다.
+    expect(slots).toContain('button.outline.background');
+    expect(slots).toContain('card.background');
+  });
+
+  it('symbol을 할당하면 해당 variant slot이 활성화된다', () => {
+    const { ir: ir1, pid } = seed();
+    const ir2: IR = {
+      ...ir1,
+      symbols: { ...ir1.symbols, primary: { primitive: pid, shade: 500 } },
+    };
+    const slots = getSlotsByAttribute('background', ir2);
+    expect(slots).toContain('button.primary.background');
   });
 });
 
@@ -78,32 +99,17 @@ describe('resolveSymbolColor', () => {
 });
 
 describe('resolveAttributeColor', () => {
-  it('primitive 참조를 풀어낸다', () => {
+  it('primitive 스냅샷을 풀어낸다', () => {
     const { ir: ir1, pid } = seed();
     const ir2: IR = {
       ...ir1,
       attributes: {
         ...ir1.attributes,
-        background: { kind: 'primitive', primitive: pid, shade: 100 },
+        background: { primitive: pid, shade: 100 },
       },
     };
     expect(resolveAttributeColor(ir2, 'background')).toEqual(
       ir1.primitives[pid].scale[100],
-    );
-  });
-
-  it('symbol 참조를 한 단계 더 풀어낸다', () => {
-    const { ir: ir1, pid } = seed();
-    const ir2: IR = {
-      ...ir1,
-      symbols: { ...ir1.symbols, primary: { primitive: pid, shade: 500 } },
-      attributes: {
-        ...ir1.attributes,
-        background: { kind: 'symbol', symbol: 'primary' },
-      },
-    };
-    expect(resolveAttributeColor(ir2, 'background')).toEqual(
-      ir1.primitives[pid].scale[500],
     );
   });
 
@@ -114,16 +120,16 @@ describe('resolveAttributeColor', () => {
 });
 
 describe('resolveSlotStateColor 상속 체인', () => {
-  it('state override → slot.ref → attribute 순서로 폴백', () => {
+  it('state override → slot.ref → attribute 순서로 폴백 (자동 symbol 바인딩 없음)', () => {
     const { ir: ir1, pid } = seed();
     const base = ir1.primitives[pid];
 
-    // attribute만 있음 → attribute 색
+    // attribute만 있음 → attribute로 폴백
     const attrOnly: IR = {
       ...ir1,
       attributes: {
         ...ir1.attributes,
-        background: { kind: 'primitive', primitive: pid, shade: 50 },
+        background: { primitive: pid, shade: 50 },
       },
       slots: {
         'button.primary.background': { ref: null, states: {} },
@@ -133,9 +139,32 @@ describe('resolveSlotStateColor 상속 체인', () => {
       resolveSlotStateColor(attrOnly, 'button.primary.background'),
     ).toEqual(base.scale[50]);
 
-    // slot.ref 추가 → slot.ref 승
-    const withSlotRef: IR = {
+    // primary symbol을 할당해도 slot.ref가 비면 attribute로 폴백 (자동 바인딩 안 됨)
+    const withSymbol: IR = {
       ...attrOnly,
+      symbols: { ...attrOnly.symbols, primary: { primitive: pid, shade: 300 } },
+    };
+    expect(
+      resolveSlotStateColor(withSymbol, 'button.primary.background'),
+    ).toEqual(base.scale[50]);
+
+    // 사용자가 명시적으로 symbol live link을 만들면 그 때 따라간다
+    const withExplicitSymbolRef: IR = {
+      ...withSymbol,
+      slots: {
+        'button.primary.background': {
+          ref: { kind: 'symbol', symbol: 'primary' },
+          states: {},
+        },
+      },
+    };
+    expect(
+      resolveSlotStateColor(withExplicitSymbolRef, 'button.primary.background'),
+    ).toEqual(base.scale[300]);
+
+    // 명시적 primitive ref → 그 색
+    const withSlotRef: IR = {
+      ...withSymbol,
       slots: {
         'button.primary.background': {
           ref: { kind: 'primitive', primitive: pid, shade: 500 },
@@ -147,7 +176,7 @@ describe('resolveSlotStateColor 상속 체인', () => {
       resolveSlotStateColor(withSlotRef, 'button.primary.background'),
     ).toEqual(base.scale[500]);
 
-    // state override 추가 → state override 승
+    // state override → slot.ref 보다 우선
     const withStateOverride: IR = {
       ...withSlotRef,
       slots: {
@@ -174,13 +203,23 @@ describe('resolveSlotStateColor 상속 체인', () => {
       resolveSlotStateColor(ir, 'button.primary.background'),
     ).toBeNull();
   });
-});
 
-describe('getSlotDisplayName', () => {
-  it('symbol 참조 slot은 접미사가 붙는다', () => {
-    const ir = createEmptyIR();
-    const ir2: IR = {
-      ...ir,
+  it('symbol 변경은 명시적으로 그 symbol을 참조하는 slot에만 영향 (라이브 링크 시나리오)', () => {
+    const { ir: ir1, pid: pidA } = seed();
+    const { ir: ir2, primitiveId: pidB } = addPrimitive(
+      ir1,
+      { L: 0.5, C: 0.2, H: 30 },
+      500,
+    );
+    // attribute background = pidA snapshot, primary = pidB
+    // 사용자가 button.primary.background에만 명시적으로 primary symbol 라이브 링크 설정
+    const ir3: IR = {
+      ...ir2,
+      symbols: { ...ir2.symbols, primary: { primitive: pidB, shade: 500 } },
+      attributes: {
+        ...ir2.attributes,
+        background: { primitive: pidA, shade: 50 },
+      },
       slots: {
         'button.primary.background': {
           ref: { kind: 'symbol', symbol: 'primary' },
@@ -188,16 +227,66 @@ describe('getSlotDisplayName', () => {
         },
       },
     };
-    expect(getSlotDisplayName('button.primary.background', ir2)).toBe(
-      'button.primary.background.primary',
+    // 명시적 symbol ref slot은 pidB.500
+    expect(
+      resolveSlotStateColor(ir3, 'button.primary.background'),
+    ).toEqual(ir2.primitives[pidB].scale[500]);
+    // 같은 variant라도 명시적 ref 없는 slot(border/text)은 attribute snapshot
+    expect(
+      resolveSlotStateColor(ir3, 'button.primary.border'),
+    ).toBeNull(); // border attribute 미할당
+    // outline, card 는 pidA.50 (attribute snapshot)
+    expect(
+      resolveSlotStateColor(ir3, 'button.outline.background'),
+    ).toEqual(ir2.primitives[pidA].scale[50]);
+    expect(resolveSlotStateColor(ir3, 'card.background')).toEqual(
+      ir2.primitives[pidA].scale[50],
+    );
+
+    // primary 변경
+    const ir4: IR = {
+      ...ir3,
+      symbols: { ...ir3.symbols, primary: { primitive: pidB, shade: 700 } },
+    };
+    // 명시적 symbol ref만 변경
+    expect(
+      resolveSlotStateColor(ir4, 'button.primary.background'),
+    ).toEqual(ir2.primitives[pidB].scale[700]);
+    // 그 외는 그대로
+    expect(
+      resolveSlotStateColor(ir4, 'button.outline.background'),
+    ).toEqual(ir2.primitives[pidA].scale[50]);
+    expect(resolveSlotStateColor(ir4, 'card.background')).toEqual(
+      ir2.primitives[pidA].scale[50],
+    );
+  });
+});
+
+describe('getSlotDisplayName', () => {
+  it('명시적 symbol 참조 slot은 접미사가 붙는다', () => {
+    const ir = createEmptyIR();
+    const ir2: IR = {
+      ...ir,
+      slots: {
+        'card.background': {
+          ref: { kind: 'symbol', symbol: 'primary' },
+          states: {},
+        },
+      },
+    };
+    expect(getSlotDisplayName('card.background', ir2)).toBe(
+      'card.background.primary',
     );
   });
 
-  it('primitive 참조나 미할당 slot은 원본 id 그대로', () => {
+  it('명시적 ref가 없는 variant slot은 접미사 없이 base id', () => {
     const ir = createEmptyIR();
     expect(getSlotDisplayName('button.primary.background', ir)).toBe(
       'button.primary.background',
     );
+  });
+
+  it('명시적 primitive 참조 slot은 접미사 없음', () => {
     const { ir: ir1, pid } = seed();
     const ir2: IR = {
       ...ir1,
@@ -211,6 +300,14 @@ describe('getSlotDisplayName', () => {
     expect(getSlotDisplayName('button.primary.background', ir2)).toBe(
       'button.primary.background',
     );
+  });
+
+  it('SymbolId가 아닌 variant slot은 접미사 없음', () => {
+    const ir = createEmptyIR();
+    expect(getSlotDisplayName('button.outline.background', ir)).toBe(
+      'button.outline.background',
+    );
+    expect(getSlotDisplayName('card.background', ir)).toBe('card.background');
   });
 });
 

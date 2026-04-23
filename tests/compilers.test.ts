@@ -23,8 +23,8 @@ function seedIR(): { ir: IR; primitiveId: string } {
     },
     attributes: {
       ...ir1.attributes,
-      text: { kind: 'primitive', primitive: primitiveId, shade: 900 },
-      background: { kind: 'symbol', symbol: 'primary' },
+      text: { primitive: primitiveId, shade: 900 },
+      background: { primitive: primitiveId, shade: 500 },
     },
     slots: {
       'button.primary.background': {
@@ -119,7 +119,7 @@ describe('dtcgCompiler', () => {
     expect(() => JSON.parse(out.content)).not.toThrow();
   });
 
-  it('symbol은 primitive leaf를 alias로, attribute는 primitive 또는 symbol을 alias로', () => {
+  it('symbol은 primitive leaf를 alias로, attribute는 항상 primitive를 alias로', () => {
     const { ir, primitiveId } = seedIR();
     const out = dtcgCompiler.compile(ir);
     const parsed = JSON.parse(out.content);
@@ -131,7 +131,7 @@ describe('dtcgCompiler', () => {
       `{color.${primitiveId}.900}`,
     );
     expect(parsed.color.attributes.background.$value).toBe(
-      `{color.symbols.primary}`,
+      `{color.${primitiveId}.500}`,
     );
   });
 

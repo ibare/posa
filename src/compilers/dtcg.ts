@@ -103,10 +103,9 @@ export const dtcgCompiler: Compiler = {
     for (const id of ATTRIBUTE_IDS) {
       const attr = ir.attributes[id];
       if (!attr) continue;
-      const alias = colorRefToAlias(ir, attr);
-      if (!alias) continue;
+      if (!ir.primitives[attr.primitive]) continue;
       attributesRoot[id] = {
-        $value: alias,
+        $value: primitiveRef(attr.primitive, attr.shade),
         $type: 'color',
       } satisfies ColorNode;
     }

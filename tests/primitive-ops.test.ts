@@ -129,7 +129,7 @@ describe('countPrimitiveReferences', () => {
       },
       attributes: {
         ...ir1.attributes,
-        background: { kind: 'primitive', primitive: pid, shade: 50 },
+        background: { primitive: pid, shade: 50 },
       },
       slots: {
         'button.primary.background': {

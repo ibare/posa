@@ -71,7 +71,7 @@ type PosaState = {
     shade: ShadeIndex,
   ) => void;
 
-  // Attribute assignment (Z0 default)
+  // Attribute assignment (Z0 default) — primitive only; symbol live link 금지
   setAttributeColor: (attrId: AttributeId, color: OKLCH | null) => void;
   setAttributeShade: (attrId: AttributeId, shade: ShadeIndex) => void;
   setAttributeAssignment: (
@@ -79,7 +79,6 @@ type PosaState = {
     primitive: PrimitiveId,
     shade: ShadeIndex,
   ) => void;
-  setAttributeSymbol: (attrId: AttributeId, symbolId: SymbolId) => void;
 
   // Slot default ref (Z1)
   setSlotColor: (slotId: SlotId, color: OKLCH | null) => void;
@@ -317,9 +316,8 @@ export const usePosaStore = create<PosaState>((set, get) => ({
     }
 
     const current = ir.attributes[attrId];
-    const currentPrimitiveId = refToPrimitiveId(current);
-    const fallbackShade =
-      current?.kind === 'primitive' ? current.shade : DEFAULT_SHADE;
+    const currentPrimitiveId = current?.primitive ?? null;
+    const fallbackShade = current?.shade ?? DEFAULT_SHADE;
 
     const { ir: nextIr, ref, needsDecision, currentPrimitiveId: nextPrim } =
       rebindColor(ir, color, currentPrimitiveId, fallbackShade);
@@ -336,14 +334,18 @@ export const usePosaStore = create<PosaState>((set, get) => ({
       return;
     }
 
-    const nextAttrs = { ...nextIr.attributes, [attrId]: ref };
+    if (ref.kind !== 'primitive') return; // 방어적: rebindColor는 항상 primitive ref 반환
+    const nextAttrs = {
+      ...nextIr.attributes,
+      [attrId]: { primitive: ref.primitive, shade: ref.shade },
+    };
     set({ ir: pruneOrphanPrimitives(bumpMeta({ ...nextIr, attributes: nextAttrs })) });
   },
 
   setAttributeShade: (attrId, shade) => {
     const { ir } = get();
     const current = ir.attributes[attrId];
-    if (!current || current.kind !== 'primitive' || current.shade === shade) return;
+    if (!current || current.shade === shade) return;
     const nextAttrs = { ...ir.attributes, [attrId]: { ...current, shade } };
     set({ ir: bumpMeta({ ...ir, attributes: nextAttrs }) });
   },
@@ -353,16 +355,7 @@ export const usePosaStore = create<PosaState>((set, get) => ({
     if (!ir.primitives[primitive]) return;
     const nextAttrs = {
       ...ir.attributes,
-      [attrId]: { kind: 'primitive' as const, primitive, shade },
-    };
-    set({ ir: pruneOrphanPrimitives(bumpMeta({ ...ir, attributes: nextAttrs })) });
-  },
-
-  setAttributeSymbol: (attrId, symbolId) => {
-    const { ir } = get();
-    const nextAttrs = {
-      ...ir.attributes,
-      [attrId]: { kind: 'symbol' as const, symbol: symbolId },
+      [attrId]: { primitive, shade },
     };
     set({ ir: pruneOrphanPrimitives(bumpMeta({ ...ir, attributes: nextAttrs })) });
   },
@@ -679,7 +672,11 @@ function applyRef(ir: IR, target: PendingPrimitiveTarget, ref: ColorRef): IR {
     return bumpMeta({ ...ir, symbols: nextSymbols });
   }
   if (target.kind === 'attribute') {
-    const nextAttrs = { ...ir.attributes, [target.attributeId]: ref };
+    if (ref.kind !== 'primitive') return ir; // attribute는 primitive만
+    const nextAttrs = {
+      ...ir.attributes,
+      [target.attributeId]: { primitive: ref.primitive, shade: ref.shade },
+    };
     return bumpMeta({ ...ir, attributes: nextAttrs });
   }
   if (target.kind === 'slot') {

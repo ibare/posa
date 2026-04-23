@@ -3,7 +3,7 @@ import { ATTRIBUTE_DEFINITIONS } from '../../catalog/attributes';
 import { SYMBOL_DEFINITIONS } from '../../catalog/symbols';
 import { oklchToHex } from '../../color/oklch';
 import {
-  enumerateAllSlotIds,
+  enumerateActiveSlotIds,
   getAttributeFromSlotId,
   resolveAttributeColor,
   resolveSymbolColor,
@@ -19,18 +19,19 @@ import { Swatch } from '../shared/Swatch';
  *   Attributes: 7행. 행 클릭 시 inspector. "slots" 버튼으로 Z1 descent.
  */
 export function Z0Plane() {
+  const ir = usePosaStore((s) => s.ir);
   const focusedNode = usePosaStore((s) => s.focusedNode);
   const setFocus = usePosaStore((s) => s.setFocus);
   const descendToAttribute = usePosaStore((s) => s.descendToAttribute);
 
   const slotCountByAttribute = useMemo(() => {
     const m: Record<string, number> = {};
-    for (const slotId of enumerateAllSlotIds()) {
+    for (const slotId of enumerateActiveSlotIds(ir)) {
       const attr = getAttributeFromSlotId(slotId);
       m[attr] = (m[attr] ?? 0) + 1;
     }
     return m;
-  }, []);
+  }, [ir]);
 
   return (
     <div className="mx-auto max-w-5xl space-y-10">

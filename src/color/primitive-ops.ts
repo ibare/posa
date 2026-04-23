@@ -130,9 +130,9 @@ function forEachDirectPrimitiveRef(
   for (const sym of Object.values(ir.symbols)) {
     if (sym) visit(sym);
   }
-  // Attribute는 ColorRef. primitive kind만 primitive 참조.
+  // Attribute는 항상 primitive 참조 (symbol live link 금지).
   for (const attr of Object.values(ir.attributes)) {
-    if (attr && attr.kind === 'primitive') visit(attr);
+    if (attr) visit(attr);
   }
   // Slot ref + state overrides. primitive kind만.
   for (const slot of Object.values(ir.slots)) {

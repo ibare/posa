@@ -1,15 +1,18 @@
 import { COMPONENT_DEFINITIONS, findComponentBySlotId } from '../catalog/components';
-import type {
-  AttributeId,
-  ColorRef,
-  IR,
-  OKLCH,
-  PrimitiveId,
-  ShadeIndex,
-  SlotId,
-  StateId,
-  SymbolId,
+import {
+  SYMBOL_IDS,
+  type AttributeId,
+  type ColorRef,
+  type IR,
+  type OKLCH,
+  type PrimitiveId,
+  type ShadeIndex,
+  type SlotId,
+  type StateId,
+  type SymbolId,
 } from './types';
+
+const SYMBOL_ID_SET: Set<string> = new Set(SYMBOL_IDS);
 
 /**
  * IR을 읽기만 해서 파생 뷰를 계산하는 순수 셀렉터.
@@ -36,9 +39,28 @@ export function enumerateAllSlotIds(): SlotId[] {
   return ids;
 }
 
-/** 주어진 attribute로 끝나는 slot id만 골라낸다. Z1 리스트용. */
-export function getSlotsByAttribute(attrId: AttributeId): SlotId[] {
-  return enumerateAllSlotIds().filter((id) => id.endsWith(`.${attrId}`));
+/**
+ * Variant 이름이 SymbolId와 동일한 slot은 그 symbol에 primitive가 할당된 경우에만 활성.
+ * (예: primary symbol 미할당 시 button.primary.* 전부 비노출.)
+ * 'outline'/'ghost'/'default' 처럼 symbol과 무관한 variant는 항상 활성.
+ * 변형이 없는 컴포넌트(card/input)는 항상 활성.
+ */
+export function isSlotActive(slotId: SlotId, ir: IR): boolean {
+  const parts = slotId.split('.');
+  if (parts.length !== 3) return true;
+  const variant = parts[1];
+  if (!SYMBOL_ID_SET.has(variant)) return true;
+  return ir.symbols[variant as SymbolId] != null;
+}
+
+/** Symbol 미할당으로 인해 비활성화된 slot을 걸러낸 활성 slot id 목록. */
+export function enumerateActiveSlotIds(ir: IR): SlotId[] {
+  return enumerateAllSlotIds().filter((id) => isSlotActive(id, ir));
+}
+
+/** 주어진 attribute로 끝나는 활성 slot id만 골라낸다. Z1 리스트용. */
+export function getSlotsByAttribute(attrId: AttributeId, ir: IR): SlotId[] {
+  return enumerateActiveSlotIds(ir).filter((id) => id.endsWith(`.${attrId}`));
 }
 
 /** slot id 끝부분에서 attribute id 추출. */
@@ -49,14 +71,14 @@ export function getAttributeFromSlotId(slotId: SlotId): AttributeId {
 
 /**
  * Slot의 표시 이름.
- *   - ref가 symbol 참조면 `${slotId}.${symbol}` 형태로 접미사가 붙는다.
- *   - 이외에는 base slot id 그대로.
+ *   - 명시적 slot.ref가 symbol이면 `${slotId}.${symbol}` 접미사.
+ *   - 그 외에는 base slot id 그대로.
  * (설계: slot 엔터티 자체는 단일 존재. 이름만 유저에게 보일 때 확장된다.)
  */
 export function getSlotDisplayName(slotId: SlotId, ir: IR): string {
   const slot = ir.slots[slotId];
-  if (!slot || !slot.ref || slot.ref.kind !== 'symbol') return slotId;
-  return `${slotId}.${slot.ref.symbol}`;
+  if (slot?.ref?.kind === 'symbol') return `${slotId}.${slot.ref.symbol}`;
+  return slotId;
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -88,15 +110,18 @@ export function resolveSymbolColor(ir: IR, symbolId: SymbolId): OKLCH | null {
 export function resolveAttributeColor(ir: IR, attrId: AttributeId): OKLCH | null {
   const assignment = ir.attributes[attrId];
   if (!assignment) return null;
-  return resolveColorRef(ir, assignment);
+  return ir.primitives[assignment.primitive]?.scale[assignment.shade] ?? null;
 }
 
 /**
  * 상속 체인:
- *   state override → slot.ref → attribute assignment → null
+ *   state override → slot.ref → attribute → null
  *
- * state === 'default'이거나 해당 state override가 없으면 slot.ref로 폴백.
- * slot.ref가 null이면 attribute로 폴백.
+ * Variant 이름이 SymbolId와 일치한다고 해서 자동으로 그 symbol에 바인딩되지 않는다.
+ * (background/border/text가 전부 한 색으로 묶이지 않게 하기 위함.)
+ * Symbol 라이브 링크는 사용자가 슬롯 인스펙터에서 명시적으로 "Use a symbol"을 선택했을 때만 형성된다.
+ *
+ * Attribute는 항상 primitive 스냅샷이므로 symbol 변경이 attribute 경유로 새지 않는다.
  */
 export function resolveSlotStateColor(
   ir: IR,
@@ -115,10 +140,12 @@ export function resolveSlotStateColor(
 
   if (slot?.ref) return resolveColorRef(ir, slot.ref);
 
-  // Slot ref 없음 → attribute에서 상속
+  // Slot 명시적 ref 없음 → attribute에서 상속 (primitive 스냅샷)
   const attrId = getAttributeFromSlotId(slotId);
   const attrAssignment = ir.attributes[attrId];
-  if (attrAssignment) return resolveColorRef(ir, attrAssignment);
+  if (attrAssignment) {
+    return ir.primitives[attrAssignment.primitive]?.scale[attrAssignment.shade] ?? null;
+  }
 
   return null;
 }
@@ -145,7 +172,7 @@ function forEachColorRef(ir: IR, visit: (ref: ColorRef) => void) {
     if (sym) visit({ kind: 'primitive', primitive: sym.primitive, shade: sym.shade });
   }
   for (const attr of Object.values(ir.attributes)) {
-    if (attr) visit(attr);
+    if (attr) visit({ kind: 'primitive', primitive: attr.primitive, shade: attr.shade });
   }
   for (const slot of Object.values(ir.slots)) {
     if (slot.ref) visit(slot.ref);

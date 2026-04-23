@@ -21,8 +21,8 @@ export function Z1Plane() {
 
   const slotIds = useMemo(() => {
     if (!selectedAttributeId) return [];
-    return getSlotsByAttribute(selectedAttributeId);
-  }, [selectedAttributeId]);
+    return getSlotsByAttribute(selectedAttributeId, ir);
+  }, [selectedAttributeId, ir]);
 
   if (!selectedAttributeId) return null;
 

@@ -91,11 +91,16 @@ export const ATTRIBUTE_IDS: AttributeId[] = [
 ];
 
 // ColorRef — 어떤 색을 가리키느냐. primitive 직접 참조, 아니면 symbol 경유.
+// 단 attribute는 symbol을 가리킬 수 없다 (cascade 차단). slot/slot-state만 가능.
 export type ColorRef =
   | { kind: 'primitive'; primitive: PrimitiveId; shade: ShadeIndex }
   | { kind: 'symbol'; symbol: SymbolId };
 
-export type AttributeAssignment = ColorRef;
+// Attribute는 항상 primitive 스냅샷. symbol live link 금지.
+export type AttributeAssignment = {
+  primitive: PrimitiveId;
+  shade: ShadeIndex;
+};
 
 // ===== Slots — 컴포넌트 × attribute =====
 export type ComponentId = string;

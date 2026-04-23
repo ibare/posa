@@ -1,5 +1,6 @@
 import {
   SHADE_INDICES,
+  type AttributeAssignment,
   type ColorRef,
   type IR,
   type PrimitiveId,
@@ -70,11 +71,19 @@ export function mergePrimitive(
     nextSymbols[symId as keyof IR['symbols']] = next;
   }
 
+  const remapAttr = (
+    assign: AttributeAssignment | null,
+  ): AttributeAssignment | null => {
+    if (!assign) return assign;
+    if (assign.primitive !== sourceId) return assign;
+    return { primitive: targetId, shade: remapShade(assign.shade) };
+  };
+
   const nextAttributes = { ...ir.attributes };
   for (const [attrId, assign] of Object.entries(ir.attributes)) {
-    const remapped = remapRef(assign);
+    const remapped = remapAttr(assign);
     if (remapped !== assign) {
-      nextAttributes[attrId as keyof IR['attributes']] = remapped ?? null;
+      nextAttributes[attrId as keyof IR['attributes']] = remapped;
     }
   }
 
@@ -129,7 +138,7 @@ export function listPrimitiveReferences(
     }
   }
   for (const [attrId, assign] of Object.entries(ir.attributes)) {
-    if (assign && assign.kind === 'primitive' && assign.primitive === primitiveId) {
+    if (assign && assign.primitive === primitiveId) {
       out.push({ kind: 'attribute', attributeId: attrId });
     }
   }
@@ -160,7 +169,7 @@ export function shadeUsage(
     if (assign && assign.primitive === primitiveId) usage[assign.shade]++;
   }
   for (const assign of Object.values(ir.attributes)) {
-    if (assign && assign.kind === 'primitive' && assign.primitive === primitiveId) {
+    if (assign && assign.primitive === primitiveId) {
       usage[assign.shade]++;
     }
   }

@@ -138,7 +138,7 @@ describe('listPrimitiveReferences', () => {
       },
       attributes: {
         ...ir1.attributes,
-        background: { kind: 'primitive', primitive: primitiveId, shade: 50 },
+        background: { primitive: primitiveId, shade: 50 },
       },
       slots: {
         'button.primary.background': {
