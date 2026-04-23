@@ -9,6 +9,11 @@ import {
   getVisibleVariants,
 } from '../../ir/selectors';
 import type { AttributeId, IR } from '../../ir/types';
+import {
+  useComponentDescription,
+  useComponentLabel,
+  useVariantLabel,
+} from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
 import { SlotCard } from '../shared/SlotCard';
 
@@ -34,8 +39,6 @@ export function ComponentSlotGrid({
   if (!hasVariants) {
     return (
       <VariantSection
-        title={null}
-        mono={null}
         componentId={component.id}
         variantId={null}
         attributes={component.attributes}
@@ -59,10 +62,8 @@ export function ComponentSlotGrid({
       {visibleVariants.map((variant) => (
         <VariantSection
           key={variant.id}
-          title={variant.label}
-          mono={variant.id}
-          componentId={component.id}
           variantId={variant.id}
+          componentId={component.id}
           attributes={component.attributes}
           focusedNode={focusedNode}
           setFocus={setFocus}
@@ -87,6 +88,8 @@ export function ZXPlane() {
     (s) => s.clearSelectedComponent,
   );
   const { t } = useTranslation('planes');
+  const componentLabel = useComponentLabel(selectedComponentId ?? '');
+  const componentDescription = useComponentDescription(selectedComponentId ?? '');
 
   const component = useMemo(
     () =>
@@ -107,10 +110,10 @@ export function ZXPlane() {
             {t('zx.component')}
           </div>
           <div className="font-mono text-lg text-stone-900">
-            {component.label}
+            {componentLabel}
           </div>
           <div className="text-xs text-stone-500 mt-0.5">
-            {component.description}
+            {componentDescription}
           </div>
         </div>
         <button
@@ -134,32 +137,28 @@ export function ZXPlane() {
 }
 
 function VariantSection({
-  title,
-  mono,
   componentId,
   variantId,
   attributes,
   focusedNode,
   setFocus,
 }: {
-  title: string | null;
-  mono: string | null;
   componentId: string;
   variantId: string | null;
   attributes: AttributeId[];
   focusedNode: string | null;
   setFocus: (nodeId: string | null) => void;
 }) {
+  const variantLabel = useVariantLabel(variantId ?? '');
+  const { t } = useTranslation('catalog');
   return (
     <section className="space-y-2">
-      {title && (
+      {variantId && (
         <div className="flex items-baseline gap-2 px-1">
-          <span className="font-mono text-sm text-stone-900">{title}</span>
-          {mono && (
-            <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
-              {mono}
-            </span>
-          )}
+          <span className="font-mono text-sm text-stone-900">{variantLabel}</span>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
+            {variantId}
+          </span>
         </div>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
@@ -171,7 +170,9 @@ function VariantSection({
           return (
             <div key={slotId} className="space-y-1">
               <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400 pl-1">
-                {getAttributeDefinition(attr)?.label ?? attr}
+                {getAttributeDefinition(attr)
+                  ? t(`attributes.${attr}.label`)
+                  : attr}
               </div>
               <SlotCard
                 slotId={slotId}

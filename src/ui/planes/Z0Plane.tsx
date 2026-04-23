@@ -110,6 +110,7 @@ function SymbolChip({ symbol, focused, onFocusToggle }: SymbolChipProps) {
   const ir = usePosaStore((s) => s.ir);
   const color = resolveSymbolColor(ir, symbol.id);
   const hex = color ? oklchToHex(color.L, color.C, color.H) : null;
+  const { t } = useTranslation('catalog');
 
   return (
     <div className="relative">
@@ -131,7 +132,7 @@ function SymbolChip({ symbol, focused, onFocusToggle }: SymbolChipProps) {
         <div className="px-3 py-2 bg-white">
           <div className="font-mono text-sm text-stone-900">{symbol.id}</div>
           <div className="text-[11px] text-stone-500 leading-snug">
-            {symbol.description}
+            {t(`symbols.${symbol.id}.description`)}
           </div>
         </div>
       </button>
@@ -163,6 +164,7 @@ function AttributeRow({
   const components = useActiveComponentDefs();
   const color = resolveAttributeColor(ir, attr.id);
   const { t } = useTranslation('planes');
+  const { t: tCat } = useTranslation('catalog');
   const directChildColors = useMemo(
     () => getDirectChildColorsForAttribute(components, ir, attr.id),
     [components, ir, attr.id],
@@ -192,7 +194,9 @@ function AttributeRow({
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-sm text-stone-900">{attr.label}</span>
+            <span className="font-mono text-sm text-stone-900">
+              {tCat(`attributes.${attr.id}.label`)}
+            </span>
             <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
               {attr.id}
             </span>
@@ -200,7 +204,7 @@ function AttributeRow({
           <div className="text-xs text-stone-500 leading-snug mt-0.5">
             {isMultiMode
               ? `${t('z0.directColor', { count: directChildColors.length })} ${t('z0.acrossSlots')}`
-              : attr.description}
+              : tCat(`attributes.${attr.id}.description`)}
           </div>
         </div>
         <button

@@ -17,8 +17,6 @@ function toDashName(id: string): string {
  */
 export const tailwindConfigCompiler: Compiler = {
   id: 'tailwind',
-  label: 'Tailwind Config',
-  description: 'tailwind.config.js colors (pair with CSS variables)',
   compile: ({ ir, components }) => {
     const activeSymbolIds = getActiveSymbolIds(components);
     const activeAttributeIds = getActiveAttributeIds(components);

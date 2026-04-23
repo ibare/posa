@@ -21,8 +21,6 @@ function primitiveVar(primId: string, shade: number): string {
 
 export const cssVariablesCompiler: Compiler = {
   id: 'css-vars',
-  label: 'CSS Variables',
-  description: 'Design token CSS variables under :root',
   compile: ({ ir, components }) => {
     const activeSymbolIds = getActiveSymbolIds(components);
     const activeAttributeIds = getActiveAttributeIds(components);

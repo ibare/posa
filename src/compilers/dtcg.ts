@@ -63,8 +63,6 @@ function ensureObject(
 
 export const dtcgCompiler: Compiler = {
   id: 'dtcg',
-  label: 'Design Tokens JSON',
-  description: 'W3C DTCG 포맷 (`{ref}` alias)',
   compile: ({ ir, components }) => {
     const activeSymbolIds = getActiveSymbolIds(components);
     const activeAttributeIds = getActiveAttributeIds(components);

@@ -14,7 +14,7 @@ import {
   type StateId,
   type SymbolId,
 } from '../ir/types';
-import { useActiveComponentDefs } from '../store/hooks';
+import { useActiveComponentDefs, useGroupLabel } from '../store/hooks';
 import { usePosaStore, type Layer } from '../store/posa-store';
 import { PosaPreviewRoot } from './PosaPreviewRoot';
 import { StateGroup } from './StateGroup';
@@ -808,24 +808,42 @@ function GroupChipBar({
       >
         All
       </button>
-      {COMPONENT_GROUPS.map((g) => {
-        const active = selectedGroupId === g.id;
-        return (
-          <button
-            key={g.id}
-            type="button"
-            onClick={() => (active ? onClear() : onSelect(g.id))}
-            className={[
-              'rounded-full px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider transition',
-              active
-                ? 'bg-stone-900 text-white'
-                : 'bg-stone-100 text-stone-600 hover:bg-stone-200',
-            ].join(' ')}
-          >
-            {g.label}
-          </button>
-        );
-      })}
+      {COMPONENT_GROUPS.map((g) => (
+        <GroupChip
+          key={g.id}
+          id={g.id}
+          active={selectedGroupId === g.id}
+          onToggle={() =>
+            selectedGroupId === g.id ? onClear() : onSelect(g.id)
+          }
+        />
+      ))}
     </div>
+  );
+}
+
+function GroupChip({
+  id,
+  active,
+  onToggle,
+}: {
+  id: ComponentGroupId;
+  active: boolean;
+  onToggle: () => void;
+}) {
+  const label = useGroupLabel(id);
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={[
+        'rounded-full px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider transition',
+        active
+          ? 'bg-stone-900 text-white'
+          : 'bg-stone-100 text-stone-600 hover:bg-stone-200',
+      ].join(' ')}
+    >
+      {label}
+    </button>
   );
 }

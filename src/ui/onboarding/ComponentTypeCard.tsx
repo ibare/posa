@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { ComponentDefinition } from '../../catalog/components';
+import { useComponentDescription, useComponentLabel } from '../../store/hooks';
 import { ComponentPreview } from './ComponentPreview';
 
 type Props = {
@@ -10,6 +11,8 @@ type Props = {
 
 export function ComponentTypeCard({ component, selected, onToggle }: Props) {
   const { t } = useTranslation('onboarding');
+  const label = useComponentLabel(component.id);
+  const description = useComponentDescription(component.id);
   const variantCount = component.variants?.length ?? 0;
   const stateCount = component.states.length;
   const attrCount = component.attributes.length;
@@ -31,10 +34,10 @@ export function ComponentTypeCard({ component, selected, onToggle }: Props) {
         <Checkbox checked={selected} />
         <div className="min-w-0 flex-1">
           <div className="font-mono text-sm text-stone-900 truncate">
-            {component.label}
+            {label}
           </div>
           <div className="text-[11px] text-stone-500 leading-snug mt-0.5 truncate">
-            {component.description}
+            {description}
           </div>
           <div className="mt-1.5 flex items-center gap-1.5 text-[10px] font-mono text-stone-400">
             <span className="tabular-nums">{attrCount}</span>

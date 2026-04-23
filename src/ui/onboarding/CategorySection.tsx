@@ -4,6 +4,7 @@ import type {
   ComponentGroupDefinition,
 } from '../../catalog/components';
 import type { ComponentId } from '../../ir/types';
+import { useGroupLabel } from '../../store/hooks';
 import { ComponentTypeCard } from './ComponentTypeCard';
 
 type Props = {
@@ -22,6 +23,7 @@ export function CategorySection({
   onToggleGroup,
 }: Props) {
   const { t } = useTranslation('onboarding');
+  const groupLabel = useGroupLabel(group.id);
   const selectedCount = members.filter((m) => selected.has(m.id)).length;
   const allSelected = selectedCount === members.length;
   const noneSelected = selectedCount === 0;
@@ -33,7 +35,7 @@ export function CategorySection({
           <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
             {group.id}
           </span>
-          <span className="font-mono text-sm text-stone-900">{group.label}</span>
+          <span className="font-mono text-sm text-stone-900">{groupLabel}</span>
           <span className="text-xs font-mono tabular-nums text-stone-500">
             <span className={noneSelected ? 'text-stone-400' : 'text-stone-900'}>
               {selectedCount}

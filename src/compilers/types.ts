@@ -20,7 +20,5 @@ export type CompileInput = {
 
 export type Compiler = {
   id: string;
-  label: string;
-  description: string;
   compile: (input: CompileInput) => CompileResult;
 };

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { AttributeDefinition } from '../catalog/attributes';
 import {
   COMPONENT_DEFINITIONS,
@@ -59,12 +60,38 @@ export function useActiveSymbolDefs(): SymbolDefinition[] {
 
 /** attribute id → label. id가 null이면 빈 문자열, 정의 없으면 id 자체를 fallback. */
 export function useAttributeLabel(id: AttributeId | null | undefined): string {
+  const { t } = useTranslation('catalog');
   if (!id) return '';
-  return getAttributeDefinition(id)?.label ?? id;
+  if (!getAttributeDefinition(id)) return id;
+  return t(`attributes.${id}.label`);
 }
 
 /** symbol id → label. id가 null이면 빈 문자열, 정의 없으면 id 자체를 fallback. */
 export function useSymbolLabel(id: SymbolId | null | undefined): string {
+  const { t } = useTranslation('catalog');
   if (!id) return '';
-  return getSymbolDefinition(id)?.label ?? id;
+  if (!getSymbolDefinition(id)) return id;
+  return t(`symbols.${id}.label`);
+}
+
+/** id로 컴포넌트 label 조회. 정의 없으면 id 반환. */
+export function useComponentLabel(id: string): string {
+  const { t } = useTranslation('catalog');
+  return t(`components.${id}.label`, { defaultValue: id });
+}
+
+/** id로 컴포넌트 description 조회. 정의 없으면 빈 문자열. */
+export function useComponentDescription(id: string): string {
+  const { t } = useTranslation('catalog');
+  return t(`components.${id}.description`, { defaultValue: '' });
+}
+
+export function useGroupLabel(id: string): string {
+  const { t } = useTranslation('catalog');
+  return t(`groups.${id}`, { defaultValue: id });
+}
+
+export function useVariantLabel(id: string): string {
+  const { t } = useTranslation('catalog');
+  return t(`variants.${id}`, { defaultValue: id });
 }

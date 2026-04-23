@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { COMPONENT_GROUPS } from '../../catalog/components';
-import { useAttributeLabel } from '../../store/hooks';
+import { useAttributeLabel, useGroupLabel } from '../../store/hooks';
 import { usePosaStore, type Layer } from '../../store/posa-store';
 
 export function BreadcrumbStrip() {
@@ -22,10 +21,8 @@ export function BreadcrumbStrip() {
   };
 
   const attrLabel = useAttributeLabel(selectedAttributeId);
-  const groupLabel = selectedGroupId
-    ? COMPONENT_GROUPS.find((g) => g.id === selectedGroupId)?.label ??
-      selectedGroupId
-    : null;
+  const groupLabelRaw = useGroupLabel(selectedGroupId ?? '');
+  const groupLabel = selectedGroupId ? groupLabelRaw : null;
 
   // ZX 모드: 단일 컴포넌트 > 그룹 순으로 우선. 둘 다 Z2가 아닐 때만 활성.
   const inZxComponent = selectedComponentId != null && layer !== 'z2';

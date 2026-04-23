@@ -9,7 +9,7 @@ export function ExportView() {
   const components = useActiveComponentDefs();
   const [selectedId, setSelectedId] = useState<string>(COMPILERS[0].id);
   const [copied, setCopied] = useState(false);
-  const { t } = useTranslation(['export', 'common']);
+  const { t } = useTranslation(['export', 'common', 'catalog']);
 
   const selected: Compiler =
     COMPILERS.find((c) => c.id === selectedId) ?? COMPILERS[0];
@@ -81,14 +81,18 @@ export function ExportView() {
                   : 'border-stone-200 hover:border-stone-500 text-stone-700',
               ].join(' ')}
             >
-              <div className="font-mono text-sm">{c.label}</div>
+              <div className="font-mono text-sm">
+                {t(`catalog:compilers.${c.id}.label`, { defaultValue: c.id })}
+              </div>
               <div
                 className={[
                   'text-xs mt-0.5 leading-snug',
                   active ? 'text-cream/70' : 'text-stone-500',
                 ].join(' ')}
               >
-                {c.description}
+                {t(`catalog:compilers.${c.id}.description`, {
+                  defaultValue: '',
+                })}
               </div>
             </button>
           );

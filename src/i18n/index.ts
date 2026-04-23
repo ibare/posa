@@ -1,5 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import catalogEn from './locales/en/catalog.json';
 import commonEn from './locales/en/common.json';
 import exportEn from './locales/en/export.json';
 import explorerEn from './locales/en/explorer.json';
@@ -7,6 +8,7 @@ import inspectorEn from './locales/en/inspector.json';
 import onboardingEn from './locales/en/onboarding.json';
 import planesEn from './locales/en/planes.json';
 import primitivesEn from './locales/en/primitives.json';
+import catalogKo from './locales/ko/catalog.json';
 import commonKo from './locales/ko/common.json';
 import exportKo from './locales/ko/export.json';
 import explorerKo from './locales/ko/explorer.json';
@@ -24,6 +26,7 @@ export const NAMESPACES = [
   'explorer',
   'inspector',
   'export',
+  'catalog',
 ] as const;
 export type Namespace = (typeof NAMESPACES)[number];
 
@@ -36,6 +39,7 @@ const RESOURCES = {
     explorer: explorerEn,
     inspector: inspectorEn,
     export: exportEn,
+    catalog: catalogEn,
   },
   ko: {
     common: commonKo,
@@ -45,6 +49,7 @@ const RESOURCES = {
     explorer: explorerKo,
     inspector: inspectorKo,
     export: exportKo,
+    catalog: catalogKo,
   },
 } as const satisfies Record<Locale, Record<Namespace, unknown>>;
 

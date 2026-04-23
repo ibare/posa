@@ -1,7 +1,15 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { COMPONENT_GROUPS } from '../../catalog/components';
-import { useActiveComponentDefs } from '../../store/hooks';
+import {
+  COMPONENT_GROUPS,
+  type ComponentDefinition,
+} from '../../catalog/components';
+import type { IR } from '../../ir/types';
+import {
+  useActiveComponentDefs,
+  useComponentLabel,
+  useGroupLabel,
+} from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
 import { ComponentSlotGrid } from './ZXPlane';
 
@@ -22,6 +30,7 @@ export function ZXGroupPlane() {
   const clearSelectedGroup = usePosaStore((s) => s.clearSelectedGroup);
   const components = useActiveComponentDefs();
   const { t } = useTranslation('planes');
+  const groupLabel = useGroupLabel(selectedGroupId ?? '');
 
   const group = useMemo(
     () =>
@@ -48,7 +57,7 @@ export function ZXGroupPlane() {
           <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
             {t('zxGroup.label')}
           </div>
-          <div className="font-mono text-lg text-stone-900">{group.label}</div>
+          <div className="font-mono text-lg text-stone-900">{groupLabel}</div>
           <div className="text-xs text-stone-500 mt-0.5">
             {t('zxGroup.componentCount', { count: members.length })}
           </div>
@@ -65,34 +74,59 @@ export function ZXGroupPlane() {
 
       <div className="space-y-8">
         {members.map((component) => (
-          <section key={component.id} className="space-y-3">
-            <div className="flex items-baseline justify-between gap-2 px-1 border-b border-stone-200 pb-1.5">
-              <div className="flex items-baseline gap-2">
-                <span className="font-mono text-sm text-stone-900">
-                  {component.label}
-                </span>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
-                  {component.id}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => selectComponent(component.id)}
-                className="text-[10px] font-mono uppercase tracking-wider text-stone-500 hover:text-stone-900 px-1.5 py-0.5 rounded hover:bg-stone-200/60 transition"
-                title={t('zxGroup.focusTitle')}
-              >
-                {t('zxGroup.focus')}
-              </button>
-            </div>
-            <ComponentSlotGrid
-              component={component}
-              focusedNode={focusedNode}
-              setFocus={setFocus}
-              ir={ir}
-            />
-          </section>
+          <ComponentSection
+            key={component.id}
+            component={component}
+            focusedNode={focusedNode}
+            setFocus={setFocus}
+            ir={ir}
+            onFocus={() => selectComponent(component.id)}
+          />
         ))}
       </div>
     </div>
+  );
+}
+
+function ComponentSection({
+  component,
+  focusedNode,
+  setFocus,
+  ir,
+  onFocus,
+}: {
+  component: ComponentDefinition;
+  focusedNode: string | null;
+  setFocus: (nodeId: string | null) => void;
+  ir: IR;
+  onFocus: () => void;
+}) {
+  const { t } = useTranslation('planes');
+  const label = useComponentLabel(component.id);
+  return (
+    <section className="space-y-3">
+      <div className="flex items-baseline justify-between gap-2 px-1 border-b border-stone-200 pb-1.5">
+        <div className="flex items-baseline gap-2">
+          <span className="font-mono text-sm text-stone-900">{label}</span>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
+            {component.id}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={onFocus}
+          className="text-[10px] font-mono uppercase tracking-wider text-stone-500 hover:text-stone-900 px-1.5 py-0.5 rounded hover:bg-stone-200/60 transition"
+          title={t('zxGroup.focusTitle')}
+        >
+          {t('zxGroup.focus')}
+        </button>
+      </div>
+      <ComponentSlotGrid
+        component={component}
+        focusedNode={focusedNode}
+        setFocus={setFocus}
+        ir={ir}
+      />
+    </section>
   );
 }
