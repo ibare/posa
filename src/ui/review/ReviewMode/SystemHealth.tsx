@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { oklchToHex } from '../../../color/oklch';
 import type { ContrastVerdict } from '../../../color/contrast';
 import {
@@ -20,6 +21,7 @@ import { SectionCard, SubCard } from './shared';
 type Props = { ir: IR };
 
 export function SystemHealth({ ir }: Props) {
+  const { t } = useTranslation('review');
   const components = useActiveComponentDefs();
   const activeSymbolIds = useActiveSymbolIds();
   const activeAttributeIds = useActiveAttributeIds();
@@ -43,9 +45,9 @@ export function SystemHealth({ ir }: Props) {
 
   return (
     <SectionCard
-      eyebrow="System health"
-      title="Before you ship it"
-      description="A quick sanity check on balance, readability, and anything that might surprise you later."
+      eyebrow={t('health.eyebrow')}
+      title={t('health.title')}
+      description={t('health.description')}
     >
       <div className="space-y-5">
         <Distribution
@@ -80,6 +82,7 @@ function Distribution({
   totalAttributes: number;
   assignedAttributes: number;
 }) {
+  const { t } = useTranslation('review');
   const totalRefs = primitiveUsage.reduce((sum, b) => sum + b.totalRefs, 0);
   const top = primitiveUsage[0];
   const topShare = top && totalRefs > 0 ? top.totalRefs / totalRefs : 0;
@@ -90,41 +93,47 @@ function Distribution({
     const pct = Math.round(topShare * 100);
     if (topShare >= 0.6) {
       leadBadge = {
-        label: `${top.primitiveId} carries ${pct}% of references — your palette leans heavily on one family`,
+        label: t('health.distribution.leadWarn', { id: top.primitiveId, pct }),
         tone: 'warn',
       };
     } else {
       leadBadge = {
-        label: `${top.primitiveId} leads at ${pct}% of references`,
+        label: t('health.distribution.leadNeutral', {
+          id: top.primitiveId,
+          pct,
+        }),
         tone: 'neutral',
       };
     }
   }
 
   return (
-    <SubCard title="Distribution" hint="Where your references land">
+    <SubCard
+      title={t('health.distribution.title')}
+      hint={t('health.distribution.hint')}
+    >
       <div className="space-y-3">
         <div className="grid grid-cols-3 gap-2">
           <StatTile
-            label="Primitives"
+            label={t('health.distribution.stats.primitives')}
             value={`${primitiveIds.length}`}
-            sub={`${totalRefs} total refs`}
+            sub={t('health.distribution.stats.totalRefs', { count: totalRefs })}
           />
           <StatTile
-            label="Symbols"
+            label={t('health.distribution.stats.symbols')}
             value={`${assignedSymbols}/${totalSymbols || 0}`}
-            sub="assigned"
+            sub={t('health.distribution.stats.assigned')}
           />
           <StatTile
-            label="Attributes"
+            label={t('health.distribution.stats.attributes')}
             value={`${assignedAttributes}/${totalAttributes || 0}`}
-            sub="assigned"
+            sub={t('health.distribution.stats.assigned')}
           />
         </div>
 
         {primitiveUsage.length === 0 ? (
           <div className="rounded-md border border-dashed border-stone-300 px-3 py-4 text-center text-[12px] italic text-stone-400">
-            Nothing references the palette yet.
+            {t('health.distribution.empty')}
           </div>
         ) : (
           <div className="space-y-1.5">
@@ -162,6 +171,7 @@ function DistributionRow({
   bucket: PrimitiveReferenceBucket;
   totalRefs: number;
 }) {
+  const { t } = useTranslation('review');
   const pct = totalRefs > 0 ? bucket.totalRefs / totalRefs : 0;
   const hex = oklchToHex(
     bucket.representativeColor.L,
@@ -183,7 +193,10 @@ function DistributionRow({
           {bucket.primitiveId}
         </div>
         <div className="truncate font-mono text-[9px] text-stone-400">
-          {bucket.usedShades.length}/{SHADE_INDICES.length} shades
+          {t('health.distribution.shadesFraction', {
+            used: bucket.usedShades.length,
+            total: SHADE_INDICES.length,
+          })}
         </div>
       </div>
       <div className="relative h-3 flex-1 rounded-full bg-stone-100">
@@ -235,31 +248,23 @@ function StatTile({
 
 const VERDICT_STYLE: Record<
   ContrastVerdict,
-  { dot: string; badge: string; label: string }
+  { dot: string; badge: string }
 > = {
-  excellent: {
-    dot: 'bg-green-500',
-    badge: 'bg-green-50 text-green-700',
-    label: 'Excellent',
-  },
-  good: {
-    dot: 'bg-lime-500',
-    badge: 'bg-lime-50 text-lime-700',
-    label: 'Good',
-  },
-  'large-only': {
-    dot: 'bg-amber-500',
-    badge: 'bg-amber-50 text-amber-700',
-    label: 'Large only',
-  },
-  poor: {
-    dot: 'bg-red-500',
-    badge: 'bg-red-50 text-red-700',
-    label: 'Hard to read',
-  },
+  excellent: { dot: 'bg-green-500', badge: 'bg-green-50 text-green-700' },
+  good: { dot: 'bg-lime-500', badge: 'bg-lime-50 text-lime-700' },
+  'large-only': { dot: 'bg-amber-500', badge: 'bg-amber-50 text-amber-700' },
+  poor: { dot: 'bg-red-500', badge: 'bg-red-50 text-red-700' },
+};
+
+const VERDICT_RANGE: Record<ContrastVerdict, string> = {
+  excellent: '7.0+',
+  good: '4.5–6.9',
+  'large-only': '3.0–4.4',
+  poor: '<3.0',
 };
 
 function Readability({ pairs }: { pairs: ContrastPair[] }) {
+  const { t } = useTranslation('review');
   const total = pairs.length;
   const counts: Record<ContrastVerdict, number> = {
     excellent: 0,
@@ -268,15 +273,16 @@ function Readability({ pairs }: { pairs: ContrastPair[] }) {
     poor: 0,
   };
   for (const p of pairs) counts[p.verdict]++;
+  const visiblePairs = pairs.slice(0, 20);
 
   return (
     <SubCard
-      title="Readability"
-      hint={`${total} text/surface ${total === 1 ? 'pair' : 'pairs'} checked (WCAG)`}
+      title={t('health.readability.title')}
+      hint={t('health.readability.pairCount', { count: total })}
     >
       {total === 0 ? (
         <div className="rounded-md border border-dashed border-stone-300 px-3 py-4 text-center text-[12px] italic text-stone-400">
-          No text/surface pairs to grade yet.
+          {t('health.readability.empty')}
         </div>
       ) : (
         <div className="space-y-3">
@@ -288,12 +294,14 @@ function Readability({ pairs }: { pairs: ContrastPair[] }) {
             )}
           </div>
           <div className="space-y-1">
-            {pairs.slice(0, 20).map((p) => (
+            {visiblePairs.map((p) => (
               <PairRow key={`${p.fgSlotId}|${p.bgSlotId}`} pair={p} />
             ))}
-            {pairs.length > 20 && (
+            {pairs.length > visiblePairs.length && (
               <div className="pt-1 text-center font-mono text-[10px] text-stone-400">
-                + {pairs.length - 20} more pairs not shown
+                {t('health.readability.more', {
+                  count: pairs.length - visiblePairs.length,
+                })}
               </div>
             )}
           </div>
@@ -310,30 +318,28 @@ function VerdictCard({
   verdict: ContrastVerdict;
   count: number;
 }) {
+  const { t } = useTranslation('review');
   const s = VERDICT_STYLE[verdict];
-  const range =
-    verdict === 'excellent'
-      ? '7.0+'
-      : verdict === 'good'
-        ? '4.5–6.9'
-        : verdict === 'large-only'
-          ? '3.0–4.4'
-          : '<3.0';
   return (
     <div className="rounded-md border border-stone-200 bg-white px-3 py-2.5">
       <div className="flex items-center gap-1.5">
         <span className={`h-2 w-2 rounded-full ${s.dot}`} />
-        <span className="text-[11px] text-stone-700">{s.label}</span>
+        <span className="text-[11px] text-stone-700">
+          {t(`health.readability.verdict.${verdict}`)}
+        </span>
       </div>
       <div className="mt-0.5 font-mono text-xl tabular-nums text-stone-900">
         {count}
       </div>
-      <div className="font-mono text-[10px] text-stone-400">{range}</div>
+      <div className="font-mono text-[10px] text-stone-400">
+        {VERDICT_RANGE[verdict]}
+      </div>
     </div>
   );
 }
 
 function PairRow({ pair }: { pair: ContrastPair }) {
+  const { t } = useTranslation('review');
   const s = VERDICT_STYLE[pair.verdict];
   const fgHex = oklchToHex(pair.fgColor.L, pair.fgColor.C, pair.fgColor.H);
   const bgHex = oklchToHex(pair.bgColor.L, pair.bgColor.C, pair.bgColor.H);
@@ -350,19 +356,22 @@ function PairRow({ pair }: { pair: ContrastPair }) {
           border: `1px solid ${fgHex}22`,
         }}
       >
-        Sample
+        {t('health.readability.sample')}
       </div>
       <div className="min-w-0 flex-1 truncate font-mono text-[11px] text-stone-600">
         <span className="text-stone-500">{scope}</span>
         <span className="text-stone-300"> · </span>
         <span className="text-stone-900">{pair.fgAttributeId}</span>
-        <span className="text-stone-400"> on </span>
+        <span className="text-stone-400">
+          {' '}
+          {t('health.readability.on')}{' '}
+        </span>
         <span className="text-stone-900">{pair.bgAttributeId}</span>
       </div>
       <div
         className={`flex-none rounded px-1.5 py-0.5 font-mono text-[10px] ${s.badge}`}
       >
-        {s.label}
+        {t(`health.readability.verdict.${pair.verdict}`)}
       </div>
       <div className="w-10 flex-none text-right font-mono text-[11px] tabular-nums text-stone-400">
         {pair.ratio.toFixed(1)}
@@ -374,15 +383,17 @@ function PairRow({ pair }: { pair: ContrastPair }) {
 // ───── Heads up ─────
 
 function HeadsUp({ items }: { items: HeadsUpItem[] }) {
+  const { t } = useTranslation('review');
+  const hint =
+    items.length === 0
+      ? t('health.headsUp.allClear')
+      : t('health.headsUp.noted', { count: items.length });
   return (
-    <SubCard
-      title="Heads up"
-      hint={items.length === 0 ? 'All clear' : `${items.length} noted`}
-    >
+    <SubCard title={t('health.headsUp.title')} hint={hint}>
       {items.length === 0 ? (
         <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2.5 text-[12px] text-green-800">
           <span className="h-2 w-2 rounded-full bg-green-500" />
-          Nothing stands out. Your system looks consistent.
+          {t('health.headsUp.empty')}
         </div>
       ) : (
         <div className="space-y-1.5">
@@ -396,7 +407,9 @@ function HeadsUp({ items }: { items: HeadsUpItem[] }) {
 }
 
 function HeadsUpRow({ item }: { item: HeadsUpItem }) {
+  const { t } = useTranslation('review');
   const isWarn = item.severity === 'warn';
+  const { title, detail } = renderItem(item, t);
   return (
     <div
       className={[
@@ -414,14 +427,37 @@ function HeadsUpRow({ item }: { item: HeadsUpItem }) {
           ].join(' ')}
         />
         <div className="min-w-0 flex-1">
-          <div className="text-[13px] font-medium text-stone-900">
-            {item.title}
-          </div>
-          <div className="mt-0.5 text-[11px] text-stone-600">
-            {item.detail}
-          </div>
+          <div className="text-[13px] font-medium text-stone-900">{title}</div>
+          <div className="mt-0.5 text-[11px] text-stone-600">{detail}</div>
         </div>
       </div>
     </div>
   );
+}
+
+function renderItem(
+  item: HeadsUpItem,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): { title: string; detail: string } {
+  switch (item.kind) {
+    case 'hover-invisible':
+      return {
+        title: t('health.headsUp.hoverInvisible.title'),
+        detail: t('health.headsUp.hoverInvisible.detail', {
+          slotId: item.slotId,
+        }),
+      };
+    case 'status-clash':
+      return {
+        title: t('health.headsUp.statusClash.title', {
+          symbolA: capitalize(item.symbolA),
+          symbolB: item.symbolB,
+        }),
+        detail: t('health.headsUp.statusClash.detail'),
+      };
+  }
+}
+
+function capitalize(s: string): string {
+  return s.length === 0 ? s : s[0].toUpperCase() + s.slice(1);
 }

@@ -233,9 +233,12 @@ describe('findHeadsUpItems', () => {
       },
     };
     const items = findHeadsUpItems(ir, COMPONENT_DEFINITIONS);
-    const hoverWarn = items.find((i) => i.id.startsWith('hover:'));
+    const hoverWarn = items.find((i) => i.kind === 'hover-invisible');
     expect(hoverWarn).toBeDefined();
-    expect(hoverWarn!.severity).toBe('warn');
+    if (hoverWarn && hoverWarn.kind === 'hover-invisible') {
+      expect(hoverWarn.severity).toBe('warn');
+      expect(hoverWarn.slotId).toBe('button.background');
+    }
   });
 
   it('success와 info가 비슷한 hue에 있으면 혼동 경고를 낸다', () => {
@@ -249,7 +252,12 @@ describe('findHeadsUpItems', () => {
       },
     };
     const items = findHeadsUpItems(ir, COMPONENT_DEFINITIONS);
-    const clash = items.find((i) => i.id.startsWith('status-clash:'));
+    const clash = items.find((i) => i.kind === 'status-clash');
     expect(clash).toBeDefined();
+    if (clash && clash.kind === 'status-clash') {
+      expect(new Set([clash.symbolA, clash.symbolB])).toEqual(
+        new Set(['success', 'info']),
+      );
+    }
   });
 });

@@ -8,6 +8,7 @@ import inspectorEn from './locales/en/inspector.json';
 import onboardingEn from './locales/en/onboarding.json';
 import planesEn from './locales/en/planes.json';
 import primitivesEn from './locales/en/primitives.json';
+import reviewEn from './locales/en/review.json';
 import catalogKo from './locales/ko/catalog.json';
 import commonKo from './locales/ko/common.json';
 import exportKo from './locales/ko/export.json';
@@ -16,6 +17,7 @@ import inspectorKo from './locales/ko/inspector.json';
 import onboardingKo from './locales/ko/onboarding.json';
 import planesKo from './locales/ko/planes.json';
 import primitivesKo from './locales/ko/primitives.json';
+import reviewKo from './locales/ko/review.json';
 import { DEFAULT_LOCALE, LOCALES, type Locale } from './config';
 
 export const NAMESPACES = [
@@ -26,6 +28,7 @@ export const NAMESPACES = [
   'explorer',
   'inspector',
   'export',
+  'review',
   'catalog',
 ] as const;
 export type Namespace = (typeof NAMESPACES)[number];
@@ -39,6 +42,7 @@ const RESOURCES = {
     explorer: explorerEn,
     inspector: inspectorEn,
     export: exportEn,
+    review: reviewEn,
     catalog: catalogEn,
   },
   ko: {
@@ -49,6 +53,7 @@ const RESOURCES = {
     explorer: explorerKo,
     inspector: inspectorKo,
     export: exportKo,
+    review: reviewKo,
     catalog: catalogKo,
   },
 } as const satisfies Record<Locale, Record<Namespace, unknown>>;

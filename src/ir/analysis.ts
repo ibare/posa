@@ -329,12 +329,20 @@ export function computeContrastPairs(
 // Heads up — 감지 규칙
 // ──────────────────────────────────────────────────────────────────────────
 
-export type HeadsUpItem = {
-  id: string;
-  severity: 'warn' | 'info';
-  title: string;
-  detail: string;
-};
+export type HeadsUpItem =
+  | {
+      id: string;
+      severity: 'warn';
+      kind: 'hover-invisible';
+      slotId: SlotId;
+    }
+  | {
+      id: string;
+      severity: 'warn';
+      kind: 'status-clash';
+      symbolA: SymbolId;
+      symbolB: SymbolId;
+    };
 
 /** L 차이가 이 값보다 작으면 hover 상태가 거의 안 보이는 것으로 간주. */
 const HOVER_L_THRESHOLD = 0.02;
@@ -350,10 +358,6 @@ const STATUS_SYMBOLS: SymbolId[] = ['success', 'info', 'warning', 'error'];
 function hueDistance(a: number, b: number): number {
   const diff = Math.abs(a - b) % 360;
   return diff > 180 ? 360 - diff : diff;
-}
-
-function capitalize(s: string): string {
-  return s.length === 0 ? s : s[0].toUpperCase() + s.slice(1);
 }
 
 export function findHeadsUpItems(
@@ -377,8 +381,8 @@ export function findHeadsUpItems(
     items.push({
       id: `hover:${slotId}`,
       severity: 'warn',
-      title: 'Hover state is hard to see',
-      detail: `${slotId} — the hover color sits almost on top of the default`,
+      kind: 'hover-invisible',
+      slotId,
     });
   }
 
@@ -399,9 +403,9 @@ export function findHeadsUpItems(
       items.push({
         id: `status-clash:${a.symbolId}:${b.symbolId}`,
         severity: 'warn',
-        title: `${capitalize(a.symbolId)} and ${b.symbolId} look alike`,
-        detail:
-          'These two status colors sit within a narrow hue band — users may confuse them',
+        kind: 'status-clash',
+        symbolA: a.symbolId,
+        symbolB: b.symbolId,
       });
     }
   }

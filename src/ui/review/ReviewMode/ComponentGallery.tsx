@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   COMPONENT_GROUPS,
   type ComponentDefinition,
@@ -58,7 +59,7 @@ import {
   type ToastVariant,
   type TypographyKind,
 } from '../../../preview/shapes';
-import { useActiveComponentDefs } from '../../../store/hooks';
+import { useActiveComponentDefs, useGroupLabel } from '../../../store/hooks';
 import { SectionCard } from './shared';
 
 type Props = { ir: IR };
@@ -74,6 +75,7 @@ function isVisibleVariant(variantId: string, ir: IR): boolean {
 }
 
 export function ComponentGallery({ ir }: Props) {
+  const { t } = useTranslation('review');
   const components = useActiveComponentDefs();
   const byGroup = useMemo(() => {
     const m = new Map<ComponentGroupId, ComponentDefinition[]>();
@@ -89,9 +91,9 @@ export function ComponentGallery({ ir }: Props) {
 
   return (
     <SectionCard
-      eyebrow="Components in use"
-      title="How your system shows up"
-      description="Every component you selected, rendered with the colors you chose. This is how the scheme reads once it's applied."
+      eyebrow={t('gallery.eyebrow')}
+      title={t('gallery.title')}
+      description={t('gallery.description')}
     >
       <PosaPreviewRoot ir={ir}>
         <div className="space-y-8">
@@ -125,14 +127,15 @@ function GroupHeading({
   id: ComponentGroupId;
   count: number;
 }) {
-  const label = id.replace(/-/g, ' ');
+  const { t } = useTranslation('review');
+  const label = useGroupLabel(id);
   return (
     <div className="mb-2 flex items-baseline justify-between border-b border-stone-200 pb-1.5">
       <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500">
         {label}
       </div>
       <div className="font-mono text-[10px] text-stone-400">
-        {count} {count === 1 ? 'component' : 'components'}
+        {t('gallery.componentCount', { count })}
       </div>
     </div>
   );
@@ -145,15 +148,17 @@ function GalleryTile({
   component: ComponentDefinition;
   ir: IR;
 }) {
+  const { t } = useTranslation('review');
+  const variantCount = component.variants?.length ?? 0;
   return (
     <div className="rounded-lg border border-stone-200 bg-stone-50/40 p-3">
       <div className="mb-2 flex items-center justify-between">
         <div className="font-mono text-[11px] text-stone-700">
           {component.id}
         </div>
-        {component.variants && component.variants.length > 0 && (
+        {variantCount > 0 && (
           <div className="font-mono text-[10px] text-stone-400">
-            {component.variants.length} variants
+            {t('gallery.variantCount', { count: variantCount })}
           </div>
         )}
       </div>

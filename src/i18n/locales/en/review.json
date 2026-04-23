@@ -1,0 +1,91 @@
+{
+  "mode": {
+    "review": "Review",
+    "export": "Export",
+    "toggleAria": "Review mode"
+  },
+  "page": {
+    "heading": "Before you ship it",
+    "description": "A quiet walkthrough of what you built. The palette in one place, every component wearing it, and anything the system noticed along the way."
+  },
+  "scheme": {
+    "eyebrow": "Color scheme",
+    "title": "Your system at a glance",
+    "description": "The full set of colors behind your components — primitives with their shades, and the semantic roles they power.",
+    "primitives": "Primitives",
+    "familyCount_one": "{{count}} family",
+    "familyCount_other": "{{count}} families",
+    "shadesInUse_zero": "no shades in use",
+    "shadesInUse_one": "{{count}} shade in use",
+    "shadesInUse_other": "{{count}} shades in use",
+    "swatchTitleUsed": "{{family}} {{shade}} · {{hex}} (in use)",
+    "swatchTitleUnused": "{{family}} {{shade}} · {{hex}} (not used)",
+    "symbols": "Symbols",
+    "attributes": "Attributes",
+    "assigned_zero": "none assigned",
+    "assigned_one": "{{count}} assigned",
+    "assigned_other": "{{count}} assigned",
+    "noSymbols": "No symbols assigned yet.",
+    "noAttributes": "No attributes assigned yet."
+  },
+  "gallery": {
+    "eyebrow": "Components in use",
+    "title": "How your system shows up",
+    "description": "Every component you selected, rendered with the colors you chose. This is how the scheme reads once it's applied.",
+    "componentCount_one": "{{count}} component",
+    "componentCount_other": "{{count}} components",
+    "variantCount_one": "{{count}} variant",
+    "variantCount_other": "{{count}} variants"
+  },
+  "health": {
+    "eyebrow": "System health",
+    "title": "Before you ship it",
+    "description": "A quick sanity check on balance, readability, and anything that might surprise you later.",
+    "distribution": {
+      "title": "Distribution",
+      "hint": "Where your references land",
+      "stats": {
+        "primitives": "Primitives",
+        "symbols": "Symbols",
+        "attributes": "Attributes",
+        "totalRefs": "{{count}} total refs",
+        "assigned": "assigned"
+      },
+      "empty": "Nothing references the palette yet.",
+      "shadesFraction": "{{used}}/{{total}} shades",
+      "leadNeutral": "{{id}} leads at {{pct}}% of references",
+      "leadWarn": "{{id}} carries {{pct}}% of references — your palette leans heavily on one family"
+    },
+    "readability": {
+      "title": "Readability",
+      "pairCount_one": "{{count}} text/surface pair checked (WCAG)",
+      "pairCount_other": "{{count}} text/surface pairs checked (WCAG)",
+      "empty": "No text/surface pairs to grade yet.",
+      "more_one": "+ {{count}} more pair not shown",
+      "more_other": "+ {{count}} more pairs not shown",
+      "sample": "Sample",
+      "on": "on",
+      "verdict": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "large-only": "Large only",
+        "poor": "Hard to read"
+      }
+    },
+    "headsUp": {
+      "title": "Heads up",
+      "allClear": "All clear",
+      "noted_one": "{{count}} noted",
+      "noted_other": "{{count}} noted",
+      "empty": "Nothing stands out. Your system looks consistent.",
+      "hoverInvisible": {
+        "title": "Hover state is hard to see",
+        "detail": "{{slotId}} — the hover color sits almost on top of the default"
+      },
+      "statusClash": {
+        "title": "{{symbolA}} and {{symbolB}} look alike",
+        "detail": "These two status colors sit within a narrow hue band — users may confuse them"
+      }
+    }
+  }
+}

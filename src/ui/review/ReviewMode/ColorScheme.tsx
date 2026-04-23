@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { oklchToHex } from '../../../color/oklch';
 import {
   computeAttributeUsage,
@@ -19,6 +20,7 @@ import { SectionCard, SubCard } from './shared';
 type Props = { ir: IR };
 
 export function ColorScheme({ ir }: Props) {
+  const { t } = useTranslation('review');
   const components = useActiveComponentDefs();
   const primitiveBuckets = useMemo(() => computePrimitiveUsage(ir), [ir]);
   const symbols = useMemo(
@@ -30,8 +32,7 @@ export function ColorScheme({ ir }: Props) {
     [ir, components],
   );
 
-  // `computePrimitiveUsage`는 참조 많은 순으로 정렬된다. 참조 0인 primitive는 bucket에
-  // 포함되지 않을 수 있으므로 IR 순서 기준으로 보충한다.
+  // `computePrimitiveUsage`는 참조 많은 순. 참조 0인 primitive도 IR 순서대로 붙여 보인다.
   const ordered = useMemo(() => {
     const byId = new Map(primitiveBuckets.map((b) => [b.primitiveId, b]));
     const out: Array<{
@@ -43,18 +44,18 @@ export function ColorScheme({ ir }: Props) {
     }
     return out;
   }, [primitiveBuckets, ir.primitives]);
-  const primitiveIdOrder = Object.keys(ir.primitives);
+  const familyCount = Object.keys(ir.primitives).length;
 
   return (
     <SectionCard
-      eyebrow="Color scheme"
-      title="Your system at a glance"
-      description="The full set of colors behind your components — primitives with their shades, and the semantic roles they power."
+      eyebrow={t('scheme.eyebrow')}
+      title={t('scheme.title')}
+      description={t('scheme.description')}
     >
       <div className="space-y-5">
         <SubCard
-          title="Primitives"
-          hint={`${primitiveIdOrder.length} ${primitiveIdOrder.length === 1 ? 'family' : 'families'}`}
+          title={t('scheme.primitives')}
+          hint={t('scheme.familyCount', { count: familyCount })}
         >
           <div className="space-y-4">
             {ordered.map(({ primitiveId, bucket }) => (
@@ -70,11 +71,11 @@ export function ColorScheme({ ir }: Props) {
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <SubCard
-            title="Symbols"
-            hint={`${symbols.length} assigned`}
+            title={t('scheme.symbols')}
+            hint={t('scheme.assigned', { count: symbols.length })}
           >
             {symbols.length === 0 ? (
-              <EmptyHint text="No symbols assigned yet." />
+              <EmptyHint text={t('scheme.noSymbols')} />
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {symbols.map((s) => (
@@ -85,11 +86,11 @@ export function ColorScheme({ ir }: Props) {
           </SubCard>
 
           <SubCard
-            title="Attributes"
-            hint={`${attributes.length} assigned`}
+            title={t('scheme.attributes')}
+            hint={t('scheme.assigned', { count: attributes.length })}
           >
             {attributes.length === 0 ? (
-              <EmptyHint text="No attributes assigned yet." />
+              <EmptyHint text={t('scheme.noAttributes')} />
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {attributes.map((a) => (
@@ -113,6 +114,7 @@ function PrimitiveRow({
   scale: Record<ShadeIndex, { L: number; C: number; H: number }>;
   usedShades: Set<ShadeIndex>;
 }) {
+  const { t } = useTranslation('review');
   const familyName = primitiveId.split('-')[0];
   const displayName =
     familyName.charAt(0).toUpperCase() + familyName.slice(1);
@@ -127,11 +129,7 @@ function PrimitiveRow({
           </span>
           <span className="text-stone-300">·</span>
           <span className="font-mono text-[11px] text-stone-500">
-            {usedCount === 0
-              ? 'no shades in use'
-              : usedCount === 1
-                ? '1 shade in use'
-                : `${usedCount} shades in use`}
+            {t('scheme.shadesInUse', { count: usedCount })}
           </span>
         </div>
         <span className="font-mono text-[11px] text-stone-400">
@@ -143,12 +141,23 @@ function PrimitiveRow({
           const color = scale[shade];
           const used = usedShades.has(shade);
           const hex = oklchToHex(color.L, color.C, color.H);
+          const title = used
+            ? t('scheme.swatchTitleUsed', {
+                family: displayName,
+                shade,
+                hex,
+              })
+            : t('scheme.swatchTitleUnused', {
+                family: displayName,
+                shade,
+                hex,
+              });
           return (
             <div key={shade} className="flex flex-col items-stretch">
               <div
                 className={['relative', used ? '' : 'mt-2'].join(' ')}
                 style={{ height: used ? 56 : 40 }}
-                title={`${displayName} ${shade} · ${hex}${used ? ' (in use)' : ' (not used)'}`}
+                title={title}
               >
                 <div
                   className="h-full w-full rounded-[3px]"

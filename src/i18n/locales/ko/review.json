@@ -1,0 +1,91 @@
+{
+  "mode": {
+    "review": "리뷰",
+    "export": "내보내기",
+    "toggleAria": "리뷰 모드"
+  },
+  "page": {
+    "heading": "배포 전에 살펴보세요",
+    "description": "완성된 컬러 시스템을 조용히 되짚는 시간입니다. 팔레트를 한자리에, 모든 컴포넌트가 스킴을 입은 모습을, 그리고 시스템이 눈여겨본 것들을 함께 확인할 수 있습니다."
+  },
+  "scheme": {
+    "eyebrow": "컬러 스킴",
+    "title": "시스템 한눈에 보기",
+    "description": "컴포넌트 뒤에 놓인 색 전부 — 프리미티브와 그 음영, 그리고 이들이 떠받치는 심볼과 속성입니다.",
+    "primitives": "프리미티브",
+    "familyCount_one": "패밀리 {{count}}개",
+    "familyCount_other": "패밀리 {{count}}개",
+    "shadesInUse_zero": "사용 중인 음영 없음",
+    "shadesInUse_one": "음영 {{count}}개 사용 중",
+    "shadesInUse_other": "음영 {{count}}개 사용 중",
+    "swatchTitleUsed": "{{family}} {{shade}} · {{hex}} (사용 중)",
+    "swatchTitleUnused": "{{family}} {{shade}} · {{hex}} (미사용)",
+    "symbols": "심볼",
+    "attributes": "속성",
+    "assigned_zero": "할당된 항목 없음",
+    "assigned_one": "{{count}}개 할당",
+    "assigned_other": "{{count}}개 할당",
+    "noSymbols": "아직 할당된 심볼이 없습니다.",
+    "noAttributes": "아직 할당된 속성이 없습니다."
+  },
+  "gallery": {
+    "eyebrow": "사용 중인 컴포넌트",
+    "title": "스킴이 입혀진 모습",
+    "description": "선택한 모든 컴포넌트를 지금 컬러로 렌더링한 뷰입니다. 스킴이 실제로 어떻게 읽히는지 한눈에 확인할 수 있습니다.",
+    "componentCount_one": "컴포넌트 {{count}}개",
+    "componentCount_other": "컴포넌트 {{count}}개",
+    "variantCount_one": "변형 {{count}}개",
+    "variantCount_other": "변형 {{count}}개"
+  },
+  "health": {
+    "eyebrow": "시스템 상태",
+    "title": "배포 전 점검",
+    "description": "균형, 가독성, 나중에 당황하지 않도록 짚어둘 것들을 빠르게 훑어봅니다.",
+    "distribution": {
+      "title": "분포",
+      "hint": "참조가 어디로 향하는지",
+      "stats": {
+        "primitives": "프리미티브",
+        "symbols": "심볼",
+        "attributes": "속성",
+        "totalRefs": "전체 참조 {{count}}건",
+        "assigned": "할당됨"
+      },
+      "empty": "아직 팔레트를 참조하는 곳이 없습니다.",
+      "shadesFraction": "음영 {{used}}/{{total}}개",
+      "leadNeutral": "{{id}}가 참조의 {{pct}}%로 선두",
+      "leadWarn": "{{id}}가 참조의 {{pct}}%를 차지합니다 — 한 패밀리에 과하게 기대고 있어요"
+    },
+    "readability": {
+      "title": "가독성",
+      "pairCount_one": "텍스트·표면 쌍 {{count}}건 검사 (WCAG)",
+      "pairCount_other": "텍스트·표면 쌍 {{count}}건 검사 (WCAG)",
+      "empty": "아직 평가할 텍스트·표면 쌍이 없습니다.",
+      "more_one": "+ 추가 {{count}}건 생략",
+      "more_other": "+ 추가 {{count}}건 생략",
+      "sample": "샘플",
+      "on": "위",
+      "verdict": {
+        "excellent": "우수",
+        "good": "양호",
+        "large-only": "큰 글씨만",
+        "poor": "읽기 어려움"
+      }
+    },
+    "headsUp": {
+      "title": "짚고 넘어갈 것",
+      "allClear": "모두 양호",
+      "noted_one": "{{count}}건 발견",
+      "noted_other": "{{count}}건 발견",
+      "empty": "특별히 눈에 띄는 문제 없음. 시스템이 고르게 보입니다.",
+      "hoverInvisible": {
+        "title": "호버 상태가 잘 안 보입니다",
+        "detail": "{{slotId}} — 호버 색이 기본 상태와 거의 겹칩니다"
+      },
+      "statusClash": {
+        "title": "{{symbolA}}와 {{symbolB}}가 닮아 보입니다",
+        "detail": "두 상태 색이 좁은 hue 대역에 몰려 있어 사용자가 혼동할 수 있습니다"
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { usePosaStore } from '../../store/posa-store';
 import { useTranslation } from 'react-i18next';
+import { usePosaStore } from '../../store/posa-store';
 import { ExportMode } from './ExportMode';
 import { ReviewMode } from './ReviewMode/ReviewMode';
 
@@ -9,15 +9,15 @@ type Mode = 'review' | 'export';
 export function ReviewView() {
   const [mode, setMode] = useState<Mode>('review');
   const primitiveCount = usePosaStore((s) => Object.keys(s.ir.primitives).length);
-  const { t } = useTranslation(['export']);
+  const { t } = useTranslation(['review', 'export']);
 
   if (primitiveCount === 0) {
     return (
       <div className="mx-auto max-w-3xl p-10 text-center border border-dashed border-stone-300 rounded-lg">
         <div className="font-display italic text-xl text-stone-700">
-          {t('empty')}
+          {t('export:empty')}
         </div>
-        <p className="text-sm text-stone-500 mt-2">{t('emptyHint')}</p>
+        <p className="text-sm text-stone-500 mt-2">{t('export:emptyHint')}</p>
       </div>
     );
   }
@@ -39,21 +39,22 @@ function ModeToggle({
   mode: Mode;
   onChange: (m: Mode) => void;
 }) {
+  const { t } = useTranslation('review');
   return (
     <div
       role="tablist"
-      aria-label="Review mode"
+      aria-label={t('mode.toggleAria')}
       className="inline-flex overflow-hidden rounded-full border border-stone-200 bg-white text-[12px]"
     >
       <ToggleButton
         active={mode === 'review'}
         onClick={() => onChange('review')}
-        label="Review"
+        label={t('mode.review')}
       />
       <ToggleButton
         active={mode === 'export'}
         onClick={() => onChange('export')}
-        label="Export"
+        label={t('mode.export')}
       />
     </div>
   );
