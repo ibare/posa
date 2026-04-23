@@ -9,6 +9,7 @@ import {
 } from '../../catalog/components';
 import type { ComponentId } from '../../ir/types';
 import { usePosaStore } from '../../store/posa-store';
+import { LocaleToggle } from '../shared/layout/LocaleToggle';
 import { CategorySection } from './CategorySection';
 
 /**
@@ -84,13 +85,16 @@ export function OnboardingScreen() {
     <div className="min-h-screen bg-cream text-stone-900 font-body antialiased">
       <div className="mx-auto max-w-5xl px-6 py-12 space-y-10">
         <header className="space-y-3">
-          <div className="flex items-baseline gap-3">
-            <h1 className="font-display italic text-4xl leading-none tracking-tight">
-              {t('common:app.title')}
-            </h1>
-            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
-              {t('caption')}
-            </span>
+          <div className="flex items-baseline justify-between gap-3">
+            <div className="flex items-baseline gap-3">
+              <h1 className="font-display italic text-4xl leading-none tracking-tight">
+                {t('common:app.title')}
+              </h1>
+              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
+                {t('caption')}
+              </span>
+            </div>
+            <LocaleToggle />
           </div>
           <h2 className="font-display text-2xl text-stone-900">{t('title')}</h2>
           <p className="text-sm text-stone-600 max-w-2xl leading-relaxed">
