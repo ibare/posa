@@ -270,6 +270,37 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     attributes: ['background', 'text', 'border', 'muted', 'icon'],
     states: ['default', 'hover', 'active'],
   },
+  // ===== Container/Alert 계열 =====
+  {
+    id: 'accordion',
+    label: 'Accordion',
+    description: 'Vertically stacked collapsible sections',
+    attributes: ['background', 'text', 'border'],
+    states: ['default', 'hover'],
+  },
+  {
+    id: 'collapsible',
+    label: 'Collapsible',
+    description: 'Single expandable/collapsible region',
+    attributes: ['background', 'text', 'border'],
+    states: ['default', 'hover'],
+  },
+  {
+    id: 'alert',
+    label: 'Alert',
+    description: 'Inline banner with icon, title and description',
+    variants: [
+      { id: 'primary', label: 'Primary' },
+      { id: 'secondary', label: 'Secondary' },
+      { id: 'accent', label: 'Accent' },
+      { id: 'success', label: 'Success' },
+      { id: 'info', label: 'Info' },
+      { id: 'warning', label: 'Warning' },
+      { id: 'error', label: 'Error' },
+    ],
+    attributes: ['background', 'text', 'border', 'icon'],
+    states: ['default'],
+  },
 ];
 
 export function findComponent(componentId: ComponentId): ComponentDefinition | undefined {

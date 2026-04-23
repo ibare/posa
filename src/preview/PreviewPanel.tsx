@@ -16,12 +16,15 @@ import { usePosaStore, type Layer } from '../store/posa-store';
 import { PosaPreviewRoot } from './PosaPreviewRoot';
 import { StateGroup } from './StateGroup';
 import {
+  AccordionShape,
   AlertDialogShape,
+  AlertShape,
   BadgeShape,
   BreadcrumbShape,
   ButtonShape,
   CardShape,
   CheckboxShape,
+  CollapsibleShape,
   CommandShape,
   ContextMenuShape,
   DialogShape,
@@ -48,6 +51,7 @@ import {
   ToastShape,
   ToggleShape,
   TooltipShape,
+  type AlertVariant,
   type BadgeVariant,
   type ButtonVariant,
   type ToastVariant,
@@ -56,6 +60,15 @@ import {
 const BUTTON_VARIANTS: ButtonVariant[] = ['primary', 'secondary', 'error'];
 const BADGE_VARIANTS: BadgeVariant[] = ['secondary', 'error'];
 const TOAST_VARIANTS: ToastVariant[] = ['error', 'warning', 'success'];
+const ALERT_VARIANTS: AlertVariant[] = [
+  'primary',
+  'secondary',
+  'accent',
+  'success',
+  'info',
+  'warning',
+  'error',
+];
 
 /**
  * Variants가 없는 단일-shape 컴포넌트들. 각 항목은 scope에 해당 id가 있으면
@@ -180,6 +193,17 @@ const SIMPLE_ENTRIES: SimplePreviewEntry[] = [
     id: 'sidebar',
     title: 'Sidebar',
     render: (state) => <SidebarShape state={state} />,
+  },
+  // Container 2종
+  {
+    id: 'accordion',
+    title: 'Accordion',
+    render: (state) => <AccordionShape state={state} />,
+  },
+  {
+    id: 'collapsible',
+    title: 'Collapsible',
+    render: (state) => <CollapsibleShape state={state} />,
   },
 ];
 
@@ -342,6 +366,7 @@ export function PreviewPanel() {
   const cardScope = scope.get('card');
   const badgeScope = scope.get('badge');
   const toastScope = scope.get('toast');
+  const alertScope = scope.get('alert');
 
   const visibleButtonVariants = filterActiveVariants(
     intersectVariants(BUTTON_VARIANTS, buttonScope),
@@ -353,6 +378,10 @@ export function PreviewPanel() {
   );
   const visibleToastVariants = filterActiveVariants(
     intersectVariants(TOAST_VARIANTS, toastScope),
+    ir,
+  );
+  const visibleAlertVariants = filterActiveVariants(
+    intersectVariants(ALERT_VARIANTS, alertScope),
     ir,
   );
 
@@ -367,6 +396,9 @@ export function PreviewPanel() {
   const hasToast = Boolean(
     toastScope && (toastScope.includeBase || visibleToastVariants.length > 0),
   );
+  const hasAlert = Boolean(
+    alertScope && (alertScope.includeBase || visibleAlertVariants.length > 0),
+  );
 
   const visibleSimpleEntries = SIMPLE_ENTRIES.filter((e) => scope.has(e.id));
 
@@ -376,6 +408,7 @@ export function PreviewPanel() {
     (cardScope ? 1 : 0) +
     (hasBadge ? 1 : 0) +
     (hasToast ? 1 : 0) +
+    (hasAlert ? 1 : 0) +
     visibleSimpleEntries.length;
   const totalCount = COMPONENT_DEFINITIONS.length;
 
@@ -513,6 +546,39 @@ export function PreviewPanel() {
                       <ToastShape
                         variant={v}
                         title={`${v[0].toUpperCase()}${v.slice(1)} toast`}
+                      />
+                      <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
+                        {v}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </PreviewSection>
+            )}
+
+            {hasAlert && (
+              <PreviewSection
+                title="Alert"
+                componentId="alert"
+                selected={selectedComponentId === 'alert'}
+                canSelect={canSelectComponent}
+                onSelect={selectComponent}
+                onDeselect={clearSelectedComponent}
+              >
+                <div className="flex flex-col gap-3">
+                  {alertScope!.includeBase && (
+                    <div className="flex flex-col items-start gap-1">
+                      <AlertShape title="Alert" />
+                      <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
+                        base
+                      </div>
+                    </div>
+                  )}
+                  {visibleAlertVariants.map((v) => (
+                    <div key={v} className="flex flex-col items-start gap-1">
+                      <AlertShape
+                        variant={v}
+                        title={`${v[0].toUpperCase()}${v.slice(1)} alert`}
                       />
                       <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
                         {v}

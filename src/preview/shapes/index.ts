@@ -30,3 +30,6 @@ export { BreadcrumbShape } from './BreadcrumbShape';
 export { TabsShape } from './TabsShape';
 export { PaginationShape } from './PaginationShape';
 export { SidebarShape } from './SidebarShape';
+export { AccordionShape } from './AccordionShape';
+export { CollapsibleShape } from './CollapsibleShape';
+export { AlertShape, type AlertVariant } from './AlertShape';
