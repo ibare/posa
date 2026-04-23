@@ -4,6 +4,7 @@ import { slotVarName } from '../slotVarName';
 type Props = {
   title?: string;
   description?: string;
+  fill?: boolean;
 };
 
 /**
@@ -13,6 +14,7 @@ type Props = {
 export function SheetShape({
   title = 'Sheet title',
   description = 'Short description.',
+  fill = false,
 }: Props) {
   const stageStyle: CSSProperties = {
     backgroundColor: `var(--${slotVarName('sheet.overlay', 'default')})`,
@@ -22,10 +24,13 @@ export function SheetShape({
     color: `var(--${slotVarName('sheet.text', 'default')})`,
     borderLeft: `1px solid var(--${slotVarName('sheet.border', 'default')})`,
   };
+  const stageClass = fill
+    ? 'relative w-full h-full overflow-hidden'
+    : 'relative w-[320px] h-[200px] rounded-md overflow-hidden';
 
   return (
     <div
-      className="relative w-[320px] h-[200px] rounded-md overflow-hidden"
+      className={stageClass}
       style={stageStyle}
       data-posa-slot="sheet.overlay"
       data-posa-state="default"

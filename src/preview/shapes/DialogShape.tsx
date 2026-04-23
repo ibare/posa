@@ -4,11 +4,14 @@ import { slotVarName } from '../slotVarName';
 type Props = {
   title?: string;
   description?: string;
+  /** true면 부모 박스를 꽉 채우는 stage. 온보딩 카드처럼 외곽 컨테이너가 크기를 정할 때 사용. */
+  fill?: boolean;
 };
 
 export function DialogShape({
   title = 'Dialog title',
   description = 'Short description of the dialog.',
+  fill = false,
 }: Props) {
   const stageStyle: CSSProperties = {
     backgroundColor: `var(--${slotVarName('dialog.overlay', 'default')})`,
@@ -18,10 +21,13 @@ export function DialogShape({
     color: `var(--${slotVarName('dialog.text', 'default')})`,
     border: `1px solid var(--${slotVarName('dialog.border', 'default')})`,
   };
+  const stageClass = fill
+    ? 'relative w-full h-full overflow-hidden'
+    : 'relative w-[300px] h-[180px] rounded-md overflow-hidden';
 
   return (
     <div
-      className="relative w-[300px] h-[180px] rounded-md overflow-hidden"
+      className={stageClass}
       style={stageStyle}
       data-posa-slot="dialog.overlay"
       data-posa-state="default"

@@ -1,4 +1,5 @@
 import type { ComponentDefinition } from '../../catalog/components';
+import { ComponentPreview } from './ComponentPreview';
 
 type Props = {
   component: ComponentDefinition;
@@ -17,22 +18,18 @@ export function ComponentTypeCard({ component, selected, onToggle }: Props) {
       onClick={onToggle}
       aria-pressed={selected}
       className={[
-        'text-left rounded-lg border transition-all duration-150 px-3 py-2.5',
+        'block w-full break-inside-avoid mb-2.5 text-left rounded-lg border transition-all duration-150 p-2.5 space-y-2.5',
         selected
           ? 'border-stone-900 bg-white -translate-y-px shadow-sm'
           : 'border-stone-200 bg-white/60 hover:border-stone-400 hover:-translate-y-px',
       ].join(' ')}
     >
+      <ComponentPreview component={component} />
       <div className="flex items-start gap-2.5">
         <Checkbox checked={selected} />
         <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-sm text-stone-900 truncate">
-              {component.label}
-            </span>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
-              {component.id}
-            </span>
+          <div className="font-mono text-sm text-stone-900 truncate">
+            {component.label}
           </div>
           <div className="text-[11px] text-stone-500 leading-snug mt-0.5 truncate">
             {component.description}

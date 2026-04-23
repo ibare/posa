@@ -4,6 +4,7 @@ import { slotVarName } from '../slotVarName';
 type Props = {
   title?: string;
   description?: string;
+  fill?: boolean;
 };
 
 /**
@@ -14,6 +15,7 @@ type Props = {
 export function AlertDialogShape({
   title = 'Are you absolutely sure?',
   description = 'This action cannot be undone.',
+  fill = false,
 }: Props) {
   const stageStyle: CSSProperties = {
     backgroundColor: `var(--${slotVarName('alert-dialog.overlay', 'default')})`,
@@ -24,10 +26,13 @@ export function AlertDialogShape({
     border: `1px solid var(--${slotVarName('alert-dialog.border', 'default')})`,
   };
   const buttonBorder = `1px solid var(--${slotVarName('alert-dialog.border', 'default')})`;
+  const stageClass = fill
+    ? 'relative w-full h-full overflow-hidden'
+    : 'relative w-[300px] h-[200px] rounded-md overflow-hidden';
 
   return (
     <div
-      className="relative w-[300px] h-[200px] rounded-md overflow-hidden"
+      className={stageClass}
       style={stageStyle}
       data-posa-slot="alert-dialog.overlay"
       data-posa-state="default"

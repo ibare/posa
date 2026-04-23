@@ -48,7 +48,7 @@ export function CategorySection({
           {allSelected ? 'deselect group' : 'select group'}
         </button>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+      <div className="columns-1 sm:columns-2 md:columns-3 gap-2.5">
         {members.map((c) => (
           <ComponentTypeCard
             key={c.id}
