@@ -1,7 +1,10 @@
 import { useMemo } from 'react';
 import { ATTRIBUTE_DEFINITIONS } from '../../catalog/attributes';
-import { COMPONENT_DEFINITIONS } from '../../catalog/components';
-import { SYMBOL_IDS, type AttributeId, type SymbolId } from '../../ir/types';
+import {
+  COMPONENT_DEFINITIONS,
+  type ComponentDefinition,
+} from '../../catalog/components';
+import { SYMBOL_IDS, type AttributeId, type IR, type SymbolId } from '../../ir/types';
 import { usePosaStore } from '../../store/posa-store';
 import { SlotCard } from '../shared/SlotCard';
 
@@ -10,6 +13,72 @@ const SYMBOL_ID_SET: Set<string> = new Set(SYMBOL_IDS);
 const ATTR_LABEL: Record<string, string> = Object.fromEntries(
   ATTRIBUTE_DEFINITIONS.map((a) => [a.id, a.label]),
 );
+
+function visibleVariantsOf(component: ComponentDefinition, ir: IR) {
+  const variants = component.variants ?? [];
+  return variants.filter((v) => {
+    if (!SYMBOL_ID_SET.has(v.id)) return true;
+    return ir.symbols[v.id as SymbolId] != null;
+  });
+}
+
+/**
+ * 한 컴포넌트의 variant × attribute slot 그리드. ZXPlane 단일, ZXGroupPlane 반복용.
+ * focus/setFocus는 상위에서 공유하는 단일 focus 슬롯을 받는다.
+ */
+export function ComponentSlotGrid({
+  component,
+  focusedNode,
+  setFocus,
+  ir,
+}: {
+  component: ComponentDefinition;
+  focusedNode: string | null;
+  setFocus: (nodeId: string | null) => void;
+  ir: IR;
+}) {
+  const visibleVariants = visibleVariantsOf(component, ir);
+  const hasVariants = (component.variants?.length ?? 0) > 0;
+
+  if (!hasVariants) {
+    return (
+      <VariantSection
+        title={null}
+        mono={null}
+        componentId={component.id}
+        variantId={null}
+        attributes={component.attributes}
+        focusedNode={focusedNode}
+        setFocus={setFocus}
+      />
+    );
+  }
+  if (visibleVariants.length === 0) {
+    return (
+      <div className="p-6 text-center text-xs text-stone-500 border border-dashed border-stone-300 rounded-lg">
+        No variants visible. Define the corresponding symbols in Z0 to expose{' '}
+        <span className="font-mono">primary</span>,{' '}
+        <span className="font-mono">secondary</span>, etc.
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-5">
+      {visibleVariants.map((variant) => (
+        <VariantSection
+          key={variant.id}
+          title={variant.label}
+          mono={variant.id}
+          componentId={component.id}
+          variantId={variant.id}
+          attributes={component.attributes}
+          focusedNode={focusedNode}
+          setFocus={setFocus}
+        />
+      ))}
+    </div>
+  );
+}
 
 /**
  * ZX — Component mode.
@@ -35,20 +104,7 @@ export function ZXPlane() {
     [selectedComponentId],
   );
 
-  // variant 이름이 SymbolId와 겹치지만 해당 symbol이 미정의면 그 variant는 숨김
-  // (stage-source 필터링 — Z0/Z1/프리뷰와 동일 규칙).
-  const visibleVariants = useMemo(() => {
-    if (!component) return [];
-    const variants = component.variants ?? [];
-    return variants.filter((v) => {
-      if (!SYMBOL_ID_SET.has(v.id)) return true;
-      return ir.symbols[v.id as SymbolId] != null;
-    });
-  }, [component, ir]);
-
   if (!component) return null;
-
-  const hasVariants = (component.variants?.length ?? 0) > 0;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -74,39 +130,12 @@ export function ZXPlane() {
         </button>
       </header>
 
-      {hasVariants ? (
-        <div className="space-y-6">
-          {visibleVariants.length === 0 && (
-            <div className="p-8 text-center text-sm text-stone-500 border border-dashed border-stone-300 rounded-lg">
-              No variants visible yet. Define the corresponding symbols in Z0
-              to expose <span className="font-mono">primary</span>,{' '}
-              <span className="font-mono">secondary</span>, etc.
-            </div>
-          )}
-          {visibleVariants.map((variant) => (
-            <VariantSection
-              key={variant.id}
-              title={variant.label}
-              mono={variant.id}
-              componentId={component.id}
-              variantId={variant.id}
-              attributes={component.attributes}
-              focusedNode={focusedNode}
-              setFocus={setFocus}
-            />
-          ))}
-        </div>
-      ) : (
-        <VariantSection
-          title={null}
-          mono={null}
-          componentId={component.id}
-          variantId={null}
-          attributes={component.attributes}
-          focusedNode={focusedNode}
-          setFocus={setFocus}
-        />
-      )}
+      <ComponentSlotGrid
+        component={component}
+        focusedNode={focusedNode}
+        setFocus={setFocus}
+        ir={ir}
+      />
     </div>
   );
 }

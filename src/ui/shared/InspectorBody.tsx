@@ -32,8 +32,11 @@ export function InspectorBody() {
   const focusedNode = usePosaStore((s) => s.focusedNode);
   const selectedSlotId = usePosaStore((s) => s.selectedSlotId);
   const selectedComponentId = usePosaStore((s) => s.selectedComponentId);
+  const selectedGroupId = usePosaStore((s) => s.selectedGroupId);
   const ir = usePosaStore((s) => s.ir);
-  const inZxMode = selectedComponentId != null && layer !== 'z2';
+  // 단일 컴포넌트 ZX 또는 그룹 ZX — 둘 다 slot focus가 default state 편집으로 연결된다.
+  const inZxMode =
+    (selectedComponentId != null || selectedGroupId != null) && layer !== 'z2';
 
   const setSymbolColor = usePosaStore((s) => s.setSymbolColor);
   const setSymbolShade = usePosaStore((s) => s.setSymbolShade);
