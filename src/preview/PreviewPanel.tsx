@@ -323,6 +323,7 @@ function derivePreviewScope(
   selectedAttributeId: AttributeId | null,
   selectedSlotId: SlotId | null,
   focusedNode: string | null,
+  selectedComponentId: ComponentId | null,
   selectedGroupId: ComponentGroupId | null,
 ): PreviewScope {
   const base = derivePreviewScopeRaw(
@@ -330,6 +331,7 @@ function derivePreviewScope(
     selectedAttributeId,
     selectedSlotId,
     focusedNode,
+    selectedComponentId,
   );
   if (!selectedGroupId) return base;
   // 그룹 멤버로 교집합. 현재 scope에 이미 담긴 컴포넌트 중 그룹에 속한 것만 남긴다.
@@ -350,20 +352,21 @@ function derivePreviewScopeRaw(
   selectedAttributeId: AttributeId | null,
   selectedSlotId: SlotId | null,
   focusedNode: string | null,
+  selectedComponentId: ComponentId | null,
 ): PreviewScope {
   if (layer === 'z2' && selectedSlotId) {
     const comp = findComponentBySlotId(selectedSlotId);
     if (!comp) return new Map();
-    let states = comp.states;
-    if (focusedNode?.startsWith('state:')) {
-      const s = focusedNode.slice('state:'.length) as StateId;
-      if (comp.states.includes(s)) states = [s];
-    }
-    return scopeFromSlot(selectedSlotId, states);
+    // state focus로 프리뷰를 한 state만 보여주지 않는다 — 다른 state와 비교하며
+    // 색을 맞추는 게 Z2 편집의 목적이라 전체 state를 항상 나란히 보여줘야 한다.
+    return scopeFromSlot(selectedSlotId, comp.states);
   }
 
   if (layer === 'z1' && selectedAttributeId) {
-    if (focusedNode?.startsWith('slot:')) {
+    // ZX 모드(selectedComponentId)에서는 slot focus에 의한 "단일 컴포넌트 zoom"을
+    // 스킵한다. 주변 컴포넌트와의 비교 관찰이 ZX 진입의 명시적 목적이고, 좁히면
+    // 프리뷰 레이아웃이 출렁이며 스크롤 위치를 잃는다. attribute 스코프는 유지.
+    if (!selectedComponentId && focusedNode?.startsWith('slot:')) {
       const slotId = focusedNode.slice('slot:'.length);
       return scopeFromSlot(slotId, DEFAULT_ONLY);
     }
@@ -430,9 +433,17 @@ export function PreviewPanel() {
         selectedAttributeId,
         selectedSlotId,
         focusedNode,
+        selectedComponentId,
         selectedGroupId,
       ),
-    [layer, selectedAttributeId, selectedSlotId, focusedNode, selectedGroupId],
+    [
+      layer,
+      selectedAttributeId,
+      selectedSlotId,
+      focusedNode,
+      selectedComponentId,
+      selectedGroupId,
+    ],
   );
 
   // ZX 진입 클릭은 z2(상태 descent)에서는 비활성 — 현재 slot의 상태를 보는 중이므로.

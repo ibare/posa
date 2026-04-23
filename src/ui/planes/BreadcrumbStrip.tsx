@@ -1,6 +1,5 @@
 import { ATTRIBUTE_DEFINITIONS } from '../../catalog/attributes';
 import { COMPONENT_GROUPS } from '../../catalog/components';
-import { getSlotDisplayName } from '../../ir/selectors';
 import { usePosaStore, type Layer } from '../../store/posa-store';
 
 const LAYER_LABEL: Record<Layer, string> = {
@@ -11,9 +10,7 @@ const LAYER_LABEL: Record<Layer, string> = {
 
 export function BreadcrumbStrip() {
   const layer = usePosaStore((s) => s.layer);
-  const ir = usePosaStore((s) => s.ir);
   const selectedAttributeId = usePosaStore((s) => s.selectedAttributeId);
-  const selectedSlotId = usePosaStore((s) => s.selectedSlotId);
   const selectedComponentId = usePosaStore((s) => s.selectedComponentId);
   const selectedGroupId = usePosaStore((s) => s.selectedGroupId);
   const jumpToLayer = usePosaStore((s) => s.jumpToLayer);
@@ -25,7 +22,6 @@ export function BreadcrumbStrip() {
   const attrLabel =
     ATTRIBUTE_DEFINITIONS.find((a) => a.id === selectedAttributeId)?.label ??
     selectedAttributeId;
-  const slotLabel = selectedSlotId ? getSlotDisplayName(selectedSlotId, ir) : null;
   const groupLabel = selectedGroupId
     ? COMPONENT_GROUPS.find((g) => g.id === selectedGroupId)?.label ??
       selectedGroupId
@@ -65,10 +61,6 @@ export function BreadcrumbStrip() {
         >
           symbols & attributes
         </button>
-        <Divider />
-        <span className="font-mono text-xs text-stone-900 px-2 py-1 bg-stone-100 rounded">
-          {groupLabel}
-        </span>
         <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
           ZX · group
         </span>
@@ -100,24 +92,6 @@ export function BreadcrumbStrip() {
           >
             {attrLabel}
           </button>
-        </>
-      )}
-
-      {layer === 'z1' && selectedAttributeId && (
-        <>
-          <Divider />
-          <span className="font-mono text-xs text-stone-900 px-2 py-1 bg-stone-100 rounded">
-            {attrLabel}
-          </span>
-        </>
-      )}
-
-      {layer === 'z2' && slotLabel && (
-        <>
-          <Divider />
-          <span className="font-mono text-xs text-stone-900 px-2 py-1 bg-stone-100 rounded break-all">
-            {slotLabel}
-          </span>
         </>
       )}
 
