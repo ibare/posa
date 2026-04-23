@@ -118,14 +118,9 @@ function SymbolChip({ symbol, focused, onFocusToggle }: SymbolChipProps) {
           ].join(' ')}
           style={hex ? { backgroundColor: hex } : undefined}
         >
-          <span
-            className={[
-              'text-xs font-mono',
-              defined ? 'text-white/90 mix-blend-difference' : 'text-stone-400',
-            ].join(' ')}
-          >
-            {defined ? symbol.label : '—'}
-          </span>
+          {!defined && (
+            <span className="text-xs font-mono text-stone-400">—</span>
+          )}
         </div>
         <div className="px-3 py-2 bg-white">
           <div className="font-mono text-sm text-stone-900">{symbol.id}</div>
