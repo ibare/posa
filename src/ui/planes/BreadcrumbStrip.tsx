@@ -1,5 +1,20 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAttributeLabel, useGroupLabel } from '../../store/hooks';
+import { oklchToHex } from '../../color/oklch';
+import {
+  getSlotsByAttribute,
+  resolveAttributeColor,
+  resolveSlotStateColor,
+  resolveSymbolColor,
+} from '../../ir/selectors';
+import type { AttributeId, SlotId, SymbolId } from '../../ir/types';
+import {
+  useActiveAttributeDefs,
+  useActiveComponentDefs,
+  useActiveSymbolDefs,
+  useAttributeLabel,
+  useGroupLabel,
+} from '../../store/hooks';
 import { usePosaStore, type Layer } from '../../store/posa-store';
 
 export function BreadcrumbStrip() {
@@ -32,6 +47,7 @@ export function BreadcrumbStrip() {
   if (inZxComponent) {
     return (
       <div className="mx-auto max-w-5xl mb-6 flex items-center gap-3 flex-wrap">
+        <MiniZ0 onClick={clearSelectedComponent} />
         <button
           type="button"
           onClick={clearSelectedComponent}
@@ -54,6 +70,7 @@ export function BreadcrumbStrip() {
   if (inZxGroup) {
     return (
       <div className="mx-auto max-w-5xl mb-6 flex items-center gap-3 flex-wrap">
+        <MiniZ0 onClick={clearSelectedGroup} />
         <button
           type="button"
           onClick={clearSelectedGroup}
@@ -72,19 +89,26 @@ export function BreadcrumbStrip() {
   return (
     <div className="mx-auto max-w-5xl mb-6 flex items-center gap-3 flex-wrap">
       {layer !== 'z0' && (
-        <button
-          type="button"
-          onClick={() => jumpToLayer('z0')}
-          className="text-[10px] font-mono uppercase tracking-wider text-stone-500 hover:text-stone-900 px-2 py-1 rounded hover:bg-stone-200/60 transition"
-          title={t('breadcrumb.backToZ0')}
-        >
-          {t('breadcrumb.symbolsAttributes')}
-        </button>
+        <>
+          <MiniZ0 onClick={() => jumpToLayer('z0')} />
+          <button
+            type="button"
+            onClick={() => jumpToLayer('z0')}
+            className="text-[10px] font-mono uppercase tracking-wider text-stone-500 hover:text-stone-900 px-2 py-1 rounded hover:bg-stone-200/60 transition"
+            title={t('breadcrumb.backToZ0')}
+          >
+            {t('breadcrumb.symbolsAttributes')}
+          </button>
+        </>
       )}
 
       {layer === 'z2' && selectedAttributeId && (
         <>
           <Divider />
+          <MiniZ1
+            attrId={selectedAttributeId}
+            onClick={() => jumpToLayer('z1')}
+          />
           <button
             type="button"
             onClick={() => jumpToLayer('z1')}
@@ -105,4 +129,130 @@ export function BreadcrumbStrip() {
 
 function Divider() {
   return <span className="text-stone-300">·</span>;
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// MiniZ0 — symbols + attributes 을 두 행의 dot 그리드로. 실시간 색 반영.
+// selectedAttributeId가 있으면 해당 attribute dot에 링 강조.
+// ──────────────────────────────────────────────────────────────────────────
+
+function MiniZ0({ onClick }: { onClick: () => void }) {
+  const ir = usePosaStore((s) => s.ir);
+  const selectedAttributeId = usePosaStore((s) => s.selectedAttributeId);
+  const symbols = useActiveSymbolDefs();
+  const attributes = useActiveAttributeDefs();
+  const { t } = useTranslation('planes');
+
+  const symbolDots = useMemo(
+    () =>
+      symbols.map((s) => ({
+        id: s.id as SymbolId,
+        color: resolveSymbolColor(ir, s.id),
+      })),
+    [symbols, ir],
+  );
+  const attributeDots = useMemo(
+    () =>
+      attributes.map((a) => ({
+        id: a.id as AttributeId,
+        color: resolveAttributeColor(ir, a.id),
+      })),
+    [attributes, ir],
+  );
+
+  if (symbols.length === 0 && attributes.length === 0) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={t('breadcrumb.backToZ0')}
+      className="flex flex-col gap-0.5 p-1 rounded border border-stone-200 bg-white/60 hover:border-stone-500 hover:-translate-y-px transition"
+    >
+      {symbolDots.length > 0 && (
+        <div className="flex gap-0.5">
+          {symbolDots.map((d) => (
+            <Dot key={`sym:${d.id}`} color={d.color} focused={false} />
+          ))}
+        </div>
+      )}
+      {attributeDots.length > 0 && (
+        <div className="flex gap-0.5">
+          {attributeDots.map((d) => (
+            <Dot
+              key={`attr:${d.id}`}
+              color={d.color}
+              focused={d.id === selectedAttributeId}
+            />
+          ))}
+        </div>
+      )}
+    </button>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// MiniZ1 — selectedAttribute의 slot들을 가로 막대 stack으로.
+// selectedSlotId에 해당 막대 링 강조.
+// ──────────────────────────────────────────────────────────────────────────
+
+function MiniZ1({
+  attrId,
+  onClick,
+}: {
+  attrId: AttributeId;
+  onClick: () => void;
+}) {
+  const ir = usePosaStore((s) => s.ir);
+  const selectedSlotId = usePosaStore((s) => s.selectedSlotId);
+  const components = useActiveComponentDefs();
+  const { t } = useTranslation('planes');
+
+  const bars = useMemo(() => {
+    const slotIds = getSlotsByAttribute(components, attrId, ir);
+    return slotIds.map<{ id: SlotId; color: ReturnType<typeof oklchToHex> | null }>(
+      (id) => {
+        const c = resolveSlotStateColor(ir, id, 'default');
+        return { id, color: c ? oklchToHex(c.L, c.C, c.H) : null };
+      },
+    );
+  }, [components, attrId, ir]);
+
+  if (bars.length === 0) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={t('breadcrumb.backToZ1')}
+      className="flex items-stretch gap-px p-1 rounded border border-stone-200 bg-white/60 hover:border-stone-500 hover:-translate-y-px transition h-[22px]"
+    >
+      {bars.map((b) => {
+        const active = b.id === selectedSlotId;
+        return (
+          <span
+            key={b.id}
+            className={[
+              'block w-1 rounded-[1px]',
+              active ? 'outline outline-[1.5px] outline-stone-900' : '',
+            ].join(' ')}
+            style={{ backgroundColor: b.color ?? '#e7e5e4' }}
+          />
+        );
+      })}
+    </button>
+  );
+}
+
+function Dot({ color, focused }: { color: { L: number; C: number; H: number } | null; focused: boolean }) {
+  const hex = color ? oklchToHex(color.L, color.C, color.H) : null;
+  return (
+    <span
+      className={[
+        'block w-2 h-2 rounded-full',
+        focused ? 'outline outline-[1.5px] outline-stone-900' : '',
+      ].join(' ')}
+      style={{ backgroundColor: hex ?? '#e7e5e4' }}
+    />
+  );
 }
