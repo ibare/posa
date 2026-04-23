@@ -4,7 +4,7 @@ import { COMPILERS, type CompileResult, type Compiler } from '../../compilers';
 import { useActiveComponentDefs } from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
 
-export function ExportView() {
+export function ExportMode() {
   const ir = usePosaStore((s) => s.ir);
   const components = useActiveComponentDefs();
   const [selectedId, setSelectedId] = useState<string>(COMPILERS[0].id);
@@ -62,7 +62,7 @@ export function ExportView() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6">
       <aside className="space-y-2">
         <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400 mb-1">
           {t('compiler')}
