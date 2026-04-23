@@ -1,4 +1,5 @@
 import { ATTRIBUTE_DEFINITIONS } from '../../catalog/attributes';
+import { COMPONENT_DEFINITIONS } from '../../catalog/components';
 import { getSlotDisplayName } from '../../ir/selectors';
 import { usePosaStore, type Layer } from '../../store/posa-store';
 
@@ -13,12 +14,45 @@ export function BreadcrumbStrip() {
   const ir = usePosaStore((s) => s.ir);
   const selectedAttributeId = usePosaStore((s) => s.selectedAttributeId);
   const selectedSlotId = usePosaStore((s) => s.selectedSlotId);
+  const selectedComponentId = usePosaStore((s) => s.selectedComponentId);
   const jumpToLayer = usePosaStore((s) => s.jumpToLayer);
+  const clearSelectedComponent = usePosaStore(
+    (s) => s.clearSelectedComponent,
+  );
 
   const attrLabel =
     ATTRIBUTE_DEFINITIONS.find((a) => a.id === selectedAttributeId)?.label ??
     selectedAttributeId;
   const slotLabel = selectedSlotId ? getSlotDisplayName(selectedSlotId, ir) : null;
+  const componentLabel = selectedComponentId
+    ? COMPONENT_DEFINITIONS.find((c) => c.id === selectedComponentId)?.label ??
+      selectedComponentId
+    : null;
+
+  // ZX 모드: selectedComponentId가 있고 Z2가 아닐 때는 ZX 빵부스러기를 보여준다.
+  const inZxMode = selectedComponentId != null && layer !== 'z2';
+
+  if (inZxMode) {
+    return (
+      <div className="mx-auto max-w-5xl mb-6 flex items-center gap-3 flex-wrap">
+        <button
+          type="button"
+          onClick={clearSelectedComponent}
+          className="text-[10px] font-mono uppercase tracking-wider text-stone-500 hover:text-stone-900 px-2 py-1 rounded hover:bg-stone-200/60 transition"
+          title="Exit ZX · back to Z*"
+        >
+          symbols & attributes
+        </button>
+        <Divider />
+        <span className="font-mono text-xs text-stone-900 px-2 py-1 bg-stone-100 rounded">
+          {componentLabel}
+        </span>
+        <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
+          ZX · component
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl mb-6 flex items-center gap-3 flex-wrap">

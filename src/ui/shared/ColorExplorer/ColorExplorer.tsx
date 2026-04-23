@@ -21,7 +21,7 @@ import { OtherPrimitives } from './OtherPrimitives';
 import { Sea } from './Sea';
 import { findSameFamilyPrimitives } from './utils';
 import * as backgroundSea from './seas/background';
-import * as destructiveSea from './seas/destructive';
+import * as errorSea from './seas/error';
 import * as foregroundSea from './seas/foreground';
 import * as genericSea from './seas/generic';
 import * as primarySea from './seas/primary';
@@ -30,7 +30,7 @@ import * as warningSea from './seas/warning';
 
 export type ColorExplorerProps = {
   /**
-   * Sea 선택 키. symbolId(primary/destructive/warning/...) 혹은 attributeId
+   * Sea 선택 키. symbolId(primary/error/warning/...) 혹은 attributeId
    * (background/text/border/...) 를 받는다. 매칭이 없으면 generic sea.
    */
   seaKey: string;
@@ -56,7 +56,7 @@ const SEA_REGISTRY: Record<string, SeaModule> = {
   info: primarySea,
   success: primarySea,
   warning: warningSea,
-  destructive: destructiveSea,
+  error: errorSea,
 
   // Attribute-inspired seas
   background: backgroundSea,

@@ -35,7 +35,6 @@ type Props = {
  * IR을 CSS 변수로 주입하는 프리뷰 루트.
  * 모든 slot × state에 대해 `--posa-slot-*` 변수를 만들고 자손 shape 컴포넌트가 이를 소비한다.
  *
- * shadcn의 `--primary` 같은 일반 변수는 만들지 않는다 — 그 레이어는 이제 없다.
  * Slot 단위로만 색이 주입되므로 shape 컴포넌트 입장에서 '컴포넌트 × attribute × state'
  * 3축의 변수 이름만 알면 된다.
  */

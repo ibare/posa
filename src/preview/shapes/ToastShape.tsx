@@ -1,10 +1,11 @@
 import type { CSSProperties } from 'react';
 import { slotVarName } from '../slotVarName';
 
-export type ToastVariant = 'default' | 'destructive' | 'warning' | 'success';
+export type ToastVariant = 'error' | 'warning' | 'success';
 
 type Props = {
-  variant: ToastVariant;
+  /** 미지정 시 기본형 slot(`toast.{attr}`)을 사용한다. */
+  variant?: ToastVariant;
   title?: string;
   description?: string;
 };
@@ -14,17 +15,18 @@ export function ToastShape({
   title = 'Toast title',
   description = 'Short description of the event.',
 }: Props) {
+  const slotBase = variant ? `toast.${variant}` : 'toast';
   const style: CSSProperties = {
-    backgroundColor: `var(--${slotVarName(`toast.${variant}.background`, 'default')})`,
-    color: `var(--${slotVarName(`toast.${variant}.text`, 'default')})`,
-    border: `1px solid var(--${slotVarName(`toast.${variant}.border`, 'default')})`,
+    backgroundColor: `var(--${slotVarName(`${slotBase}.background`, 'default')})`,
+    color: `var(--${slotVarName(`${slotBase}.text`, 'default')})`,
+    border: `1px solid var(--${slotVarName(`${slotBase}.border`, 'default')})`,
   };
 
   return (
     <div
       className="w-[320px] rounded-md p-4"
       style={style}
-      data-posa-slot={`toast.${variant}.background`}
+      data-posa-slot={`${slotBase}.background`}
       data-posa-state="default"
     >
       <div className="text-sm font-semibold mb-0.5">{title}</div>

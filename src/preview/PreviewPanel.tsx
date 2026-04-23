@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, type MouseEvent, type ReactNode } from 'react';
 import {
   COMPONENT_DEFINITIONS,
   findComponentBySlotId,
@@ -26,29 +26,15 @@ import {
   type ToastVariant,
 } from './shapes';
 
-const BUTTON_VARIANTS: ButtonVariant[] = [
-  'primary',
-  'secondary',
-  'destructive',
-  'outline',
-  'ghost',
-];
-const BADGE_VARIANTS: BadgeVariant[] = [
-  'default',
-  'secondary',
-  'destructive',
-  'outline',
-];
-const TOAST_VARIANTS: ToastVariant[] = [
-  'default',
-  'destructive',
-  'warning',
-  'success',
-];
+const BUTTON_VARIANTS: ButtonVariant[] = ['primary', 'secondary', 'error'];
+const BADGE_VARIANTS: BadgeVariant[] = ['secondary', 'error'];
+const TOAST_VARIANTS: ToastVariant[] = ['error', 'warning', 'success'];
 
 type ComponentScope = {
-  /** null이면 카탈로그의 모든 variant. */
+  /** null이면 카탈로그의 모든 variant, []면 variant는 렌더하지 않음. */
   variants: string[] | null;
+  /** 기본형(`{comp}.{attr}`) shape를 이 컴포넌트 섹션에 포함할지. */
+  includeBase: boolean;
   states: StateId[];
 };
 
@@ -64,7 +50,7 @@ const DEFAULT_ONLY: StateId[] = ['default'];
 function fullScope(states: StateId[]): PreviewScope {
   const m: PreviewScope = new Map();
   for (const c of COMPONENT_DEFINITIONS) {
-    m.set(c.id, { variants: null, states });
+    m.set(c.id, { variants: null, includeBase: true, states });
   }
   return m;
 }
@@ -76,7 +62,7 @@ function scopeFromAttribute(
   const m: PreviewScope = new Map();
   for (const c of COMPONENT_DEFINITIONS) {
     if (c.attributes.includes(attrId)) {
-      m.set(c.id, { variants: null, states });
+      m.set(c.id, { variants: null, includeBase: true, states });
     }
   }
   return m;
@@ -90,8 +76,10 @@ function scopeFromSlot(
   if (!comp) return new Map();
   const variant = variantOf(slotId);
   const m: PreviewScope = new Map();
+  // 기본형 slot focus면 기본형만, variant slot이면 해당 variant만.
   m.set(comp.id, {
-    variants: variant ? [variant] : null,
+    variants: variant ? [variant] : [],
+    includeBase: variant == null,
     states,
   });
   return m;
@@ -175,7 +163,12 @@ export function PreviewPanel() {
   const layer = usePosaStore((s) => s.layer);
   const selectedAttributeId = usePosaStore((s) => s.selectedAttributeId);
   const selectedSlotId = usePosaStore((s) => s.selectedSlotId);
+  const selectedComponentId = usePosaStore((s) => s.selectedComponentId);
   const focusedNode = usePosaStore((s) => s.focusedNode);
+  const selectComponent = usePosaStore((s) => s.selectComponent);
+  const clearSelectedComponent = usePosaStore(
+    (s) => s.clearSelectedComponent,
+  );
 
   const scope = useMemo(
     () =>
@@ -187,6 +180,9 @@ export function PreviewPanel() {
       ),
     [layer, selectedAttributeId, selectedSlotId, focusedNode],
   );
+
+  // ZX 진입 클릭은 z2(상태 descent)에서는 비활성 — 현재 slot의 상태를 보는 중이므로.
+  const canSelectComponent = layer !== 'z2';
 
   const buttonScope = scope.get('button');
   const inputScope = scope.get('input');
@@ -207,9 +203,17 @@ export function PreviewPanel() {
     ir,
   );
 
-  const hasButton = buttonScope && visibleButtonVariants.length > 0;
-  const hasBadge = badgeScope && visibleBadgeVariants.length > 0;
-  const hasToast = toastScope && visibleToastVariants.length > 0;
+  const hasButton = Boolean(
+    buttonScope &&
+      (buttonScope.includeBase || visibleButtonVariants.length > 0),
+  );
+  const hasBadge = Boolean(
+    badgeScope &&
+      (badgeScope.includeBase || visibleBadgeVariants.length > 0),
+  );
+  const hasToast = Boolean(
+    toastScope && (toastScope.includeBase || visibleToastVariants.length > 0),
+  );
 
   const visibleCount =
     (hasButton ? 1 : 0) +
@@ -240,12 +244,24 @@ export function PreviewPanel() {
         ) : (
           <PosaPreviewRoot ir={ir} className="space-y-8">
             {hasButton && (
-              <PreviewSection title="Button">
+              <PreviewSection
+                title="Button"
+                componentId="button"
+                selected={selectedComponentId === 'button'}
+                canSelect={canSelectComponent}
+                onSelect={selectComponent}
+                onDeselect={clearSelectedComponent}
+              >
+                {buttonScope!.includeBase && (
+                  <StateGroup label="BASE" states={buttonScope!.states}>
+                    {(state) => <ButtonShape state={state} label="button" />}
+                  </StateGroup>
+                )}
                 {visibleButtonVariants.map((v) => (
                   <StateGroup
                     key={v}
                     label={v.toUpperCase()}
-                    states={buttonScope.states}
+                    states={buttonScope!.states}
                   >
                     {(state) => (
                       <ButtonShape variant={v} state={state} label={v} />
@@ -256,7 +272,14 @@ export function PreviewPanel() {
             )}
 
             {inputScope && (
-              <PreviewSection title="Input">
+              <PreviewSection
+                title="Input"
+                componentId="input"
+                selected={selectedComponentId === 'input'}
+                canSelect={canSelectComponent}
+                onSelect={selectComponent}
+                onDeselect={clearSelectedComponent}
+              >
                 <StateGroup label="INPUT" states={inputScope.states}>
                   {(state) => (
                     <InputShape
@@ -269,14 +292,36 @@ export function PreviewPanel() {
             )}
 
             {cardScope && (
-              <PreviewSection title="Card">
+              <PreviewSection
+                title="Card"
+                componentId="card"
+                selected={selectedComponentId === 'card'}
+                canSelect={canSelectComponent}
+                onSelect={selectComponent}
+                onDeselect={clearSelectedComponent}
+              >
                 <CardShape />
               </PreviewSection>
             )}
 
             {hasBadge && (
-              <PreviewSection title="Badge">
+              <PreviewSection
+                title="Badge"
+                componentId="badge"
+                selected={selectedComponentId === 'badge'}
+                canSelect={canSelectComponent}
+                onSelect={selectComponent}
+                onDeselect={clearSelectedComponent}
+              >
                 <div className="flex flex-wrap gap-3 items-start">
+                  {badgeScope!.includeBase && (
+                    <div className="flex flex-col items-start gap-2">
+                      <BadgeShape label="badge" />
+                      <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
+                        base
+                      </div>
+                    </div>
+                  )}
                   {visibleBadgeVariants.map((v) => (
                     <div key={v} className="flex flex-col items-start gap-2">
                       <BadgeShape variant={v} label={v} />
@@ -290,8 +335,23 @@ export function PreviewPanel() {
             )}
 
             {hasToast && (
-              <PreviewSection title="Toast">
+              <PreviewSection
+                title="Toast"
+                componentId="toast"
+                selected={selectedComponentId === 'toast'}
+                canSelect={canSelectComponent}
+                onSelect={selectComponent}
+                onDeselect={clearSelectedComponent}
+              >
                 <div className="flex flex-col gap-3">
+                  {toastScope!.includeBase && (
+                    <div className="flex flex-col items-start gap-1">
+                      <ToastShape title="Toast" />
+                      <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
+                        base
+                      </div>
+                    </div>
+                  )}
                   {visibleToastVariants.map((v) => (
                     <div key={v} className="flex flex-col items-start gap-1">
                       <ToastShape
@@ -315,15 +375,59 @@ export function PreviewPanel() {
 
 function PreviewSection({
   title,
+  componentId,
+  selected,
+  canSelect,
+  onSelect,
+  onDeselect,
   children,
 }: {
   title: string;
+  componentId: ComponentId;
+  selected: boolean;
+  canSelect: boolean;
+  onSelect: (id: ComponentId) => void;
+  onDeselect: () => void;
   children: ReactNode;
 }) {
+  const handleClick = () => {
+    if (!canSelect) return;
+    if (selected) onDeselect();
+    else onSelect(componentId);
+  };
+  const handleDeselect = (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    onDeselect();
+  };
+
   return (
-    <section className="space-y-3">
-      <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-500">
-        {title}
+    <section
+      onClick={canSelect ? handleClick : undefined}
+      className={[
+        'relative space-y-3 rounded-lg border p-3 transition',
+        canSelect ? 'cursor-pointer' : '',
+        selected
+          ? 'border-stone-900 bg-stone-50 ring-2 ring-stone-900/10'
+          : canSelect
+            ? 'border-transparent hover:border-stone-300 hover:bg-stone-50/60'
+            : 'border-transparent',
+      ].join(' ')}
+    >
+      <div className="flex items-center justify-between">
+        <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-500">
+          {title}
+        </div>
+        {selected && (
+          <button
+            type="button"
+            onClick={handleDeselect}
+            className="flex-none text-[10px] font-mono text-stone-500 hover:text-stone-900 px-1.5 py-0.5 rounded hover:bg-stone-200/60 transition"
+            title="Exit ZX mode"
+            aria-label="Exit ZX mode"
+          >
+            ×
+          </button>
+        )}
       </div>
       {children}
     </section>

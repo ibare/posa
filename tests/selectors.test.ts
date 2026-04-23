@@ -23,12 +23,13 @@ function seed(): { ir: IR; pid: string } {
 }
 
 describe('enumerateAllSlotIds', () => {
-  it('모든 component × variant × attribute 조합을 나열한다', () => {
+  it('모든 component × (기본형 + variant들) × attribute 조합을 나열한다', () => {
     const ids = enumerateAllSlotIds();
     let expected = 0;
     for (const c of COMPONENT_DEFINITIONS) {
-      const variants = c.variants?.length ?? 1;
-      expected += variants * c.attributes.length;
+      // 기본형 1 + variant 수
+      const lanes = 1 + (c.variants?.length ?? 0);
+      expected += lanes * c.attributes.length;
     }
     expect(ids.length).toBe(expected);
     expect(new Set(ids).size).toBe(ids.length);
@@ -54,9 +55,9 @@ describe('getSlotsByAttribute', () => {
     const ir = createEmptyIR();
     const slots = getSlotsByAttribute('background', ir);
     expect(slots).not.toContain('button.primary.background');
-    expect(slots).not.toContain('badge.destructive.background');
-    // symbol과 무관한 variant·varient 없는 컴포넌트는 남는다.
-    expect(slots).toContain('button.outline.background');
+    expect(slots).not.toContain('badge.error.background');
+    // 기본형 slot과 variants 없는 컴포넌트는 남는다.
+    expect(slots).toContain('button.background');
     expect(slots).toContain('card.background');
   });
 

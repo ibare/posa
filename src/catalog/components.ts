@@ -2,9 +2,13 @@ import type { AttributeId, ComponentId, StateId } from '../ir/types';
 
 /**
  * Phase 1: 5개 컴포넌트만. Phase 2에서 확장.
+ *
  * Slot id 규칙:
- *   - Variant 없음: `{componentId}.{attributeId}`             예) card.background
- *   - Variant 있음: `{componentId}.{variantId}.{attributeId}` 예) button.primary.background
+ *   - 기본형(variant 지정 없음): `{componentId}.{attributeId}`          예) button.background
+ *   - Variant 지정:              `{componentId}.{variantId}.{attributeId}` 예) button.primary.background
+ *
+ * 기본형은 모든 컴포넌트가 가진다 (`variants` 필드 여부와 무관).
+ * variant id는 SymbolId와 문자열이 일치해야만 symbol 축과 결합된다.
  */
 
 export type ComponentVariant = {
@@ -29,9 +33,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     variants: [
       { id: 'primary', label: 'Primary' },
       { id: 'secondary', label: 'Secondary' },
-      { id: 'destructive', label: 'Destructive' },
-      { id: 'outline', label: 'Outline' },
-      { id: 'ghost', label: 'Ghost' },
+      { id: 'error', label: 'Error' },
     ],
     attributes: ['background', 'text', 'border', 'outline'],
     states: ['default', 'hover', 'active', 'disabled', 'focus'],
@@ -55,10 +57,8 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     label: 'Badge',
     description: 'Small status indicator',
     variants: [
-      { id: 'default', label: 'Default' },
       { id: 'secondary', label: 'Secondary' },
-      { id: 'destructive', label: 'Destructive' },
-      { id: 'outline', label: 'Outline' },
+      { id: 'error', label: 'Error' },
     ],
     attributes: ['background', 'text', 'border'],
     states: ['default'],
@@ -68,8 +68,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     label: 'Toast',
     description: 'Transient notification',
     variants: [
-      { id: 'default', label: 'Default' },
-      { id: 'destructive', label: 'Destructive' },
+      { id: 'error', label: 'Error' },
       { id: 'warning', label: 'Warning' },
       { id: 'success', label: 'Success' },
     ],

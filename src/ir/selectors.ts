@@ -26,13 +26,13 @@ const SYMBOL_ID_SET: Set<string> = new Set(SYMBOL_IDS);
 export function enumerateAllSlotIds(): SlotId[] {
   const ids: SlotId[] = [];
   for (const comp of COMPONENT_DEFINITIONS) {
-    const variants = comp.variants ?? [{ id: '', label: '' }];
-    for (const variant of variants) {
+    // 기본형은 모든 컴포넌트가 동일하게 가진다.
+    for (const attr of comp.attributes) {
+      ids.push(`${comp.id}.${attr}`);
+    }
+    for (const variant of comp.variants ?? []) {
       for (const attr of comp.attributes) {
-        const base = variant.id
-          ? `${comp.id}.${variant.id}.${attr}`
-          : `${comp.id}.${attr}`;
-        ids.push(base);
+        ids.push(`${comp.id}.${variant.id}.${attr}`);
       }
     }
   }
@@ -42,8 +42,8 @@ export function enumerateAllSlotIds(): SlotId[] {
 /**
  * Variant 이름이 SymbolId와 동일한 slot은 그 symbol에 primitive가 할당된 경우에만 활성.
  * (예: primary symbol 미할당 시 button.primary.* 전부 비노출.)
- * 'outline'/'ghost'/'default' 처럼 symbol과 무관한 variant는 항상 활성.
- * 변형이 없는 컴포넌트(card/input)는 항상 활성.
+ * Posa 정책상 모든 variant id는 SymbolId와 일치한다 — 일치하지 않는 variant는
+ * 카탈로그에서 허용하지 않는다. 기본형(segment가 2개) slot은 항상 활성.
  */
 export function isSlotActive(slotId: SlotId, ir: IR): boolean {
   const parts = slotId.split('.');

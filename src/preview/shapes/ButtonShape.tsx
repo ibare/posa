@@ -2,22 +2,23 @@ import type { CSSProperties } from 'react';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'destructive' | 'outline' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'error';
 
 type Props = {
-  variant: ButtonVariant;
+  /** 미지정 시 기본형 slot(`button.{attr}`)을 사용한다. */
+  variant?: ButtonVariant;
   state?: StateId;
   label?: string;
 };
 
 /**
- * ButtonShape — shadcn에서 차용한 것은 치수/레이아웃 외형뿐.
- * 어떤 색이 어디에 칠해지는지는 IR slot 할당에 따라 그대로 반영된다.
+ * ButtonShape — 치수/레이아웃은 단일 외형 하나. 색은 IR slot 할당으로 결정된다.
  */
 export function ButtonShape({ variant, state = 'default', label = 'Button' }: Props) {
-  const bgVar = `var(--${slotVarName(`button.${variant}.background`, state)})`;
-  const textVar = `var(--${slotVarName(`button.${variant}.text`, state)})`;
-  const borderVar = `var(--${slotVarName(`button.${variant}.border`, state)})`;
+  const slotBase = variant ? `button.${variant}` : 'button';
+  const bgVar = `var(--${slotVarName(`${slotBase}.background`, state)})`;
+  const textVar = `var(--${slotVarName(`${slotBase}.text`, state)})`;
+  const borderVar = `var(--${slotVarName(`${slotBase}.border`, state)})`;
 
   const style: CSSProperties = {
     backgroundColor: bgVar,
@@ -29,7 +30,7 @@ export function ButtonShape({ variant, state = 'default', label = 'Button' }: Pr
     <div
       className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium"
       style={style}
-      data-posa-slot={`button.${variant}.background`}
+      data-posa-slot={`${slotBase}.background`}
       data-posa-state={state}
     >
       {label}

@@ -1,17 +1,19 @@
 import type { CSSProperties } from 'react';
 import { slotVarName } from '../slotVarName';
 
-export type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
+export type BadgeVariant = 'secondary' | 'error';
 
 type Props = {
-  variant: BadgeVariant;
+  /** 미지정 시 기본형 slot(`badge.{attr}`)을 사용한다. */
+  variant?: BadgeVariant;
   label?: string;
 };
 
 export function BadgeShape({ variant, label = 'Badge' }: Props) {
-  const bgVar = `var(--${slotVarName(`badge.${variant}.background`, 'default')})`;
-  const textVar = `var(--${slotVarName(`badge.${variant}.text`, 'default')})`;
-  const borderVar = `var(--${slotVarName(`badge.${variant}.border`, 'default')})`;
+  const slotBase = variant ? `badge.${variant}` : 'badge';
+  const bgVar = `var(--${slotVarName(`${slotBase}.background`, 'default')})`;
+  const textVar = `var(--${slotVarName(`${slotBase}.text`, 'default')})`;
+  const borderVar = `var(--${slotVarName(`${slotBase}.border`, 'default')})`;
 
   const style: CSSProperties = {
     backgroundColor: bgVar,
@@ -23,7 +25,7 @@ export function BadgeShape({ variant, label = 'Badge' }: Props) {
     <div
       className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
       style={style}
-      data-posa-slot={`badge.${variant}.background`}
+      data-posa-slot={`${slotBase}.background`}
       data-posa-state="default"
     >
       {label}

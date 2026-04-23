@@ -24,14 +24,16 @@ import { ColorExplorer } from './ColorExplorer';
  * 찾아 ColorExplorer에 binding한다. Focus id 관례:
  *   Z0 attributes 섹션 → `attr:<attributeId>`
  *   Z0 symbols 섹션    → `sym:<symbolId>`
- *   Z1 slot card       → `slot:<slotId>`
+ *   Z1 / ZX slot card  → `slot:<slotId>`
  *   Z2 state card      → `state:<state>` (selectedSlotId가 컨텍스트)
  */
 export function InspectorBody() {
   const layer = usePosaStore((s) => s.layer);
   const focusedNode = usePosaStore((s) => s.focusedNode);
   const selectedSlotId = usePosaStore((s) => s.selectedSlotId);
+  const selectedComponentId = usePosaStore((s) => s.selectedComponentId);
   const ir = usePosaStore((s) => s.ir);
+  const inZxMode = selectedComponentId != null && layer !== 'z2';
 
   const setSymbolColor = usePosaStore((s) => s.setSymbolColor);
   const setSymbolShade = usePosaStore((s) => s.setSymbolShade);
@@ -78,8 +80,38 @@ export function InspectorBody() {
   const context = useMemo<Context | null>(() => {
     if (!focusedNode) return null;
 
+    // Z1 / ZX: slot default (layer에 상관없이 slot: focus는 default state 편집)
+    if (
+      focusedNode.startsWith('slot:') &&
+      (layer === 'z1' || inZxMode)
+    ) {
+      const slotId = focusedNode.slice(5);
+      const slot = ir.slots[slotId];
+      const assignment = slot?.ref ?? null;
+      const component = findComponentBySlotId(slotId);
+      const hasMultipleStates = (component?.states.length ?? 0) > 1;
+      const attrId = getAttributeFromSlotId(slotId);
+      return {
+        label: 'slot',
+        nodeLabel: slotId,
+        seaKey: attrId,
+        color: resolveSlotStateColor(ir, slotId, 'default'),
+        assignment,
+        isDirect: assignment !== null,
+        canClear: assignment !== null,
+        supportsSymbolRef: true,
+        onChange: (c) => setSlotColor(slotId, c),
+        onClear: () => setSlotColor(slotId, null),
+        onSelectShade: (shade) => setSlotShade(slotId, shade),
+        onSelectPrimitive: (primitiveId, shade) =>
+          setSlotAssignment(slotId, primitiveId, shade),
+        onSelectSymbol: (symbolId) => setSlotSymbol(slotId, symbolId),
+        descendSlot: hasMultipleStates ? slotId : undefined,
+      };
+    }
+
     // Z0: symbol | attribute
-    if (layer === 'z0') {
+    if (layer === 'z0' && !inZxMode) {
       if (focusedNode.startsWith('sym:')) {
         const symbolId = focusedNode.slice(4) as SymbolId;
         const assignment = ir.symbols[symbolId];
@@ -134,35 +166,8 @@ export function InspectorBody() {
       return null;
     }
 
-    // Z1: slot default
-    if (layer === 'z1') {
-      if (!focusedNode.startsWith('slot:')) return null;
-      const slotId = focusedNode.slice(5);
-      const slot = ir.slots[slotId];
-      const assignment = slot?.ref ?? null;
-      const component = findComponentBySlotId(slotId);
-      const hasMultipleStates = (component?.states.length ?? 0) > 1;
-      const attrId = getAttributeFromSlotId(slotId);
-      return {
-        label: 'slot',
-        nodeLabel: slotId,
-        seaKey: attrId,
-        color: resolveSlotStateColor(ir, slotId, 'default'),
-        assignment,
-        isDirect: assignment !== null,
-        canClear: assignment !== null,
-        supportsSymbolRef: true,
-        onChange: (c) => setSlotColor(slotId, c),
-        onClear: () => setSlotColor(slotId, null),
-        onSelectShade: (shade) => setSlotShade(slotId, shade),
-        onSelectPrimitive: (primitiveId, shade) =>
-          setSlotAssignment(slotId, primitiveId, shade),
-        onSelectSymbol: (symbolId) => setSlotSymbol(slotId, symbolId),
-        descendSlot: hasMultipleStates ? slotId : undefined,
-      };
-    }
-
     // Z2: slot state (default uses setSlot*, non-default uses setSlotState*)
+    if (layer !== 'z2') return null;
     if (!selectedSlotId || !focusedNode.startsWith('state:')) return null;
     const state = focusedNode.slice(6) as StateId;
     const slot = ir.slots[selectedSlotId];
@@ -211,6 +216,7 @@ export function InspectorBody() {
   }, [
     focusedNode,
     layer,
+    inZxMode,
     selectedSlotId,
     ir,
     setSymbolColor,
@@ -236,7 +242,7 @@ export function InspectorBody() {
       <header className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
-            {layer} · {context.label}
+            {inZxMode ? 'zx' : layer} · {context.label}
           </div>
           <div className="font-mono text-sm text-stone-900 mt-0.5 break-all">
             {context.nodeLabel}

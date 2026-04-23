@@ -14,6 +14,7 @@ import {
   createEmptyIR,
   type AttributeId,
   type ColorRef,
+  type ComponentId,
   type IR,
   type OKLCH,
   type PrimitiveId,
@@ -41,6 +42,8 @@ type PosaState = {
   layer: Layer;
   selectedAttributeId: AttributeId | null; // Z1 descent target
   selectedSlotId: SlotId | null; // Z2 descent target
+  /** ZX(Component 모드) 진입 target. null이면 일반 Z0~Z2. 프리뷰에서 컴포넌트를 선택하면 세팅된다. */
+  selectedComponentId: ComponentId | null;
   focusedNode: string | null; // 현재 평면에서 inspector 열린 node id
   lastDirection: LayerDirection;
 
@@ -104,6 +107,10 @@ type PosaState = {
   ascend: () => void;
   jumpToLayer: (layer: Layer) => void;
   setFocus: (nodeId: string | null) => void;
+
+  // ZX (Component mode)
+  selectComponent: (componentId: ComponentId) => void;
+  clearSelectedComponent: () => void;
 
   // Phase / atlas
   goToPhase: (phase: Phase) => void;
@@ -174,6 +181,7 @@ export const usePosaStore = create<PosaState>((set, get) => ({
   layer: 'z0',
   selectedAttributeId: null,
   selectedSlotId: null,
+  selectedComponentId: null,
   focusedNode: null,
   lastDirection: 'neutral',
 
@@ -184,6 +192,7 @@ export const usePosaStore = create<PosaState>((set, get) => ({
       layer: 'z0',
       selectedAttributeId: null,
       selectedSlotId: null,
+      selectedComponentId: null,
       focusedNode: null,
       lastDirection: 'neutral',
     });
@@ -474,6 +483,12 @@ export const usePosaStore = create<PosaState>((set, get) => ({
   },
 
   setFocus: (nodeId) => set({ focusedNode: nodeId }),
+
+  // ── ZX (Component mode) ──────────────────────────────────────────────
+  selectComponent: (componentId) =>
+    set({ selectedComponentId: componentId, focusedNode: null }),
+  clearSelectedComponent: () =>
+    set({ selectedComponentId: null, focusedNode: null }),
 
   // ── Phase / atlas ─────────────────────────────────────────────────────
   goToPhase: (phase) => {

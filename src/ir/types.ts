@@ -53,7 +53,7 @@ export type SymbolId =
   | 'success'
   | 'info'
   | 'warning'
-  | 'destructive';
+  | 'error';
 
 export const SYMBOL_IDS: SymbolId[] = [
   'primary',
@@ -62,7 +62,7 @@ export const SYMBOL_IDS: SymbolId[] = [
   'success',
   'info',
   'warning',
-  'destructive',
+  'error',
 ];
 
 export type SymbolAssignment = {

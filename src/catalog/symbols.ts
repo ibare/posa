@@ -13,5 +13,5 @@ export const SYMBOL_DEFINITIONS: SymbolDefinition[] = [
   { id: 'success', label: 'Success', description: 'Positive confirmation' },
   { id: 'info', label: 'Info', description: 'Neutral information' },
   { id: 'warning', label: 'Warning', description: 'Caution or attention' },
-  { id: 'destructive', label: 'Destructive', description: 'Danger or error' },
+  { id: 'error', label: 'Error', description: 'Danger or error' },
 ];
