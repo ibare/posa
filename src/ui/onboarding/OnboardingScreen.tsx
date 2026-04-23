@@ -1,13 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   COMPONENT_DEFINITIONS,
   COMPONENT_GROUPS,
+  findComponent,
   type ComponentDefinition,
   type ComponentGroupId,
 } from '../../catalog/components';
-import type { ComponentId } from '../../ir/types';
+import type { ComponentId, IR, SymbolId } from '../../ir/types';
 import { usePosaStore } from '../../store/posa-store';
 import { ConfirmDialog } from '../shared/ConfirmDialog';
 import { LocaleToggle } from '../shared/layout/LocaleToggle';
@@ -18,11 +19,11 @@ import { useComponentLabel } from '../../store/hooks';
  * 온보딩: 색 지정 대상 컴포넌트 스코프를 고르는 화면.
  *
  * 라이브 커밋 모델 — 체크를 토글하면 즉시 store의 activeComponentIds와 IR이 갱신된다.
- * 제거로 손실이 발생할 가능성이 있으면 그 시점에 확인 다이얼로그를 띄우고 취소 시 원복한다.
+ * 색 연결이 있는 컴포넌트를 해제하려 하면 확인 다이얼로그를 띄우고 취소 시 원복한다.
  * 마지막 컴포넌트를 빼는 순간에는 전체 wipe 확인을 한다.
  *
- * Continue/Start 버튼은 /explore로 이동만 한다 (커밋 작업 없음). 라벨은 엔트리 스냅샷과
- * 현재 상태가 같으면 Continue, 달라졌으면(또는 처음부터 빈 상태였으면) Start.
+ * 버튼 라벨: 데이터가 있고 이번 세션에서 0을 거치지 않았다면 Continue, 그 외엔 Start.
+ * Continue/Start 클릭 시 네비 컨텍스트를 리셋하고 /explore(Z0)로 이동한다.
  */
 export function OnboardingScreen() {
   const navigate = useNavigate();
@@ -31,16 +32,21 @@ export function OnboardingScreen() {
   const addActiveComponents = usePosaStore((s) => s.addActiveComponents);
   const removeActiveComponents = usePosaStore((s) => s.removeActiveComponents);
   const startFresh = usePosaStore((s) => s.startFresh);
+  const resetNavigation = usePosaStore((s) => s.resetNavigation);
   const { t } = useTranslation(['onboarding', 'common']);
 
-  // 엔트리 스냅샷 — "변경 없으면 Continue" 판정에 쓴다.
-  const [entrySnapshot] = useState<Set<ComponentId>>(
-    () => new Set(activeComponentIds),
+  // 세션 내에서 한 번이라도 0이 되었는가. 0을 거치면 Continue → Start로 고정.
+  // 진입 시 비어있었다면 true로 시작해서 처음부터 Start가 뜬다.
+  const [wentToZero, setWentToZero] = useState(
+    () => activeComponentIds.length === 0,
   );
+  useEffect(() => {
+    if (activeComponentIds.length === 0) setWentToZero(true);
+  }, [activeComponentIds.length]);
 
   const [removalConfirm, setRemovalConfirm] = useState<
-    | { kind: 'component'; id: ComponentId; slotCount: number }
-    | { kind: 'group'; ids: ComponentId[]; slotCount: number }
+    | { kind: 'component'; id: ComponentId }
+    | { kind: 'group'; ids: ComponentId[] }
     | { kind: 'all' }
     | null
   >(null);
@@ -60,13 +66,12 @@ export function OnboardingScreen() {
     [activeComponentIds],
   );
 
-  const countSlotsFor = (ids: Iterable<ComponentId>): number => {
-    const removeSet = new Set(ids);
-    let n = 0;
-    for (const slotId of Object.keys(ir.slots)) {
-      if (removeSet.has(slotId.split('.')[0] as ComponentId)) n++;
-    }
-    return n;
+  const hasColorLink = (componentId: ComponentId): boolean => {
+    return componentHasColorLink(ir, componentId);
+  };
+  const anyHasColorLink = (ids: Iterable<ComponentId>): boolean => {
+    for (const id of ids) if (hasColorLink(id)) return true;
+    return false;
   };
 
   const handleRemove = (ids: ComponentId[]) => {
@@ -80,15 +85,14 @@ export function OnboardingScreen() {
       return;
     }
 
-    const slotCount = countSlotsFor(uniq);
-    if (slotCount === 0) {
+    if (!anyHasColorLink(uniq)) {
       removeActiveComponents(uniq);
       return;
     }
     if (uniq.length === 1) {
-      setRemovalConfirm({ kind: 'component', id: uniq[0], slotCount });
+      setRemovalConfirm({ kind: 'component', id: uniq[0] });
     } else {
-      setRemovalConfirm({ kind: 'group', ids: uniq, slotCount });
+      setRemovalConfirm({ kind: 'group', ids: uniq });
     }
   };
 
@@ -126,14 +130,15 @@ export function OnboardingScreen() {
   const count = selected.size;
   const total = COMPONENT_DEFINITIONS.length;
   const isEmpty = count === 0;
-  const pristine =
-    entrySnapshot.size === selected.size &&
-    [...entrySnapshot].every((id) => selected.has(id));
-  const isContinue = !isEmpty && pristine && entrySnapshot.size > 0;
+  // 데이터가 있고, 이번 세션에서 0을 거치지 않았다면 Continue.
+  // 0을 거친 순간부터는 "새로 시작"이므로 Start로 고정된다.
+  const isContinue = !isEmpty && !wentToZero;
   const canProceed = !isEmpty;
 
   const onProceed = () => {
     if (!canProceed) return;
+    // /explore 진입은 항상 Z0부터. 이전 세션에 남아있던 네비 컨텍스트를 리셋.
+    resetNavigation();
     navigate('/explore');
   };
 
@@ -238,8 +243,8 @@ function RemovalConfirmDialog({
   onCancel,
 }: {
   confirm:
-    | { kind: 'component'; id: ComponentId; slotCount: number }
-    | { kind: 'group'; ids: ComponentId[]; slotCount: number }
+    | { kind: 'component'; id: ComponentId }
+    | { kind: 'group'; ids: ComponentId[] }
     | { kind: 'all' }
     | null;
   onConfirm: () => void;
@@ -283,9 +288,7 @@ function RemovalConfirmDialog({
         open
         destructive
         title={t('confirm.removeComponent.title', { component: componentLabel })}
-        description={t('confirm.removeComponent.description', {
-          count: confirm.slotCount,
-        })}
+        description={t('confirm.removeComponent.description')}
         confirmLabel={t('common:action.remove')}
         onConfirm={onConfirm}
         onCancel={onCancel}
@@ -298,12 +301,34 @@ function RemovalConfirmDialog({
       open
       destructive
       title={t('confirm.removeGroup.title', { count: confirm.ids.length })}
-      description={t('confirm.removeGroup.description', {
-        count: confirm.slotCount,
-      })}
+      description={t('confirm.removeGroup.description')}
       confirmLabel={t('common:action.remove')}
       onConfirm={onConfirm}
       onCancel={onCancel}
     />
   );
+}
+
+/**
+ * 주어진 컴포넌트가 현재 IR 상의 "색 연결"을 하나라도 갖는지.
+ *  1) 컴포넌트가 소유한 slot  (`{cid}.*`)
+ *  2) 컴포넌트가 선언한 attribute 중 IR에 전역 색이 잡힌 것
+ *  3) 컴포넌트의 variant id와 일치하는 symbol에 색이 잡힌 것
+ *
+ * (2)(3)은 제거되지 않지만, 체크 해제하면 프리뷰에서 이 컴포넌트가 사라져
+ * 사용자 시점에선 "설정한 색이 사라진" 것처럼 보이기 때문에 경고 대상에 포함한다.
+ */
+function componentHasColorLink(ir: IR, componentId: ComponentId): boolean {
+  for (const slotId of Object.keys(ir.slots)) {
+    if (slotId.split('.')[0] === componentId) return true;
+  }
+  const def = findComponent(componentId);
+  if (!def) return false;
+  for (const attr of def.attributes) {
+    if (ir.attributes[attr]) return true;
+  }
+  for (const variant of def.variants ?? []) {
+    if (ir.symbols[variant.id as SymbolId]) return true;
+  }
+  return false;
 }

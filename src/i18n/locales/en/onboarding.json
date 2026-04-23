@@ -19,13 +19,11 @@
   "confirm": {
     "removeComponent": {
       "title": "Remove {{component}}?",
-      "description_one": "{{count}} color assignment on this component will be cleared.",
-      "description_other": "{{count}} color assignments on this component will be cleared."
+      "description": "Color links tied to this component will disappear from the preview."
     },
     "removeGroup": {
       "title": "Remove {{count}} components?",
-      "description_one": "{{count}} color assignment across these components will be cleared.",
-      "description_other": "{{count}} color assignments across these components will be cleared."
+      "description": "Color links tied to the selected components will disappear from the preview."
     },
     "removeAll": {
       "title": "Clear everything?",

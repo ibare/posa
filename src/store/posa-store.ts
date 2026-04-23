@@ -69,6 +69,7 @@ type PosaState = {
   startFresh: () => void;
   addActiveComponents: (ids: ComponentId[]) => void;
   removeActiveComponents: (ids: ComponentId[]) => void;
+  resetNavigation: () => void;
   setLocale: (locale: Locale) => void;
 
   // Symbol assignment
@@ -216,6 +217,18 @@ export const usePosaStore = create<PosaState>()(
   setLocale: (locale) => {
     void i18n.changeLanguage(locale);
     set({ locale });
+  },
+
+  resetNavigation: () => {
+    set({
+      layer: 'z0',
+      selectedAttributeId: null,
+      selectedSlotId: null,
+      selectedComponentId: null,
+      selectedGroupId: null,
+      focusedNode: null,
+      lastDirection: 'neutral',
+    });
   },
 
   startFresh: () => {
