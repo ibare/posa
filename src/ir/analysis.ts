@@ -5,10 +5,7 @@
  * 없다. 여기 함수들은 그 축들을 기준으로 쏠림·정합성·대비를 요약한다.
  */
 
-import {
-  findComponentBySlotId,
-  type ComponentDefinition,
-} from '../catalog/components';
+import type { ComponentDefinition } from '../catalog/components';
 import { contrastRatio, verdictOf, type ContrastVerdict } from '../color/contrast';
 import {
   enumerateActiveSlotIds,
@@ -325,90 +322,3 @@ export function computeContrastPairs(
   return pairs;
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// Heads up — 감지 규칙
-// ──────────────────────────────────────────────────────────────────────────
-
-export type HeadsUpItem =
-  | {
-      id: string;
-      severity: 'warn';
-      kind: 'hover-invisible';
-      slotId: SlotId;
-    }
-  | {
-      id: string;
-      severity: 'warn';
-      kind: 'status-clash';
-      symbolA: SymbolId;
-      symbolB: SymbolId;
-    };
-
-/** L 차이가 이 값보다 작으면 hover 상태가 거의 안 보이는 것으로 간주. */
-const HOVER_L_THRESHOLD = 0.02;
-
-/** 채도가 이 이하면 hue가 의미 없다 — status color 충돌 검사에서 제외. */
-const STATUS_CHROMA_THRESHOLD = 0.03;
-
-/** status symbol 끼리의 hue 거리(도)가 이 값 미만이면 혼동 가능. */
-const STATUS_HUE_THRESHOLD = 20;
-
-const STATUS_SYMBOLS: SymbolId[] = ['success', 'info', 'warning', 'error'];
-
-function hueDistance(a: number, b: number): number {
-  const diff = Math.abs(a - b) % 360;
-  return diff > 180 ? 360 - diff : diff;
-}
-
-export function findHeadsUpItems(
-  ir: IR,
-  components: ComponentDefinition[],
-): HeadsUpItem[] {
-  const items: HeadsUpItem[] = [];
-
-  // (1) 거의 안 보이는 hover.
-  for (const slotId of enumerateActiveSlotIds(components, ir)) {
-    const slot = ir.slots[slotId];
-    if (!slot) continue;
-    const comp = findComponentBySlotId(slotId);
-    if (!comp || !comp.states.includes('hover')) continue;
-    const hoverOverride = slot.states?.hover;
-    if (!hoverOverride) continue;
-    const baseColor = resolveSlotStateColor(ir, slotId, 'default');
-    const hoverColor = resolveSlotStateColor(ir, slotId, 'hover');
-    if (!baseColor || !hoverColor) continue;
-    if (Math.abs(baseColor.L - hoverColor.L) >= HOVER_L_THRESHOLD) continue;
-    items.push({
-      id: `hover:${slotId}`,
-      severity: 'warn',
-      kind: 'hover-invisible',
-      slotId,
-    });
-  }
-
-  // (2) 혼동 가능한 상태 색.
-  const statusColors: { symbolId: SymbolId; color: OKLCH }[] = [];
-  for (const symbolId of STATUS_SYMBOLS) {
-    if (ir.symbols[symbolId] == null) continue;
-    const color = resolveSymbolColor(ir, symbolId);
-    if (!color) continue;
-    if (color.C < STATUS_CHROMA_THRESHOLD) continue;
-    statusColors.push({ symbolId, color });
-  }
-  for (let i = 0; i < statusColors.length; i++) {
-    for (let j = i + 1; j < statusColors.length; j++) {
-      const a = statusColors[i];
-      const b = statusColors[j];
-      if (hueDistance(a.color.H, b.color.H) >= STATUS_HUE_THRESHOLD) continue;
-      items.push({
-        id: `status-clash:${a.symbolId}:${b.symbolId}`,
-        severity: 'warn',
-        kind: 'status-clash',
-        symbolA: a.symbolId,
-        symbolB: b.symbolId,
-      });
-    }
-  }
-
-  return items;
-}

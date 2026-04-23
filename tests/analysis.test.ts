@@ -7,7 +7,6 @@ import {
   computeContrastPairs,
   computePrimitiveUsage,
   computeSymbolUsage,
-  findHeadsUpItems,
 } from '../src/ir/analysis';
 import { createEmptyIR, type IR } from '../src/ir/types';
 
@@ -212,52 +211,3 @@ describe('computeContrastPairs', () => {
   });
 });
 
-describe('findHeadsUpItems', () => {
-  it('깨끗한 IR에서는 빈 배열', () => {
-    const { ir } = seedGreen();
-    expect(findHeadsUpItems(ir, COMPONENT_DEFINITIONS)).toEqual([]);
-  });
-
-  it('default와 hover의 L이 거의 같으면 warn을 생성', () => {
-    const { ir: base, pid } = seedGreen();
-    // shade 500과 500은 사실상 같은 색. L 차이는 0.
-    const ir: IR = {
-      ...base,
-      slots: {
-        'button.background': {
-          ref: { kind: 'primitive', primitive: pid, shade: 500 },
-          states: {
-            hover: { kind: 'primitive', primitive: pid, shade: 500 },
-          },
-        },
-      },
-    };
-    const items = findHeadsUpItems(ir, COMPONENT_DEFINITIONS);
-    const hoverWarn = items.find((i) => i.kind === 'hover-invisible');
-    expect(hoverWarn).toBeDefined();
-    if (hoverWarn && hoverWarn.kind === 'hover-invisible') {
-      expect(hoverWarn.severity).toBe('warn');
-      expect(hoverWarn.slotId).toBe('button.background');
-    }
-  });
-
-  it('success와 info가 비슷한 hue에 있으면 혼동 경고를 낸다', () => {
-    // 같은 primitive(green)를 success와 info에 둘 다 바인딩 → hue 거리 0.
-    const { ir: base, pid } = seedGreen();
-    const ir: IR = {
-      ...base,
-      symbols: {
-        success: { primitive: pid, shade: 500 },
-        info: { primitive: pid, shade: 600 },
-      },
-    };
-    const items = findHeadsUpItems(ir, COMPONENT_DEFINITIONS);
-    const clash = items.find((i) => i.kind === 'status-clash');
-    expect(clash).toBeDefined();
-    if (clash && clash.kind === 'status-clash') {
-      expect(new Set([clash.symbolA, clash.symbolB])).toEqual(
-        new Set(['success', 'info']),
-      );
-    }
-  });
-});

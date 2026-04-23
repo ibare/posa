@@ -71,21 +71,6 @@
         "large-only": "Large only",
         "poor": "Hard to read"
       }
-    },
-    "headsUp": {
-      "title": "Heads up",
-      "allClear": "All clear",
-      "noted_one": "{{count}} noted",
-      "noted_other": "{{count}} noted",
-      "empty": "Nothing stands out. Your system looks consistent.",
-      "hoverInvisible": {
-        "title": "Hover state is hard to see",
-        "detail": "{{slotId}} — the hover color sits almost on top of the default"
-      },
-      "statusClash": {
-        "title": "{{symbolA}} and {{symbolB}} look alike",
-        "detail": "These two status colors sit within a narrow hue band — users may confuse them"
-      }
     }
   }
 }

@@ -5,9 +5,7 @@ import type { ContrastVerdict } from '../../../color/contrast';
 import {
   computeContrastPairs,
   computePrimitiveUsage,
-  findHeadsUpItems,
   type ContrastPair,
-  type HeadsUpItem,
   type PrimitiveReferenceBucket,
 } from '../../../ir/analysis';
 import { SHADE_INDICES, type IR } from '../../../ir/types';
@@ -29,10 +27,6 @@ export function SystemHealth({ ir }: Props) {
   const primitiveUsage = useMemo(() => computePrimitiveUsage(ir), [ir]);
   const contrastPairs = useMemo(
     () => computeContrastPairs(ir, components),
-    [ir, components],
-  );
-  const headsUp = useMemo(
-    () => findHeadsUpItems(ir, components),
     [ir, components],
   );
 
@@ -59,7 +53,6 @@ export function SystemHealth({ ir }: Props) {
           assignedAttributes={assignedAttributes}
         />
         <Readability pairs={contrastPairs} />
-        <HeadsUp items={headsUp} />
       </div>
     </SectionCard>
   );
@@ -380,84 +373,3 @@ function PairRow({ pair }: { pair: ContrastPair }) {
   );
 }
 
-// ───── Heads up ─────
-
-function HeadsUp({ items }: { items: HeadsUpItem[] }) {
-  const { t } = useTranslation('review');
-  const hint =
-    items.length === 0
-      ? t('health.headsUp.allClear')
-      : t('health.headsUp.noted', { count: items.length });
-  return (
-    <SubCard title={t('health.headsUp.title')} hint={hint}>
-      {items.length === 0 ? (
-        <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2.5 text-[12px] text-green-800">
-          <span className="h-2 w-2 rounded-full bg-green-500" />
-          {t('health.headsUp.empty')}
-        </div>
-      ) : (
-        <div className="space-y-1.5">
-          {items.map((item) => (
-            <HeadsUpRow key={item.id} item={item} />
-          ))}
-        </div>
-      )}
-    </SubCard>
-  );
-}
-
-function HeadsUpRow({ item }: { item: HeadsUpItem }) {
-  const { t } = useTranslation('review');
-  const isWarn = item.severity === 'warn';
-  const { title, detail } = renderItem(item, t);
-  return (
-    <div
-      className={[
-        'rounded-md border px-3 py-2',
-        isWarn
-          ? 'border-amber-200 bg-amber-50'
-          : 'border-stone-200 bg-stone-50',
-      ].join(' ')}
-    >
-      <div className="flex items-start gap-2">
-        <span
-          className={[
-            'mt-1 h-2 w-2 flex-none rounded-full',
-            isWarn ? 'bg-amber-500' : 'bg-stone-400',
-          ].join(' ')}
-        />
-        <div className="min-w-0 flex-1">
-          <div className="text-[13px] font-medium text-stone-900">{title}</div>
-          <div className="mt-0.5 text-[11px] text-stone-600">{detail}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function renderItem(
-  item: HeadsUpItem,
-  t: (key: string, opts?: Record<string, unknown>) => string,
-): { title: string; detail: string } {
-  switch (item.kind) {
-    case 'hover-invisible':
-      return {
-        title: t('health.headsUp.hoverInvisible.title'),
-        detail: t('health.headsUp.hoverInvisible.detail', {
-          slotId: item.slotId,
-        }),
-      };
-    case 'status-clash':
-      return {
-        title: t('health.headsUp.statusClash.title', {
-          symbolA: capitalize(item.symbolA),
-          symbolB: item.symbolB,
-        }),
-        detail: t('health.headsUp.statusClash.detail'),
-      };
-  }
-}
-
-function capitalize(s: string): string {
-  return s.length === 0 ? s : s[0].toUpperCase() + s.slice(1);
-}

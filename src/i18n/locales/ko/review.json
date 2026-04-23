@@ -71,21 +71,6 @@
         "large-only": "큰 글씨만",
         "poor": "읽기 어려움"
       }
-    },
-    "headsUp": {
-      "title": "짚고 넘어갈 것",
-      "allClear": "모두 양호",
-      "noted_one": "{{count}}건 발견",
-      "noted_other": "{{count}}건 발견",
-      "empty": "특별히 눈에 띄는 문제 없음. 시스템이 고르게 보입니다.",
-      "hoverInvisible": {
-        "title": "호버 상태가 잘 안 보입니다",
-        "detail": "{{slotId}} — 호버 색이 기본 상태와 거의 겹칩니다"
-      },
-      "statusClash": {
-        "title": "{{symbolA}}와 {{symbolB}}가 닮아 보입니다",
-        "detail": "두 상태 색이 좁은 hue 대역에 몰려 있어 사용자가 혼동할 수 있습니다"
-      }
     }
   }
 }
