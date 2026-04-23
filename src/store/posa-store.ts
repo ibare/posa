@@ -236,7 +236,8 @@ export const usePosaStore = create<PosaState>((set, get) => ({
 
     if (color === null) {
       if (!ir.symbols[symbolId]) return;
-      const nextSymbols = { ...ir.symbols, [symbolId]: null };
+      const nextSymbols = { ...ir.symbols };
+      delete nextSymbols[symbolId];
       set({ ir: pruneOrphanPrimitives(bumpMeta({ ...ir, symbols: nextSymbols })) });
       return;
     }
@@ -275,7 +276,8 @@ export const usePosaStore = create<PosaState>((set, get) => ({
 
     if (color === null) {
       if (!ir.attributes[attrId]) return;
-      const nextAttrs = { ...ir.attributes, [attrId]: null };
+      const nextAttrs = { ...ir.attributes };
+      delete nextAttrs[attrId];
       set({ ir: pruneOrphanPrimitives(bumpMeta({ ...ir, attributes: nextAttrs })) });
       return;
     }

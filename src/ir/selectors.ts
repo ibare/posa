@@ -1,8 +1,17 @@
 import {
+  ATTRIBUTE_DEFINITIONS,
+  type AttributeDefinition,
+} from '../catalog/attributes';
+import {
   findComponentBySlotId,
   type ComponentDefinition,
 } from '../catalog/components';
 import {
+  SYMBOL_DEFINITIONS,
+  type SymbolDefinition,
+} from '../catalog/symbols';
+import {
+  ATTRIBUTE_IDS,
   SYMBOL_IDS,
   type AttributeId,
   type ColorRef,
@@ -16,6 +25,76 @@ import {
 } from './types';
 
 const SYMBOL_ID_SET: Set<string> = new Set(SYMBOL_IDS);
+
+// ──────────────────────────────────────────────────────────────────────────
+// Active scope 파생
+//
+// 사용자가 선택한 컴포넌트 집합(scope)이 Z*·IR·export의 유일한 원천이다.
+// 여기서 파생되는 attribute/symbol 집합만이 앱 전체에서 열거 가능한 공간이다.
+// 카탈로그 전수 상수(ATTRIBUTE_IDS/SYMBOL_IDS)는 "등록된 어휘"일 뿐 열거에 쓰지 않는다.
+// ──────────────────────────────────────────────────────────────────────────
+
+/** 스코프 컴포넌트들이 선언한 attribute 합집합. ATTRIBUTE_IDS 원래 순서 유지. */
+export function getActiveAttributeIds(
+  components: ComponentDefinition[],
+): AttributeId[] {
+  const seen = new Set<AttributeId>();
+  for (const c of components) for (const a of c.attributes) seen.add(a);
+  return ATTRIBUTE_IDS.filter((id) => seen.has(id));
+}
+
+/**
+ * 스코프 컴포넌트의 variant 중 variant.id가 SymbolId와 일치하는 것의 합집합.
+ * SYMBOL_IDS 원래 순서 유지. 어떤 컴포넌트도 variant를 쓰지 않으면 빈 배열.
+ *
+ * 근거: variant 이름이 SymbolId와 일치할 때만 Symbol 축과 결합 가능하고
+ * (catalog 정책), 그 외 경로로는 symbol 할당이 어떤 slot에도 영향을 주지 않아
+ * 열거할 의미가 없다.
+ */
+export function getActiveSymbolIds(
+  components: ComponentDefinition[],
+): SymbolId[] {
+  const seen = new Set<SymbolId>();
+  for (const c of components) {
+    for (const v of c.variants ?? []) {
+      if (SYMBOL_ID_SET.has(v.id)) seen.add(v.id as SymbolId);
+    }
+  }
+  return SYMBOL_IDS.filter((id) => seen.has(id));
+}
+
+const ATTRIBUTE_DEF_BY_ID: Record<AttributeId, AttributeDefinition> =
+  Object.fromEntries(ATTRIBUTE_DEFINITIONS.map((d) => [d.id, d])) as Record<
+    AttributeId,
+    AttributeDefinition
+  >;
+const SYMBOL_DEF_BY_ID: Record<SymbolId, SymbolDefinition> = Object.fromEntries(
+  SYMBOL_DEFINITIONS.map((d) => [d.id, d]),
+) as Record<SymbolId, SymbolDefinition>;
+
+export function getActiveAttributeDefs(
+  components: ComponentDefinition[],
+): AttributeDefinition[] {
+  return getActiveAttributeIds(components).map((id) => ATTRIBUTE_DEF_BY_ID[id]);
+}
+
+export function getActiveSymbolDefs(
+  components: ComponentDefinition[],
+): SymbolDefinition[] {
+  return getActiveSymbolIds(components).map((id) => SYMBOL_DEF_BY_ID[id]);
+}
+
+/** 카탈로그에 등록된 attribute 정의 룩업 (스코프 무관, label 용). */
+export function getAttributeDefinition(
+  id: AttributeId,
+): AttributeDefinition | undefined {
+  return ATTRIBUTE_DEF_BY_ID[id];
+}
+
+/** 카탈로그에 등록된 symbol 정의 룩업 (스코프 무관, label 용). */
+export function getSymbolDefinition(id: SymbolId): SymbolDefinition | undefined {
+  return SYMBOL_DEF_BY_ID[id];
+}
 
 /**
  * IR을 읽기만 해서 파생 뷰를 계산하는 순수 셀렉터.

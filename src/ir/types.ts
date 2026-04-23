@@ -143,6 +143,11 @@ export type SlotAssignment = {
 };
 
 // ===== 전체 IR =====
+//
+// symbols/attributes는 "할당된 것만" 보관한다. 키의 존재 자체가 할당을 뜻하고,
+// 부재는 미할당(또는 스코프 밖)을 뜻한다. null 상태는 더 이상 허용하지 않는다.
+// 스코프는 store의 activeComponentIds가 단일 원천이며, IR은 그 스코프 안에서만
+// 키를 갖도록 관리된다.
 export type IR = {
   meta: {
     version: string;
@@ -150,24 +155,18 @@ export type IR = {
     updatedAt: number;
   };
   primitives: Record<PrimitiveId, PrimitiveScale>;
-  symbols: Record<SymbolId, SymbolAssignment | null>;
-  attributes: Record<AttributeId, AttributeAssignment | null>;
+  symbols: Partial<Record<SymbolId, SymbolAssignment>>;
+  attributes: Partial<Record<AttributeId, AttributeAssignment>>;
   slots: Record<SlotId, SlotAssignment>;
 };
 
 export function createEmptyIR(): IR {
   const now = Date.now();
-  const symbols = Object.fromEntries(
-    SYMBOL_IDS.map((s) => [s, null]),
-  ) as IR['symbols'];
-  const attributes = Object.fromEntries(
-    ATTRIBUTE_IDS.map((a) => [a, null]),
-  ) as IR['attributes'];
   return {
     meta: { version: '1.0', createdAt: now, updatedAt: now },
     primitives: {},
-    symbols,
-    attributes,
+    symbols: {},
+    attributes: {},
     slots: {},
   };
 }

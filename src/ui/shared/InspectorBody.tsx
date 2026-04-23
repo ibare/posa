@@ -139,7 +139,7 @@ export function InspectorBody() {
       }
       if (focusedNode.startsWith('attr:')) {
         const attrId = focusedNode.slice(5) as AttributeId;
-        const assignment = ir.attributes[attrId] ?? null;
+        const assignment = ir.attributes[attrId];
         const ref: ColorRef | null = assignment
           ? { kind: 'primitive', primitive: assignment.primitive, shade: assignment.shade }
           : null;
@@ -149,8 +149,8 @@ export function InspectorBody() {
           seaKey: attrId,
           color: resolveAttributeColor(ir, attrId),
           assignment: ref,
-          isDirect: assignment !== null,
-          canClear: assignment !== null,
+          isDirect: Boolean(assignment),
+          canClear: Boolean(assignment),
           // attribute는 라이브 링크는 못 갖지만, "이 symbol의 현재 색을 가져오기"
           // 어포던스는 유지. 클릭 시 그 시점 primitive로 스냅샷 저장.
           supportsSymbolRef: true,

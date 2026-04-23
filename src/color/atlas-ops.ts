@@ -71,16 +71,14 @@ export function mergePrimitive(
     nextSymbols[symId as keyof IR['symbols']] = next;
   }
 
-  const remapAttr = (
-    assign: AttributeAssignment | null,
-  ): AttributeAssignment | null => {
-    if (!assign) return assign;
+  const remapAttr = (assign: AttributeAssignment): AttributeAssignment => {
     if (assign.primitive !== sourceId) return assign;
     return { primitive: targetId, shade: remapShade(assign.shade) };
   };
 
   const nextAttributes = { ...ir.attributes };
   for (const [attrId, assign] of Object.entries(ir.attributes)) {
+    if (!assign) continue;
     const remapped = remapAttr(assign);
     if (remapped !== assign) {
       nextAttributes[attrId as keyof IR['attributes']] = remapped;
