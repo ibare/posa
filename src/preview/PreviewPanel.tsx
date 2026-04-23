@@ -27,15 +27,20 @@ import {
   DrawerShape,
   DropdownMenuShape,
   HoverCardShape,
+  InputGroupShape,
+  InputOTPShape,
   InputShape,
   MenubarShape,
+  NativeSelectShape,
   NavigationMenuShape,
   PopoverShape,
   ProgressShape,
   RadioGroupShape,
+  SelectShape,
   SheetShape,
   SliderShape,
   SwitchShape,
+  TextareaShape,
   ToastShape,
   ToggleShape,
   TooltipShape,
@@ -125,6 +130,32 @@ const SIMPLE_ENTRIES: SimplePreviewEntry[] = [
     render: (state) => <SliderShape state={state} />,
   },
   { id: 'progress', title: 'Progress', render: () => <ProgressShape /> },
+  // Input 보조 5종
+  {
+    id: 'textarea',
+    title: 'Textarea',
+    render: (state) => <TextareaShape state={state} />,
+  },
+  {
+    id: 'input-group',
+    title: 'Input Group',
+    render: (state) => <InputGroupShape state={state} />,
+  },
+  {
+    id: 'input-otp',
+    title: 'Input OTP',
+    render: (state) => <InputOTPShape state={state} />,
+  },
+  {
+    id: 'native-select',
+    title: 'Native Select',
+    render: (state) => <NativeSelectShape state={state} />,
+  },
+  {
+    id: 'select',
+    title: 'Select',
+    render: (state) => <SelectShape state={state} />,
+  },
 ];
 
 type ComponentScope = {

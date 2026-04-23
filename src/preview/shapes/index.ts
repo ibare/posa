@@ -21,3 +21,8 @@ export { SwitchShape } from './SwitchShape';
 export { ToggleShape } from './ToggleShape';
 export { SliderShape } from './SliderShape';
 export { ProgressShape } from './ProgressShape';
+export { TextareaShape } from './TextareaShape';
+export { InputGroupShape } from './InputGroupShape';
+export { InputOTPShape } from './InputOTPShape';
+export { NativeSelectShape } from './NativeSelectShape';
+export { SelectShape } from './SelectShape';

@@ -205,6 +205,42 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     attributes: ['track', 'fill'],
     states: ['default'],
   },
+  // ===== Input 보조 계열 =====
+  {
+    id: 'textarea',
+    label: 'Textarea',
+    description: 'Multi-line text input',
+    attributes: ['background', 'text', 'placeholder', 'border', 'outline'],
+    states: ['default', 'focus', 'disabled'],
+  },
+  {
+    id: 'input-group',
+    label: 'Input Group',
+    description: 'Input with leading / trailing addon',
+    attributes: ['background', 'text', 'placeholder', 'border', 'outline', 'icon'],
+    states: ['default', 'focus', 'disabled'],
+  },
+  {
+    id: 'input-otp',
+    label: 'Input OTP',
+    description: 'Fixed-width code entry with individual slots',
+    attributes: ['background', 'text', 'placeholder', 'border', 'outline'],
+    states: ['default', 'focus', 'disabled'],
+  },
+  {
+    id: 'native-select',
+    label: 'Native Select',
+    description: 'Browser-native <select> styled like Input',
+    attributes: ['background', 'text', 'border', 'outline', 'icon'],
+    states: ['default', 'hover', 'focus', 'disabled'],
+  },
+  {
+    id: 'select',
+    label: 'Select',
+    description: 'Custom select trigger (paired with a menu panel)',
+    attributes: ['background', 'text', 'border', 'outline', 'icon'],
+    states: ['default', 'hover', 'focus', 'active', 'disabled'],
+  },
 ];
 
 export function findComponent(componentId: ComponentId): ComponentDefinition | undefined {
