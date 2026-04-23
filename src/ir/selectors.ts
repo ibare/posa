@@ -150,6 +150,47 @@ export function resolveSlotStateColor(
   return null;
 }
 
+/**
+ * Z0 attribute row의 "모드 2" 판정 + 분할 swatch 표시용.
+ * 그 attribute로 끝나는 active slot 중 slot.ref가 명시된 slot들의 default 색을
+ * distinct(OKLCH 정확 일치 dedup)하게 모은다.
+ */
+export function getDirectChildColorsForAttribute(
+  ir: IR,
+  attrId: AttributeId,
+): OKLCH[] {
+  const out: OKLCH[] = [];
+  for (const slotId of getSlotsByAttribute(attrId, ir)) {
+    const slot = ir.slots[slotId];
+    if (!slot?.ref) continue;
+    const color = resolveColorRef(ir, slot.ref);
+    if (!color) continue;
+    if (!out.some((c) => c.L === color.L && c.C === color.C && c.H === color.H)) {
+      out.push(color);
+    }
+  }
+  return out;
+}
+
+/**
+ * Z1 slot row의 "모드 2" 판정 + 분할 swatch 표시용.
+ * slot.states에 override된 색들의 distinct 목록.
+ */
+export function getDirectChildColorsForSlot(ir: IR, slotId: SlotId): OKLCH[] {
+  const slot = ir.slots[slotId];
+  if (!slot) return [];
+  const out: OKLCH[] = [];
+  for (const ref of Object.values(slot.states)) {
+    if (!ref) continue;
+    const color = resolveColorRef(ir, ref);
+    if (!color) continue;
+    if (!out.some((c) => c.L === color.L && c.C === color.C && c.H === color.H)) {
+      out.push(color);
+    }
+  }
+  return out;
+}
+
 /** slot state에 직접 할당이 있는지(=상속이 아닌지) — UI 표시용. */
 export function isSlotStateDirectlyAssigned(
   ir: IR,

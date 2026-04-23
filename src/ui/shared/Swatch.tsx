@@ -10,14 +10,36 @@ const SIZE_CLASS: Record<SwatchSize, string> = {
   lg: 'w-16 h-16',
 };
 
+const BADGE_TEXT_CLASS: Record<SwatchSize, string> = {
+  xs: 'text-[7px]',
+  sm: 'text-[8px]',
+  md: 'text-[9px]',
+  lg: 'text-[10px]',
+};
+
 type Props = {
-  color: OKLCH | null;
+  /** 단일 색 모드. colors와 동시에 주면 colors가 우선. */
+  color?: OKLCH | null;
+  /** 다중 색 모드(분할 swatch). distinct 색 목록을 외부에서 dedup해 넘긴다. */
+  colors?: OKLCH[];
   size?: SwatchSize;
   dim?: boolean;
   title?: string;
 };
 
-export function Swatch({ color, size = 'md', dim = false, title }: Props) {
+export function Swatch({
+  color,
+  colors,
+  size = 'md',
+  dim = false,
+  title,
+}: Props) {
+  if (colors && colors.length > 0) {
+    return (
+      <MultiSwatch colors={colors} size={size} dim={dim} title={title} />
+    );
+  }
+
   if (!color) {
     return (
       <div
@@ -49,6 +71,79 @@ export function Swatch({ color, size = 'md', dim = false, title }: Props) {
           aria-label="outside sRGB gamut"
         />
       )}
+    </div>
+  );
+}
+
+function MultiSwatch({
+  colors,
+  size,
+  dim,
+  title,
+}: {
+  colors: OKLCH[];
+  size: SwatchSize;
+  dim: boolean;
+  title?: string;
+}) {
+  const total = colors.length;
+  const visible = colors.slice(0, 4);
+  const overflow = total - visible.length;
+  const hexes = visible.map((c) => oklchToHex(c.L, c.C, c.H));
+
+  const label =
+    title ?? `${total} direct color${total === 1 ? '' : 's'} below`;
+
+  return (
+    <div
+      className={`relative ${SIZE_CLASS[size]} rounded-md ring-1 ring-stone-400/80 overflow-hidden ${
+        dim ? 'opacity-60' : ''
+      }`}
+      title={label}
+      aria-label={label}
+    >
+      <SwatchSplit hexes={hexes} />
+      {overflow > 0 && (
+        <span
+          className={`absolute bottom-0 right-0 px-1 leading-none py-0.5 bg-stone-900/85 text-white font-mono ${BADGE_TEXT_CLASS[size]}`}
+        >
+          +{overflow}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function SwatchSplit({ hexes }: { hexes: string[] }) {
+  if (hexes.length === 1) {
+    return <div className="w-full h-full" style={{ backgroundColor: hexes[0] }} />;
+  }
+  if (hexes.length === 2) {
+    return (
+      <div className="w-full h-full flex">
+        <div className="flex-1" style={{ backgroundColor: hexes[0] }} />
+        <div className="flex-1" style={{ backgroundColor: hexes[1] }} />
+      </div>
+    );
+  }
+  if (hexes.length === 3) {
+    return (
+      <div className="w-full h-full flex flex-col">
+        <div className="flex-1" style={{ backgroundColor: hexes[0] }} />
+        <div className="flex-1 flex">
+          <div className="flex-1" style={{ backgroundColor: hexes[1] }} />
+          <div className="flex-1" style={{ backgroundColor: hexes[2] }} />
+        </div>
+      </div>
+    );
+  }
+  // 4
+  return (
+    <div className="w-full h-full grid grid-cols-2 grid-rows-2">
+      <div style={{ backgroundColor: hexes[0] }} />
+      <div style={{ backgroundColor: hexes[1] }} />
+      <div style={{ backgroundColor: hexes[2] }} />
+      <div style={{ backgroundColor: hexes[3] }} />
     </div>
   );
 }

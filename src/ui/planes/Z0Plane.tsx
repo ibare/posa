@@ -5,6 +5,7 @@ import { oklchToHex } from '../../color/oklch';
 import {
   enumerateActiveSlotIds,
   getAttributeFromSlotId,
+  getDirectChildColorsForAttribute,
   resolveAttributeColor,
   resolveSymbolColor,
 } from '../../ir/selectors';
@@ -159,19 +160,33 @@ function AttributeRow({
 }: AttributeRowProps) {
   const ir = usePosaStore((s) => s.ir);
   const color = resolveAttributeColor(ir, attr.id);
+  const directChildColors = useMemo(
+    () => getDirectChildColorsForAttribute(ir, attr.id),
+    [ir, attr.id],
+  );
+  // 모드 2: 하위 slot 중 직접 색이 명시된 게 1개 이상.
+  // 클릭 = 즉시 descend. swatch는 분할 표시.
+  const isMultiMode = directChildColors.length > 0;
+
+  const onRowClick = isMultiMode ? onDescend : onFocusToggle;
+  const showInspector = focused && !isMultiMode;
 
   return (
     <div className="relative">
       <div
         className={[
           'flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/80 border transition-all duration-150 cursor-pointer',
-          focused
+          focused && !isMultiMode
             ? 'border-stone-900 -translate-y-px'
             : 'border-stone-200 hover:border-stone-400 hover:-translate-y-px',
         ].join(' ')}
-        onClick={onFocusToggle}
+        onClick={onRowClick}
       >
-        <Swatch color={color} size="md" />
+        {isMultiMode ? (
+          <Swatch colors={directChildColors} size="md" />
+        ) : (
+          <Swatch color={color} size="md" />
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="font-mono text-sm text-stone-900">{attr.label}</span>
@@ -180,7 +195,11 @@ function AttributeRow({
             </span>
           </div>
           <div className="text-xs text-stone-500 leading-snug mt-0.5">
-            {attr.description}
+            {isMultiMode
+              ? `${directChildColors.length} direct color${
+                  directChildColors.length === 1 ? '' : 's'
+                } across slots — click to descend`
+              : attr.description}
           </div>
         </div>
         <button
@@ -207,7 +226,7 @@ function AttributeRow({
           </svg>
         </button>
       </div>
-      {focused && (
+      {showInspector && (
         <div className="absolute left-0 right-0 top-full mt-2 z-20 max-w-[26rem] max-h-[calc(100vh-10rem)] overflow-y-auto bg-white border border-stone-200 shadow-lg rounded-lg p-4">
           <InspectorBody />
         </div>
