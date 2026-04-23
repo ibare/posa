@@ -1,8 +1,11 @@
 import { oklchToCssString } from '../color/oklch';
 import {
-  ATTRIBUTE_IDS,
+  enumerateAllSlotIds,
+  getActiveAttributeIds,
+  getActiveSymbolIds,
+} from '../ir/selectors';
+import {
   SHADE_INDICES,
-  SYMBOL_IDS,
   type ColorRef,
   type IR,
   type PrimitiveId,
@@ -62,7 +65,9 @@ export const dtcgCompiler: Compiler = {
   id: 'dtcg',
   label: 'Design Tokens JSON',
   description: 'W3C DTCG 포맷 (`{ref}` alias)',
-  compile: (ir: IR) => {
+  compile: ({ ir, components }) => {
+    const activeSymbolIds = getActiveSymbolIds(components);
+    const activeAttributeIds = getActiveAttributeIds(components);
     const out: Record<string, unknown> = {
       $schema:
         'https://design-tokens.github.io/community-group/format.schema.json',
@@ -86,7 +91,7 @@ export const dtcgCompiler: Compiler = {
     }
 
     const symbolsRoot: Record<string, unknown> = {};
-    for (const id of SYMBOL_IDS) {
+    for (const id of activeSymbolIds) {
       const sym = ir.symbols[id];
       if (!sym) continue;
       if (!ir.primitives[sym.primitive]) continue;
@@ -100,7 +105,7 @@ export const dtcgCompiler: Compiler = {
     }
 
     const attributesRoot: Record<string, unknown> = {};
-    for (const id of ATTRIBUTE_IDS) {
+    for (const id of activeAttributeIds) {
       const attr = ir.attributes[id];
       if (!attr) continue;
       if (!ir.primitives[attr.primitive]) continue;
@@ -113,7 +118,9 @@ export const dtcgCompiler: Compiler = {
       colorRoot.attributes = attributesRoot;
     }
 
-    const slotEntries = Object.entries(ir.slots).filter(([, s]) => {
+    const scopeSlotIds = new Set(enumerateAllSlotIds(components));
+    const slotEntries = Object.entries(ir.slots).filter(([id, s]) => {
+      if (!scopeSlotIds.has(id)) return false;
       if (s.ref) return true;
       return Object.values(s.states).some((v) => v);
     });

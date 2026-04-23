@@ -1,10 +1,10 @@
 import { oklchToCssString } from '../color/oklch';
 import {
-  ATTRIBUTE_IDS,
-  SHADE_INDICES,
-  SYMBOL_IDS,
-  type IR,
-} from '../ir/types';
+  enumerateAllSlotIds,
+  getActiveAttributeIds,
+  getActiveSymbolIds,
+} from '../ir/selectors';
+import { SHADE_INDICES } from '../ir/types';
 import type { Compiler } from './types';
 
 function toDashName(id: string): string {
@@ -19,7 +19,10 @@ export const tailwindConfigCompiler: Compiler = {
   id: 'tailwind',
   label: 'Tailwind Config',
   description: 'tailwind.config.js colors (pair with CSS variables)',
-  compile: (ir: IR) => {
+  compile: ({ ir, components }) => {
+    const activeSymbolIds = getActiveSymbolIds(components);
+    const activeAttributeIds = getActiveAttributeIds(components);
+    const scopeSlotIds = new Set(enumerateAllSlotIds(components));
     const primEntries = Object.values(ir.primitives).sort(
       (a, b) => a.createdAt - b.createdAt,
     );
@@ -40,17 +43,18 @@ export const tailwindConfigCompiler: Compiler = {
       lines.push('        },');
     }
 
-    for (const id of SYMBOL_IDS) {
+    for (const id of activeSymbolIds) {
       if (!ir.symbols[id]) continue;
       lines.push(`        'symbol-${id}': 'var(--posa-symbol-${id})',`);
     }
 
-    for (const id of ATTRIBUTE_IDS) {
+    for (const id of activeAttributeIds) {
       if (!ir.attributes[id]) continue;
       lines.push(`        'attr-${id}': 'var(--posa-attr-${id})',`);
     }
 
     for (const [slotId, slot] of Object.entries(ir.slots)) {
+      if (!scopeSlotIds.has(slotId)) continue;
       const dash = toDashName(slotId);
       if (slot.ref) {
         lines.push(`        'slot-${dash}': 'var(--posa-slot-${dash})',`);

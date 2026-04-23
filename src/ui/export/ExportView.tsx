@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
 import { COMPILERS, type CompileResult, type Compiler } from '../../compilers';
+import { useActiveComponentDefs } from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
 
 export function ExportView() {
   const ir = usePosaStore((s) => s.ir);
+  const components = useActiveComponentDefs();
   const [selectedId, setSelectedId] = useState<string>(COMPILERS[0].id);
   const [copied, setCopied] = useState(false);
 
@@ -11,15 +13,13 @@ export function ExportView() {
     COMPILERS.find((c) => c.id === selectedId) ?? COMPILERS[0];
 
   const result: CompileResult = useMemo(
-    () => selected.compile(ir),
-    [selected, ir],
+    () => selected.compile({ ir, components }),
+    [selected, ir, components],
   );
 
   const primitiveCount = Object.keys(ir.primitives).length;
-  const symbolCount = Object.values(ir.symbols).filter((s) => s !== null).length;
-  const attributeCount = Object.values(ir.attributes).filter(
-    (a) => a !== null,
-  ).length;
+  const symbolCount = Object.keys(ir.symbols).length;
+  const attributeCount = Object.keys(ir.attributes).length;
   const slotCount = Object.values(ir.slots).filter(
     (s) => s.ref !== null || Object.keys(s.states).length > 0,
   ).length;

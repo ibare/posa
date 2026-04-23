@@ -1,16 +1,14 @@
 import { oklchToCssString } from '../color/oklch';
 import { countPrimitiveReferences } from '../color/primitive-ops';
 import {
+  enumerateAllSlotIds,
+  getActiveAttributeIds,
+  getActiveSymbolIds,
   resolveAttributeColor,
   resolveSlotStateColor,
   resolveSymbolColor,
 } from '../ir/selectors';
-import {
-  ATTRIBUTE_IDS,
-  SHADE_INDICES,
-  SYMBOL_IDS,
-  type IR,
-} from '../ir/types';
+import { SHADE_INDICES } from '../ir/types';
 import type { Compiler } from './types';
 
 function toDashName(id: string): string {
@@ -25,7 +23,10 @@ export const cssVariablesCompiler: Compiler = {
   id: 'css-vars',
   label: 'CSS Variables',
   description: 'Design token CSS variables under :root',
-  compile: (ir: IR) => {
+  compile: ({ ir, components }) => {
+    const activeSymbolIds = getActiveSymbolIds(components);
+    const activeAttributeIds = getActiveAttributeIds(components);
+    const scopeSlotIds = new Set(enumerateAllSlotIds(components));
     const lines: string[] = [':root {'];
 
     const primEntries = Object.values(ir.primitives).sort(
@@ -50,7 +51,7 @@ export const cssVariablesCompiler: Compiler = {
     }
 
     const symbolLines: string[] = [];
-    for (const id of SYMBOL_IDS) {
+    for (const id of activeSymbolIds) {
       const c = resolveSymbolColor(ir, id);
       if (!c) continue;
       symbolLines.push(`  --posa-symbol-${id}: ${oklchToCssString(c)};`);
@@ -62,7 +63,7 @@ export const cssVariablesCompiler: Compiler = {
     }
 
     const attrLines: string[] = [];
-    for (const id of ATTRIBUTE_IDS) {
+    for (const id of activeAttributeIds) {
       const c = resolveAttributeColor(ir, id);
       if (!c) continue;
       attrLines.push(`  --posa-attr-${id}: ${oklchToCssString(c)};`);
@@ -75,6 +76,7 @@ export const cssVariablesCompiler: Compiler = {
 
     const slotLines: string[] = [];
     for (const [slotId, slot] of Object.entries(ir.slots)) {
+      if (!scopeSlotIds.has(slotId)) continue;
       const dash = toDashName(slotId);
       if (slot.ref) {
         const c = resolveSlotStateColor(ir, slotId, 'default');
