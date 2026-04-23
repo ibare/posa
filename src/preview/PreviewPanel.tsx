@@ -59,10 +59,12 @@ import {
   ToastShape,
   ToggleShape,
   TooltipShape,
+  TypographyShape,
   type AlertVariant,
   type BadgeVariant,
   type ButtonVariant,
   type ToastVariant,
+  type TypographyKind,
 } from './shapes';
 
 const BUTTON_VARIANTS: ButtonVariant[] = ['primary', 'secondary', 'error'];
@@ -227,6 +229,26 @@ const SIMPLE_ENTRIES: SimplePreviewEntry[] = [
   },
   { id: 'separator', title: 'Separator', render: () => <SeparatorShape /> },
   { id: 'label', title: 'Label', render: (state) => <LabelShape state={state} /> },
+  // Typography 11종 (state 축 없음, variant 없음)
+  ...(
+    [
+      ['h1', 'Typography H1'],
+      ['h2', 'Typography H2'],
+      ['h3', 'Typography H3'],
+      ['h4', 'Typography H4'],
+      ['p', 'Typography P'],
+      ['blockquote', 'Typography Blockquote'],
+      ['list', 'Typography List'],
+      ['inline-code', 'Typography Inline Code'],
+      ['lead', 'Typography Lead'],
+      ['large', 'Typography Large'],
+      ['small', 'Typography Small'],
+    ] satisfies ReadonlyArray<readonly [TypographyKind, string]>
+  ).map<SimplePreviewEntry>(([kind, title]) => ({
+    id: `typography-${kind}`,
+    title,
+    render: () => <TypographyShape kind={kind} />,
+  })),
 ];
 
 type ComponentScope = {

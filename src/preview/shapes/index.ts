@@ -41,3 +41,4 @@ export { TableShape } from './TableShape';
 export { CalendarShape } from './CalendarShape';
 export { SeparatorShape } from './SeparatorShape';
 export { LabelShape } from './LabelShape';
+export { TypographyShape, type TypographyKind } from './TypographyShape';
