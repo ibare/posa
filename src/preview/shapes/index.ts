@@ -19,3 +19,5 @@ export { CheckboxShape } from './CheckboxShape';
 export { RadioGroupShape } from './RadioGroupShape';
 export { SwitchShape } from './SwitchShape';
 export { ToggleShape } from './ToggleShape';
+export { SliderShape } from './SliderShape';
+export { ProgressShape } from './ProgressShape';

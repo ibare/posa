@@ -31,8 +31,10 @@ import {
   MenubarShape,
   NavigationMenuShape,
   PopoverShape,
+  ProgressShape,
   RadioGroupShape,
   SheetShape,
+  SliderShape,
   SwitchShape,
   ToastShape,
   ToggleShape,
@@ -116,6 +118,13 @@ const SIMPLE_ENTRIES: SimplePreviewEntry[] = [
     title: 'Toggle',
     render: (state) => <ToggleShape state={state} />,
   },
+  // Range/Progress 2종
+  {
+    id: 'slider',
+    title: 'Slider',
+    render: (state) => <SliderShape state={state} />,
+  },
+  { id: 'progress', title: 'Progress', render: () => <ProgressShape /> },
 ];
 
 type ComponentScope = {

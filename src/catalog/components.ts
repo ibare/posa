@@ -190,6 +190,21 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     attributes: ['background', 'text', 'border'],
     states: ['default', 'hover', 'active', 'disabled'],
   },
+  // ===== Range/Progress 계열 =====
+  {
+    id: 'slider',
+    label: 'Slider',
+    description: 'Draggable value picker with track, fill and thumb',
+    attributes: ['track', 'fill', 'thumb', 'outline'],
+    states: ['default', 'hover', 'focus', 'disabled'],
+  },
+  {
+    id: 'progress',
+    label: 'Progress',
+    description: 'Non-interactive progress bar',
+    attributes: ['track', 'fill'],
+    states: ['default'],
+  },
 ];
 
 export function findComponent(componentId: ComponentId): ComponentDefinition | undefined {
