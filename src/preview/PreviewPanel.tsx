@@ -1,7 +1,9 @@
 import { useMemo, type MouseEvent, type ReactNode } from 'react';
 import {
   COMPONENT_DEFINITIONS,
+  COMPONENT_GROUPS,
   findComponentBySlotId,
+  type ComponentGroupId,
 } from '../catalog/components';
 import {
   SYMBOL_IDS,
@@ -321,6 +323,33 @@ function derivePreviewScope(
   selectedAttributeId: AttributeId | null,
   selectedSlotId: SlotId | null,
   focusedNode: string | null,
+  selectedGroupId: ComponentGroupId | null,
+): PreviewScope {
+  const base = derivePreviewScopeRaw(
+    layer,
+    selectedAttributeId,
+    selectedSlotId,
+    focusedNode,
+  );
+  if (!selectedGroupId) return base;
+  // 그룹 멤버로 교집합. 현재 scope에 이미 담긴 컴포넌트 중 그룹에 속한 것만 남긴다.
+  const groupMembers = new Set(
+    COMPONENT_DEFINITIONS.filter((c) => c.group === selectedGroupId).map(
+      (c) => c.id,
+    ),
+  );
+  const next: PreviewScope = new Map();
+  base.forEach((sc, id) => {
+    if (groupMembers.has(id)) next.set(id, sc);
+  });
+  return next;
+}
+
+function derivePreviewScopeRaw(
+  layer: Layer,
+  selectedAttributeId: AttributeId | null,
+  selectedSlotId: SlotId | null,
+  focusedNode: string | null,
 ): PreviewScope {
   if (layer === 'z2' && selectedSlotId) {
     const comp = findComponentBySlotId(selectedSlotId);
@@ -385,11 +414,14 @@ export function PreviewPanel() {
   const selectedAttributeId = usePosaStore((s) => s.selectedAttributeId);
   const selectedSlotId = usePosaStore((s) => s.selectedSlotId);
   const selectedComponentId = usePosaStore((s) => s.selectedComponentId);
+  const selectedGroupId = usePosaStore((s) => s.selectedGroupId);
   const focusedNode = usePosaStore((s) => s.focusedNode);
   const selectComponent = usePosaStore((s) => s.selectComponent);
   const clearSelectedComponent = usePosaStore(
     (s) => s.clearSelectedComponent,
   );
+  const selectGroup = usePosaStore((s) => s.selectGroup);
+  const clearSelectedGroup = usePosaStore((s) => s.clearSelectedGroup);
 
   const scope = useMemo(
     () =>
@@ -398,8 +430,9 @@ export function PreviewPanel() {
         selectedAttributeId,
         selectedSlotId,
         focusedNode,
+        selectedGroupId,
       ),
-    [layer, selectedAttributeId, selectedSlotId, focusedNode],
+    [layer, selectedAttributeId, selectedSlotId, focusedNode, selectedGroupId],
   );
 
   // ZX 진입 클릭은 z2(상태 descent)에서는 비활성 — 현재 slot의 상태를 보는 중이므로.
@@ -468,6 +501,12 @@ export function PreviewPanel() {
             : `${visibleCount} of ${totalCount} components`}
         </div>
       </header>
+
+      <GroupChipBar
+        selectedGroupId={selectedGroupId}
+        onSelect={selectGroup}
+        onClear={clearSelectedGroup}
+      />
 
       <div className="min-h-0 flex-1 overflow-auto p-4">
         {visibleCount === 0 ? (
@@ -723,5 +762,50 @@ function PreviewSection({
       </div>
       {children}
     </section>
+  );
+}
+
+function GroupChipBar({
+  selectedGroupId,
+  onSelect,
+  onClear,
+}: {
+  selectedGroupId: ComponentGroupId | null;
+  onSelect: (id: ComponentGroupId) => void;
+  onClear: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1 border-b border-stone-200 px-3 py-2">
+      <button
+        type="button"
+        onClick={onClear}
+        className={[
+          'rounded-full px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider transition',
+          selectedGroupId === null
+            ? 'bg-stone-900 text-white'
+            : 'bg-stone-100 text-stone-600 hover:bg-stone-200',
+        ].join(' ')}
+      >
+        All
+      </button>
+      {COMPONENT_GROUPS.map((g) => {
+        const active = selectedGroupId === g.id;
+        return (
+          <button
+            key={g.id}
+            type="button"
+            onClick={() => (active ? onClear() : onSelect(g.id))}
+            className={[
+              'rounded-full px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider transition',
+              active
+                ? 'bg-stone-900 text-white'
+                : 'bg-stone-100 text-stone-600 hover:bg-stone-200',
+            ].join(' ')}
+          >
+            {g.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }

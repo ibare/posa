@@ -16,10 +16,50 @@ export type ComponentVariant = {
   label: string;
 };
 
+/**
+ * 컴포넌트 그룹 id. 프리뷰 범위를 같은 카테고리로 좁힐 때 사용한다.
+ * 예: 'typography'를 선택하면 h1~small 11개를 한 화면에서 비교하며 색을 지정.
+ */
+export type ComponentGroupId =
+  | 'action'
+  | 'input'
+  | 'form-control'
+  | 'range'
+  | 'overlay'
+  | 'menu'
+  | 'navigation'
+  | 'container'
+  | 'feedback'
+  | 'display'
+  | 'data'
+  | 'typography';
+
+export type ComponentGroupDefinition = {
+  id: ComponentGroupId;
+  label: string;
+};
+
+/** UI 나열 순서는 이 배열 순서를 따른다. */
+export const COMPONENT_GROUPS: ComponentGroupDefinition[] = [
+  { id: 'action', label: 'Action' },
+  { id: 'input', label: 'Input' },
+  { id: 'form-control', label: 'Form Control' },
+  { id: 'range', label: 'Range' },
+  { id: 'overlay', label: 'Overlay' },
+  { id: 'menu', label: 'Menu' },
+  { id: 'navigation', label: 'Navigation' },
+  { id: 'container', label: 'Container' },
+  { id: 'feedback', label: 'Feedback' },
+  { id: 'display', label: 'Display' },
+  { id: 'data', label: 'Data' },
+  { id: 'typography', label: 'Typography' },
+];
+
 export type ComponentDefinition = {
   id: ComponentId;
   label: string;
   description: string;
+  group: ComponentGroupId;
   variants?: ComponentVariant[];
   attributes: AttributeId[];
   states: StateId[];
@@ -30,6 +70,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'button',
     label: 'Button',
     description: 'Clickable action',
+    group: 'action',
     variants: [
       { id: 'primary', label: 'Primary' },
       { id: 'secondary', label: 'Secondary' },
@@ -42,6 +83,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'input',
     label: 'Input',
     description: 'Single-line text field',
+    group: 'input',
     attributes: ['background', 'text', 'placeholder', 'border', 'outline'],
     states: ['default', 'focus', 'disabled'],
   },
@@ -49,6 +91,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'card',
     label: 'Card',
     description: 'Elevated container',
+    group: 'container',
     attributes: ['background', 'text', 'border'],
     states: ['default'],
   },
@@ -56,6 +99,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'badge',
     label: 'Badge',
     description: 'Small status indicator',
+    group: 'display',
     variants: [
       { id: 'secondary', label: 'Secondary' },
       { id: 'error', label: 'Error' },
@@ -67,6 +111,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'toast',
     label: 'Toast',
     description: 'Transient notification',
+    group: 'feedback',
     variants: [
       { id: 'error', label: 'Error' },
       { id: 'warning', label: 'Warning' },
@@ -80,6 +125,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'dialog',
     label: 'Dialog',
     description: 'Modal dialog with backdrop',
+    group: 'overlay',
     attributes: ['overlay', 'background', 'text', 'border'],
     states: ['default'],
   },
@@ -87,6 +133,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'alert-dialog',
     label: 'Alert Dialog',
     description: 'Modal confirmation dialog',
+    group: 'overlay',
     attributes: ['overlay', 'background', 'text', 'border'],
     states: ['default'],
   },
@@ -94,6 +141,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'sheet',
     label: 'Sheet',
     description: 'Side-anchored overlay panel',
+    group: 'overlay',
     attributes: ['overlay', 'background', 'text', 'border'],
     states: ['default'],
   },
@@ -101,6 +149,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'drawer',
     label: 'Drawer',
     description: 'Bottom-anchored overlay panel',
+    group: 'overlay',
     attributes: ['overlay', 'background', 'text', 'border'],
     states: ['default'],
   },
@@ -108,6 +157,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'popover',
     label: 'Popover',
     description: 'Floating panel anchored to a trigger',
+    group: 'overlay',
     attributes: ['background', 'text', 'border'],
     states: ['default'],
   },
@@ -115,6 +165,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'hover-card',
     label: 'Hover Card',
     description: 'Popover surfaced on hover',
+    group: 'overlay',
     attributes: ['background', 'text', 'border'],
     states: ['default'],
   },
@@ -122,6 +173,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'tooltip',
     label: 'Tooltip',
     description: 'Short hint label',
+    group: 'overlay',
     attributes: ['background', 'text', 'border'],
     states: ['default'],
   },
@@ -130,6 +182,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'dropdown-menu',
     label: 'Dropdown Menu',
     description: 'Menu opened from a trigger button',
+    group: 'menu',
     attributes: ['background', 'text', 'border', 'muted', 'icon'],
     states: ['default', 'hover', 'active', 'disabled'],
   },
@@ -137,6 +190,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'context-menu',
     label: 'Context Menu',
     description: 'Menu opened on right-click',
+    group: 'menu',
     attributes: ['background', 'text', 'border', 'muted', 'icon'],
     states: ['default', 'hover', 'active', 'disabled'],
   },
@@ -144,6 +198,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'menubar',
     label: 'Menubar',
     description: 'Horizontal menu bar (File / Edit / …)',
+    group: 'menu',
     attributes: ['background', 'text', 'border', 'muted', 'icon'],
     states: ['default', 'hover', 'active', 'disabled'],
   },
@@ -151,6 +206,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'navigation-menu',
     label: 'Navigation Menu',
     description: 'Top-level site navigation',
+    group: 'menu',
     attributes: ['background', 'text', 'border', 'muted', 'icon'],
     states: ['default', 'hover', 'active'],
   },
@@ -158,6 +214,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'command',
     label: 'Command',
     description: 'Command palette with search input',
+    group: 'menu',
     attributes: ['background', 'text', 'border', 'muted', 'icon', 'placeholder'],
     states: ['default', 'hover', 'active', 'disabled'],
   },
@@ -166,6 +223,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'checkbox',
     label: 'Checkbox',
     description: 'Binary on/off box with check mark',
+    group: 'form-control',
     attributes: ['background', 'border', 'mark'],
     states: ['default', 'hover', 'focus', 'disabled', 'checked'],
   },
@@ -173,6 +231,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'radio-group',
     label: 'Radio Group',
     description: 'One-of-many selection with dot marker',
+    group: 'form-control',
     attributes: ['background', 'border', 'mark'],
     states: ['default', 'hover', 'focus', 'disabled', 'checked'],
   },
@@ -180,6 +239,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'switch',
     label: 'Switch',
     description: 'On/off toggle with track and thumb',
+    group: 'form-control',
     attributes: ['track', 'thumb', 'border'],
     states: ['default', 'hover', 'focus', 'disabled', 'checked'],
   },
@@ -187,6 +247,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'toggle',
     label: 'Toggle',
     description: 'Pressable button with on/off state',
+    group: 'form-control',
     attributes: ['background', 'text', 'border'],
     states: ['default', 'hover', 'active', 'disabled'],
   },
@@ -195,6 +256,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'slider',
     label: 'Slider',
     description: 'Draggable value picker with track, fill and thumb',
+    group: 'range',
     attributes: ['track', 'fill', 'thumb', 'outline'],
     states: ['default', 'hover', 'focus', 'disabled'],
   },
@@ -202,6 +264,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'progress',
     label: 'Progress',
     description: 'Non-interactive progress bar',
+    group: 'range',
     attributes: ['track', 'fill'],
     states: ['default'],
   },
@@ -210,6 +273,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'textarea',
     label: 'Textarea',
     description: 'Multi-line text input',
+    group: 'input',
     attributes: ['background', 'text', 'placeholder', 'border', 'outline'],
     states: ['default', 'focus', 'disabled'],
   },
@@ -217,6 +281,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'input-group',
     label: 'Input Group',
     description: 'Input with leading / trailing addon',
+    group: 'input',
     attributes: ['background', 'text', 'placeholder', 'border', 'outline', 'icon'],
     states: ['default', 'focus', 'disabled'],
   },
@@ -224,6 +289,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'input-otp',
     label: 'Input OTP',
     description: 'Fixed-width code entry with individual slots',
+    group: 'input',
     attributes: ['background', 'text', 'placeholder', 'border', 'outline'],
     states: ['default', 'focus', 'disabled'],
   },
@@ -231,6 +297,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'native-select',
     label: 'Native Select',
     description: 'Browser-native <select> styled like Input',
+    group: 'input',
     attributes: ['background', 'text', 'border', 'outline', 'icon'],
     states: ['default', 'hover', 'focus', 'disabled'],
   },
@@ -238,6 +305,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'select',
     label: 'Select',
     description: 'Custom select trigger (paired with a menu panel)',
+    group: 'input',
     attributes: ['background', 'text', 'border', 'outline', 'icon'],
     states: ['default', 'hover', 'focus', 'active', 'disabled'],
   },
@@ -246,6 +314,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'breadcrumb',
     label: 'Breadcrumb',
     description: 'Hierarchical path showing the current page location',
+    group: 'navigation',
     attributes: ['background', 'text', 'border', 'muted'],
     states: ['default', 'hover', 'active', 'disabled'],
   },
@@ -253,6 +322,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'tabs',
     label: 'Tabs',
     description: 'Switch between views with horizontal tab list',
+    group: 'navigation',
     attributes: ['background', 'text', 'border', 'muted'],
     states: ['default', 'hover', 'active'],
   },
@@ -260,6 +330,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'pagination',
     label: 'Pagination',
     description: 'Paged navigation with numbered buttons',
+    group: 'navigation',
     attributes: ['background', 'text', 'border', 'muted'],
     states: ['default', 'hover', 'active', 'disabled'],
   },
@@ -267,6 +338,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'sidebar',
     label: 'Sidebar',
     description: 'Vertical application-level navigation panel',
+    group: 'navigation',
     attributes: ['background', 'text', 'border', 'muted', 'icon'],
     states: ['default', 'hover', 'active'],
   },
@@ -275,6 +347,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'accordion',
     label: 'Accordion',
     description: 'Vertically stacked collapsible sections',
+    group: 'container',
     attributes: ['background', 'text', 'border'],
     states: ['default', 'hover'],
   },
@@ -282,6 +355,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'collapsible',
     label: 'Collapsible',
     description: 'Single expandable/collapsible region',
+    group: 'container',
     attributes: ['background', 'text', 'border'],
     states: ['default', 'hover'],
   },
@@ -289,6 +363,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'alert',
     label: 'Alert',
     description: 'Inline banner with icon, title and description',
+    group: 'feedback',
     variants: [
       { id: 'primary', label: 'Primary' },
       { id: 'secondary', label: 'Secondary' },
@@ -306,6 +381,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'avatar',
     label: 'Avatar',
     description: 'Circular profile photo or initials',
+    group: 'display',
     attributes: ['background', 'text', 'border'],
     states: ['default'],
   },
@@ -313,6 +389,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'spinner',
     label: 'Spinner',
     description: 'Rotating loading indicator',
+    group: 'display',
     attributes: ['icon'],
     states: ['default'],
   },
@@ -320,6 +397,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'skeleton',
     label: 'Skeleton',
     description: 'Placeholder shape shown while content loads',
+    group: 'display',
     attributes: ['muted'],
     states: ['default'],
   },
@@ -327,6 +405,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'kbd',
     label: 'Kbd',
     description: 'Inline keyboard key hint',
+    group: 'display',
     attributes: ['background', 'text', 'border'],
     states: ['default'],
   },
@@ -335,6 +414,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'table',
     label: 'Table',
     description: 'Tabular data with header and rows',
+    group: 'data',
     attributes: ['background', 'text', 'border', 'muted'],
     states: ['default', 'hover'],
   },
@@ -342,6 +422,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'calendar',
     label: 'Calendar',
     description: 'Month grid with selectable days',
+    group: 'data',
     attributes: ['background', 'text', 'border', 'muted'],
     states: ['default', 'hover', 'active'],
   },
@@ -349,6 +430,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'separator',
     label: 'Separator',
     description: 'Horizontal or vertical divider line',
+    group: 'container',
     attributes: ['border'],
     states: ['default'],
   },
@@ -356,6 +438,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'label',
     label: 'Label',
     description: 'Form field label text',
+    group: 'input',
     attributes: ['text'],
     states: ['default', 'disabled'],
   },
@@ -364,6 +447,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'typography-h1',
     label: 'Typography H1',
     description: 'Top-level heading (h1)',
+    group: 'typography',
     attributes: ['text'],
     states: ['default'],
   },
@@ -371,6 +455,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'typography-h2',
     label: 'Typography H2',
     description: 'Section heading (h2)',
+    group: 'typography',
     attributes: ['text'],
     states: ['default'],
   },
@@ -378,6 +463,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'typography-h3',
     label: 'Typography H3',
     description: 'Subsection heading (h3)',
+    group: 'typography',
     attributes: ['text'],
     states: ['default'],
   },
@@ -385,6 +471,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'typography-h4',
     label: 'Typography H4',
     description: 'Minor heading (h4)',
+    group: 'typography',
     attributes: ['text'],
     states: ['default'],
   },
@@ -392,6 +479,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'typography-p',
     label: 'Typography P',
     description: 'Body paragraph',
+    group: 'typography',
     attributes: ['text'],
     states: ['default'],
   },
@@ -399,6 +487,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'typography-blockquote',
     label: 'Typography Blockquote',
     description: 'Quoted block',
+    group: 'typography',
     attributes: ['text'],
     states: ['default'],
   },
@@ -406,6 +495,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'typography-list',
     label: 'Typography List',
     description: 'Unordered list',
+    group: 'typography',
     attributes: ['text'],
     states: ['default'],
   },
@@ -413,6 +503,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'typography-inline-code',
     label: 'Typography Inline Code',
     description: 'Inline code span',
+    group: 'typography',
     attributes: ['text'],
     states: ['default'],
   },
@@ -420,6 +511,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'typography-lead',
     label: 'Typography Lead',
     description: 'Lead paragraph (intro)',
+    group: 'typography',
     attributes: ['text'],
     states: ['default'],
   },
@@ -427,6 +519,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'typography-large',
     label: 'Typography Large',
     description: 'Large emphasized text',
+    group: 'typography',
     attributes: ['text'],
     states: ['default'],
   },
@@ -434,6 +527,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     id: 'typography-small',
     label: 'Typography Small',
     description: 'Small helper text',
+    group: 'typography',
     attributes: ['text'],
     states: ['default'],
   },

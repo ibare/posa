@@ -10,6 +10,7 @@ import {
   isWithinScale,
   pruneOrphanPrimitives,
 } from '../color/primitive-ops';
+import type { ComponentGroupId } from '../catalog/components';
 import {
   createEmptyIR,
   type AttributeId,
@@ -44,6 +45,12 @@ type PosaState = {
   selectedSlotId: SlotId | null; // Z2 descent target
   /** ZX(Component 모드) 진입 target. null이면 일반 Z0~Z2. 프리뷰에서 컴포넌트를 선택하면 세팅된다. */
   selectedComponentId: ComponentId | null;
+  /**
+   * 프리뷰 범위를 그룹 멤버로 좁히는 필터. null이면 전체.
+   *   - layer / selectedComponentId 와 독립적으로 적용된다(교집합).
+   *   - 그룹 선택 상태에서 그룹 내 컴포넌트를 ZX로 더 파고들 수도 있다.
+   */
+  selectedGroupId: ComponentGroupId | null;
   focusedNode: string | null; // 현재 평면에서 inspector 열린 node id
   lastDirection: LayerDirection;
 
@@ -111,6 +118,10 @@ type PosaState = {
   // ZX (Component mode)
   selectComponent: (componentId: ComponentId) => void;
   clearSelectedComponent: () => void;
+
+  // Group scope (preview filter)
+  selectGroup: (groupId: ComponentGroupId) => void;
+  clearSelectedGroup: () => void;
 
   // Phase / atlas
   goToPhase: (phase: Phase) => void;
@@ -182,6 +193,7 @@ export const usePosaStore = create<PosaState>((set, get) => ({
   selectedAttributeId: null,
   selectedSlotId: null,
   selectedComponentId: null,
+  selectedGroupId: null,
   focusedNode: null,
   lastDirection: 'neutral',
 
@@ -193,6 +205,7 @@ export const usePosaStore = create<PosaState>((set, get) => ({
       selectedAttributeId: null,
       selectedSlotId: null,
       selectedComponentId: null,
+      selectedGroupId: null,
       focusedNode: null,
       lastDirection: 'neutral',
     });
@@ -489,6 +502,18 @@ export const usePosaStore = create<PosaState>((set, get) => ({
     set({ selectedComponentId: componentId, focusedNode: null }),
   clearSelectedComponent: () =>
     set({ selectedComponentId: null, focusedNode: null }),
+
+  selectGroup: (groupId) =>
+    set({
+      selectedGroupId: groupId,
+      // 그룹 범위를 바꾸면 기존 ZX/slot/attribute 컨텍스트는 무의미해지므로 리셋.
+      selectedComponentId: null,
+      selectedAttributeId: null,
+      selectedSlotId: null,
+      focusedNode: null,
+      layer: 'z0',
+    }),
+  clearSelectedGroup: () => set({ selectedGroupId: null }),
 
   // ── Phase / atlas ─────────────────────────────────────────────────────
   goToPhase: (phase) => {
