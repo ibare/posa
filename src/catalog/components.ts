@@ -125,6 +125,42 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     attributes: ['background', 'text', 'border'],
     states: ['default'],
   },
+  // ===== Menu 계열 =====
+  {
+    id: 'dropdown-menu',
+    label: 'Dropdown Menu',
+    description: 'Menu opened from a trigger button',
+    attributes: ['background', 'text', 'border', 'muted', 'icon'],
+    states: ['default', 'hover', 'active', 'disabled'],
+  },
+  {
+    id: 'context-menu',
+    label: 'Context Menu',
+    description: 'Menu opened on right-click',
+    attributes: ['background', 'text', 'border', 'muted', 'icon'],
+    states: ['default', 'hover', 'active', 'disabled'],
+  },
+  {
+    id: 'menubar',
+    label: 'Menubar',
+    description: 'Horizontal menu bar (File / Edit / …)',
+    attributes: ['background', 'text', 'border', 'muted', 'icon'],
+    states: ['default', 'hover', 'active', 'disabled'],
+  },
+  {
+    id: 'navigation-menu',
+    label: 'Navigation Menu',
+    description: 'Top-level site navigation',
+    attributes: ['background', 'text', 'border', 'muted', 'icon'],
+    states: ['default', 'hover', 'active'],
+  },
+  {
+    id: 'command',
+    label: 'Command',
+    description: 'Command palette with search input',
+    attributes: ['background', 'text', 'border', 'muted', 'icon', 'placeholder'],
+    states: ['default', 'hover', 'active', 'disabled'],
+  },
 ];
 
 export function findComponent(componentId: ComponentId): ComponentDefinition | undefined {

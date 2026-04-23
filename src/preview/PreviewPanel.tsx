@@ -20,10 +20,15 @@ import {
   BadgeShape,
   ButtonShape,
   CardShape,
+  CommandShape,
+  ContextMenuShape,
   DialogShape,
   DrawerShape,
+  DropdownMenuShape,
   HoverCardShape,
   InputShape,
+  MenubarShape,
+  NavigationMenuShape,
   PopoverShape,
   SheetShape,
   ToastShape,
@@ -39,15 +44,20 @@ const TOAST_VARIANTS: ToastVariant[] = ['error', 'warning', 'success'];
 
 /**
  * Variants가 없는 단일-shape 컴포넌트들. 각 항목은 scope에 해당 id가 있으면
- * PreviewSection 한 개로 렌더된다. 섹션 순서는 본 배열 순서를 따른다.
+ * PreviewSection 한 개로 렌더된다. 섹션 순서는 본 배열 순서.
+ *
+ * state 축이 의미 있는 컴포넌트(Menu 등)는 PreviewPanel에서 StateGroup으로
+ * 감싸서 state마다 render(state)를 호출한다. state 축이 default 하나뿐이면
+ * 그냥 한 번만 호출된다.
  */
 type SimplePreviewEntry = {
   id: ComponentId;
   title: string;
-  render: () => ReactNode;
+  render: (state: StateId) => ReactNode;
 };
 
 const SIMPLE_ENTRIES: SimplePreviewEntry[] = [
+  // Overlay 7종 (state 축 없음)
   { id: 'dialog', title: 'Dialog', render: () => <DialogShape /> },
   { id: 'alert-dialog', title: 'Alert Dialog', render: () => <AlertDialogShape /> },
   { id: 'sheet', title: 'Sheet', render: () => <SheetShape /> },
@@ -55,6 +65,32 @@ const SIMPLE_ENTRIES: SimplePreviewEntry[] = [
   { id: 'popover', title: 'Popover', render: () => <PopoverShape /> },
   { id: 'hover-card', title: 'Hover Card', render: () => <HoverCardShape /> },
   { id: 'tooltip', title: 'Tooltip', render: () => <TooltipShape /> },
+  // Menu 5종 (state 축 활용)
+  {
+    id: 'dropdown-menu',
+    title: 'Dropdown Menu',
+    render: (state) => <DropdownMenuShape state={state} />,
+  },
+  {
+    id: 'context-menu',
+    title: 'Context Menu',
+    render: (state) => <ContextMenuShape state={state} />,
+  },
+  {
+    id: 'menubar',
+    title: 'Menubar',
+    render: (state) => <MenubarShape state={state} />,
+  },
+  {
+    id: 'navigation-menu',
+    title: 'Navigation Menu',
+    render: (state) => <NavigationMenuShape state={state} />,
+  },
+  {
+    id: 'command',
+    title: 'Command',
+    render: (state) => <CommandShape state={state} />,
+  },
 ];
 
 type ComponentScope = {
@@ -397,19 +433,31 @@ export function PreviewPanel() {
               </PreviewSection>
             )}
 
-            {visibleSimpleEntries.map((entry) => (
-              <PreviewSection
-                key={entry.id}
-                title={entry.title}
-                componentId={entry.id}
-                selected={selectedComponentId === entry.id}
-                canSelect={canSelectComponent}
-                onSelect={selectComponent}
-                onDeselect={clearSelectedComponent}
-              >
-                {entry.render()}
-              </PreviewSection>
-            ))}
+            {visibleSimpleEntries.map((entry) => {
+              const sc = scope.get(entry.id)!;
+              return (
+                <PreviewSection
+                  key={entry.id}
+                  title={entry.title}
+                  componentId={entry.id}
+                  selected={selectedComponentId === entry.id}
+                  canSelect={canSelectComponent}
+                  onSelect={selectComponent}
+                  onDeselect={clearSelectedComponent}
+                >
+                  {sc.states.length <= 1 ? (
+                    entry.render(sc.states[0] ?? 'default')
+                  ) : (
+                    <StateGroup
+                      label={entry.title.toUpperCase()}
+                      states={sc.states}
+                    >
+                      {(state) => entry.render(state)}
+                    </StateGroup>
+                  )}
+                </PreviewSection>
+              );
+            })}
           </PosaPreviewRoot>
         )}
       </div>

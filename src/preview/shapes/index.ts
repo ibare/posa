@@ -10,3 +10,8 @@ export { DrawerShape } from './DrawerShape';
 export { PopoverShape } from './PopoverShape';
 export { HoverCardShape } from './HoverCardShape';
 export { TooltipShape } from './TooltipShape';
+export { DropdownMenuShape } from './DropdownMenuShape';
+export { ContextMenuShape } from './ContextMenuShape';
+export { MenubarShape } from './MenubarShape';
+export { NavigationMenuShape } from './NavigationMenuShape';
+export { CommandShape } from './CommandShape';
