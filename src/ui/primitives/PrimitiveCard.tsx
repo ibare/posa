@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import {
   listPrimitiveReferences,
@@ -6,7 +7,11 @@ import {
   type PrimitiveReferenceLocation,
 } from '../../color/atlas-ops';
 import { oklchToCssString, oklchToHex } from '../../color/oklch';
-import { SHADE_INDICES, type PrimitiveScale } from '../../ir/types';
+import {
+  SHADE_INDICES,
+  type PrimitiveScale,
+  type ShadeIndex,
+} from '../../ir/types';
 import { usePosaStore } from '../../store/posa-store';
 
 type Props = {
@@ -29,7 +34,18 @@ export function PrimitiveCard({
   const ir = usePosaStore((s) => s.ir);
   const removePrimitive = usePosaStore((s) => s.removePrimitive);
   const mergePrimitive = usePosaStore((s) => s.mergePrimitive);
+  const atlasSelection = usePosaStore((s) => s.atlasSelection);
+  const selectAtlasShade = usePosaStore((s) => s.selectAtlasShade);
+  const moveAtlasSelection = usePosaStore((s) => s.moveAtlasSelection);
+  const rebindPrimitiveShade = usePosaStore((s) => s.rebindPrimitiveShade);
   const [expanded, setExpanded] = useState(false);
+  // draggingShade가 null이 아니면 현재 pointer가 눌린 상태(드래그 이동 중).
+  // selection은 store가 보유하지만, drag 제스처 수명은 pointerdown~pointerup으로 짧아
+  // 컴포넌트 로컬로 두는 게 cleanup이 깔끔하다.
+  const [draggingShade, setDraggingShade] = useState<ShadeIndex | null>(null);
+  const [pointerPos, setPointerPos] = useState<{ x: number; y: number } | null>(
+    null,
+  );
   const { t } = useTranslation('primitives');
 
   const refs = useMemo(
@@ -48,6 +64,56 @@ export function PrimitiveCard({
     if (!window.confirm(t('card.confirmRemove', { id: primitive.id }))) return;
     removePrimitive(primitive.id);
   };
+
+  const isSelectedThisCard =
+    atlasSelection !== null && atlasSelection.primitiveId === primitive.id;
+  const isDragging = draggingShade !== null;
+
+  const handleShadePointerDown = (
+    e: ReactPointerEvent<HTMLSpanElement>,
+    shade: ShadeIndex,
+  ) => {
+    if (e.button !== 0) return;
+    if ((usage[shade] ?? 0) === 0) return;
+    e.preventDefault();
+    // 바깥 document listener가 이 클릭을 "빈 공간"으로 오인해 해제하지 않도록.
+    e.stopPropagation();
+    selectAtlasShade(primitive.id, shade);
+    setDraggingShade(shade);
+    setPointerPos({ x: e.clientX, y: e.clientY });
+  };
+
+  useEffect(() => {
+    if (draggingShade == null) return;
+    const primitiveId = primitive.id;
+
+    const onMove = (e: PointerEvent) => {
+      setPointerPos({ x: e.clientX, y: e.clientY });
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      const cell = target?.closest<HTMLElement>('[data-atlas-shade]');
+      if (!cell) return;
+      if (cell.getAttribute('data-atlas-primitive') !== primitiveId) return;
+      const raw = cell.getAttribute('data-atlas-shade');
+      if (!raw) return;
+      const nextShade = Number(raw) as ShadeIndex;
+      const currentShade = usePosaStore.getState().atlasSelection?.shade;
+      if (currentShade == null || nextShade === currentShade) return;
+      rebindPrimitiveShade(primitiveId, currentShade, nextShade);
+      moveAtlasSelection(nextShade);
+    };
+    const onUp = () => {
+      setDraggingShade(null);
+      setPointerPos(null);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+    };
+  }, [draggingShade, primitive.id, rebindPrimitiveShade, moveAtlasSelection]);
 
   const handleMergeInto = () => {
     if (!mergeSource) return;
@@ -97,9 +163,13 @@ export function PrimitiveCard({
             const c = primitive.scale[shade];
             const hex = oklchToHex(c.L, c.C, c.H);
             const isAnchor = shade === primitive.anchorShade;
+            const isSelected =
+              isSelectedThisCard && atlasSelection?.shade === shade;
             return (
               <span
                 key={shade}
+                data-atlas-primitive={primitive.id}
+                data-atlas-shade={shade}
                 className="flex-1 h-7 relative"
                 style={{ backgroundColor: hex }}
                 title={`${shade} · ${hex} · ${usage[shade] ?? 0}x`}
@@ -110,18 +180,63 @@ export function PrimitiveCard({
                     aria-label={t('card.anchor')}
                   />
                 )}
+                {isSelected && (
+                  <span className="absolute inset-0 pointer-events-none ring-2 ring-inset ring-white" />
+                )}
               </span>
             );
           })}
         </div>
         <div className="flex text-[10px] font-mono text-stone-400 tabular-nums mt-1">
-          {SHADE_INDICES.map((shade) => (
-            <span key={shade} className="flex-1 text-center">
-              {usage[shade] > 0 ? usage[shade] : ''}
-            </span>
-          ))}
+          {SHADE_INDICES.map((shade) => {
+            const count = usage[shade] ?? 0;
+            const isSelected =
+              isSelectedThisCard && atlasSelection?.shade === shade;
+            return (
+              <span
+                key={shade}
+                data-atlas-primitive={primitive.id}
+                data-atlas-shade={shade}
+                onPointerDown={
+                  count > 0
+                    ? (e) => handleShadePointerDown(e, shade)
+                    : undefined
+                }
+                className={[
+                  'flex-1 flex items-center justify-center h-5 select-none',
+                  count > 0 ? (isDragging && isSelected ? 'cursor-grabbing' : 'cursor-pointer') : '',
+                ].join(' ')}
+              >
+                {count > 0 ? (
+                  isSelected ? (
+                    <span className="inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-stone-900 text-cream text-[10px] font-mono">
+                      {count}
+                    </span>
+                  ) : (
+                    <span>{count}</span>
+                  )
+                ) : null}
+              </span>
+            );
+          })}
         </div>
       </div>
+
+      {isDragging && isSelectedThisCard && pointerPos && atlasSelection &&
+        createPortal(
+          <div
+            className="fixed pointer-events-none z-50"
+            style={{
+              left: pointerPos.x + 14,
+              top: pointerPos.y + 14,
+            }}
+          >
+            <div className="inline-flex items-center justify-center h-6 min-w-6 px-2 rounded-full bg-stone-900 text-cream text-[11px] font-mono shadow-lg ring-2 ring-white">
+              {usage[atlasSelection.shade] ?? 0}
+            </div>
+          </div>,
+          document.body,
+        )}
 
       {refCount > 0 && (
         <button

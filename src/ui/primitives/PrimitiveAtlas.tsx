@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   countPrimitiveReferences,
@@ -6,6 +6,7 @@ import {
   hueFamily,
 } from '../../color/primitive-ops';
 import type { PrimitiveScale } from '../../ir/types';
+import { PreviewPanel } from '../../preview/PreviewPanel';
 import { usePosaStore } from '../../store/posa-store';
 import { PrimitiveCard } from './PrimitiveCard';
 
@@ -16,8 +17,26 @@ type FamilyBucket = {
 
 export function PrimitiveAtlas() {
   const ir = usePosaStore((s) => s.ir);
+  const atlasSelection = usePosaStore((s) => s.atlasSelection);
+  const clearAtlasSelection = usePosaStore((s) => s.clearAtlasSelection);
   const [mergeSource, setMergeSource] = useState<string | null>(null);
   const { t } = useTranslation(['primitives', 'common']);
+
+  // 선택 상태에서 atlas cell·preview overlay 바깥을 클릭하면 해제.
+  // 다른 cell을 누르면 그 cell의 pointerdown에서 stopPropagation + selectAtlasShade가
+  // 이어서 호출되므로 "다른 곳 선택"도 자연스럽게 처리된다.
+  useEffect(() => {
+    if (!atlasSelection) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('[data-atlas-shade]')) return;
+      if (target.closest('[data-atlas-preview-overlay]')) return;
+      clearAtlasSelection();
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [atlasSelection, clearAtlasSelection]);
 
   const primitives = useMemo(
     () =>
@@ -56,7 +75,15 @@ export function PrimitiveAtlas() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6 relative">
+      {atlasSelection && (
+        <div
+          data-atlas-preview-overlay
+          className="fixed right-4 top-20 z-40 w-[22rem] max-w-[calc(100vw-2rem)]"
+        >
+          <PreviewPanel />
+        </div>
+      )}
       <header className="px-1 flex items-end justify-between gap-4 flex-wrap">
         <div>
           <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">

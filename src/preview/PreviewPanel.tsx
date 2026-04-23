@@ -10,6 +10,8 @@ import {
   type AttributeId,
   type ComponentId,
   type IR,
+  type PrimitiveId,
+  type ShadeIndex,
   type SlotId,
   type StateId,
   type SymbolId,
@@ -296,6 +298,96 @@ function scopeFromAttribute(
   return m;
 }
 
+/**
+ * Atlas 선택 상태에서의 스코프. 선택된 (primitive, shade)를 "실제로" 소비하는
+ * 컴포넌트만 살린다. 각 컴포넌트는 모든 state를 보여준다(상태별 영향 관찰).
+ *
+ *   - symbol 매칭: 그 shade에 배정된 symbol 집합을 구하고, 다음을 포함한다
+ *       · 그 symbol을 `kind:'symbol'`로 참조하는 slot의 owner
+ *       · variant.id가 그 symbol id와 일치하는 컴포넌트(예: Button.primary)
+ *     심볼이 active여도 직접 소비처가 없으면 포함하지 않는다.
+ *   - attribute 매칭: 그 attribute를 선언한 컴포넌트.
+ *   - slot / slot-state 직접 매칭: slotId의 소유 컴포넌트.
+ */
+function scopeFromAtlasSelection(
+  ir: IR,
+  components: ComponentDefinition[],
+  sel: { primitiveId: PrimitiveId; shade: ShadeIndex },
+): PreviewScope {
+  const impacted = new Set<ComponentId>();
+
+  const matchedSymbols = new Set<SymbolId>();
+  for (const [symId, assign] of Object.entries(ir.symbols)) {
+    if (!assign) continue;
+    if (assign.primitive === sel.primitiveId && assign.shade === sel.shade) {
+      matchedSymbols.add(symId as SymbolId);
+    }
+  }
+
+  if (matchedSymbols.size > 0) {
+    for (const [slotId, slot] of Object.entries(ir.slots)) {
+      const ownerId = slotId.split('.')[0];
+      const hitsSymbol = (ref: typeof slot.ref) =>
+        !!ref && ref.kind === 'symbol' && matchedSymbols.has(ref.symbol);
+      if (hitsSymbol(slot.ref)) {
+        impacted.add(ownerId);
+        continue;
+      }
+      for (const override of Object.values(slot.states)) {
+        if (hitsSymbol(override ?? null)) {
+          impacted.add(ownerId);
+          break;
+        }
+      }
+    }
+    for (const c of components) {
+      if (!c.variants) continue;
+      if (c.variants.some((v) => matchedSymbols.has(v.id as SymbolId))) {
+        impacted.add(c.id);
+      }
+    }
+  }
+
+  for (const [attrId, assign] of Object.entries(ir.attributes)) {
+    if (!assign) continue;
+    if (assign.primitive === sel.primitiveId && assign.shade === sel.shade) {
+      for (const c of components) {
+        if (c.attributes.includes(attrId as AttributeId)) impacted.add(c.id);
+      }
+    }
+  }
+
+  for (const [slotId, slot] of Object.entries(ir.slots)) {
+    const ownerId = slotId.split('.')[0];
+    const match = (ref: typeof slot.ref) =>
+      !!ref &&
+      ref.kind === 'primitive' &&
+      ref.primitive === sel.primitiveId &&
+      ref.shade === sel.shade;
+    if (match(slot.ref)) {
+      impacted.add(ownerId);
+      continue;
+    }
+    for (const override of Object.values(slot.states)) {
+      if (match(override ?? null)) {
+        impacted.add(ownerId);
+        break;
+      }
+    }
+  }
+
+  const scope: PreviewScope = new Map();
+  for (const comp of components) {
+    if (!impacted.has(comp.id)) continue;
+    scope.set(comp.id, {
+      variants: null,
+      includeBase: true,
+      states: comp.states,
+    });
+  }
+  return scope;
+}
+
 function scopeFromSlot(
   slotId: SlotId,
   states: StateId[],
@@ -324,6 +416,7 @@ function scopeFromSlot(
  *     state 포커스가 있으면 해당 state 1개로 좁힘.
  */
 function derivePreviewScope(
+  ir: IR,
   components: ComponentDefinition[],
   layer: Layer,
   selectedAttributeId: AttributeId | null,
@@ -331,7 +424,12 @@ function derivePreviewScope(
   focusedNode: string | null,
   selectedComponentId: ComponentId | null,
   selectedGroupId: ComponentGroupId | null,
+  atlasSelection: { primitiveId: PrimitiveId; shade: ShadeIndex } | null,
 ): PreviewScope {
+  // Atlas 드래그 중엔 다른 네비 컨텍스트를 덮고 "이 shade의 소비자"만 보여준다.
+  if (atlasSelection) {
+    return scopeFromAtlasSelection(ir, components, atlasSelection);
+  }
   const base = derivePreviewScopeRaw(
     components,
     layer,
@@ -425,6 +523,7 @@ export function PreviewPanel() {
   const selectedComponentId = usePosaStore((s) => s.selectedComponentId);
   const selectedGroupId = usePosaStore((s) => s.selectedGroupId);
   const focusedNode = usePosaStore((s) => s.focusedNode);
+  const atlasSelection = usePosaStore((s) => s.atlasSelection);
   const selectComponent = usePosaStore((s) => s.selectComponent);
   const clearSelectedComponent = usePosaStore(
     (s) => s.clearSelectedComponent,
@@ -436,6 +535,7 @@ export function PreviewPanel() {
   const scope = useMemo(
     () =>
       derivePreviewScope(
+        ir,
         components,
         layer,
         selectedAttributeId,
@@ -443,8 +543,10 @@ export function PreviewPanel() {
         focusedNode,
         selectedComponentId,
         selectedGroupId,
+        atlasSelection,
       ),
     [
+      ir,
       components,
       layer,
       selectedAttributeId,
@@ -452,6 +554,7 @@ export function PreviewPanel() {
       focusedNode,
       selectedComponentId,
       selectedGroupId,
+      atlasSelection,
     ],
   );
 

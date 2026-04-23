@@ -9,6 +9,7 @@ import {
   type SlotId,
   type StateId,
   type SymbolAssignment,
+  type SymbolId,
 } from '../ir/types';
 import { countPrimitiveReferences, findNearestShade } from './primitive-ops';
 
@@ -151,6 +152,89 @@ export function listPrimitiveReferences(
     }
   }
   return out;
+}
+
+/**
+ * 같은 primitive 내에서 fromShade를 참조하던 모든 소비자를 toShade로 옮긴다.
+ * Atlas의 참조 숫자 드래그에서 사용 — 사용자가 소비자 집합을 고정한 채로
+ * 어느 스텝을 바라볼지 실시간으로 바꿔보기 위한 경로.
+ *
+ * primitive.scale 자체는 손대지 않는다. 앵커(anchorShade)도 불변.
+ */
+export function rebindShade(
+  ir: IR,
+  primitiveId: PrimitiveId,
+  fromShade: ShadeIndex,
+  toShade: ShadeIndex,
+): IR {
+  if (fromShade === toShade) return ir;
+  if (!ir.primitives[primitiveId]) return ir;
+
+  let changed = false;
+
+  const nextSymbols = { ...ir.symbols };
+  for (const [symId, assign] of Object.entries(ir.symbols)) {
+    if (!assign || assign.primitive !== primitiveId || assign.shade !== fromShade) continue;
+    nextSymbols[symId as SymbolId] = { primitive: primitiveId, shade: toShade };
+    changed = true;
+  }
+
+  const nextAttributes = { ...ir.attributes };
+  for (const [attrId, assign] of Object.entries(ir.attributes)) {
+    if (!assign || assign.primitive !== primitiveId || assign.shade !== fromShade) continue;
+    nextAttributes[attrId as keyof IR['attributes']] = {
+      primitive: primitiveId,
+      shade: toShade,
+    };
+    changed = true;
+  }
+
+  const nextSlots = { ...ir.slots };
+  for (const [slotId, slot] of Object.entries(ir.slots)) {
+    let slotChanged = false;
+    let nextRef = slot.ref;
+    if (
+      slot.ref &&
+      slot.ref.kind === 'primitive' &&
+      slot.ref.primitive === primitiveId &&
+      slot.ref.shade === fromShade
+    ) {
+      nextRef = { kind: 'primitive', primitive: primitiveId, shade: toShade };
+      slotChanged = true;
+    }
+    let nextStates = slot.states;
+    let statesChanged = false;
+    for (const [state, override] of Object.entries(slot.states)) {
+      if (
+        override &&
+        override.kind === 'primitive' &&
+        override.primitive === primitiveId &&
+        override.shade === fromShade
+      ) {
+        if (!statesChanged) nextStates = { ...slot.states };
+        nextStates[state as Exclude<StateId, 'default'>] = {
+          kind: 'primitive',
+          primitive: primitiveId,
+          shade: toShade,
+        };
+        statesChanged = true;
+      }
+    }
+    if (slotChanged || statesChanged) {
+      nextSlots[slotId] = { ...slot, ref: nextRef, states: nextStates };
+      changed = true;
+    }
+  }
+
+  if (!changed) return ir;
+
+  return {
+    ...ir,
+    symbols: nextSymbols,
+    attributes: nextAttributes,
+    slots: nextSlots,
+    meta: { ...ir.meta, updatedAt: Date.now() },
+  };
 }
 
 export function shadeUsage(

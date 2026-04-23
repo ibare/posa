@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import {
   mergePrimitive as mergePrimitiveOp,
+  rebindShade as rebindShadeOp,
   removePrimitive as removePrimitiveOp,
 } from '../color/atlas-ops';
 import {
@@ -64,6 +65,14 @@ type PosaState = {
 
   /** UI locale. i18next와 동기화된다. */
   locale: Locale;
+
+  /**
+   * Atlas에서 사용자가 선택한 (primitive, shade) 앵커.
+   * 이 선택이 살아있는 동안 프리뷰 스코프가 이 스텝의 소비자 집합으로 좁혀지고
+   * 플로팅 프리뷰 오버레이도 띄워진다. 드래그로 shade를 다른 스텝으로 옮기면
+   * selection도 함께 이동한다. 다른 셀을 선택하거나 밖을 클릭하면 해제.
+   */
+  atlasSelection: { primitiveId: PrimitiveId; shade: ShadeIndex } | null;
 
   // Lifecycle
   startFresh: () => void;
@@ -141,6 +150,21 @@ type PosaState = {
   // Atlas
   removePrimitive: (primitiveId: PrimitiveId) => void;
   mergePrimitive: (sourceId: PrimitiveId, targetId: PrimitiveId) => void;
+  /**
+   * 같은 primitive 내에서 fromShade를 참조하던 모든 소비자를 toShade로 일괄 이동.
+   * Atlas의 참조 숫자 드래그가 hover를 바꿀 때마다 호출된다.
+   */
+  rebindPrimitiveShade: (
+    primitiveId: PrimitiveId,
+    fromShade: ShadeIndex,
+    toShade: ShadeIndex,
+  ) => void;
+  /** Atlas 셀을 mousedown한 순간 — selection을 해당 (primitive, shade)로 세팅/교체. */
+  selectAtlasShade: (primitiveId: PrimitiveId, shade: ShadeIndex) => void;
+  /** 드래그 중 같은 primitive의 다른 shade로 selection이 옮겨갈 때. */
+  moveAtlasSelection: (shade: ShadeIndex) => void;
+  /** 밖을 클릭했거나 명시적으로 해제할 때. */
+  clearAtlasSelection: () => void;
 };
 
 const DEFAULT_SHADE: ShadeIndex = 500;
@@ -213,6 +237,7 @@ export const usePosaStore = create<PosaState>()(
   focusedNode: null,
   lastDirection: 'neutral',
   locale: DEFAULT_LOCALE,
+  atlasSelection: null,
 
   setLocale: (locale) => {
     void i18n.changeLanguage(locale);
@@ -611,6 +636,28 @@ export const usePosaStore = create<PosaState>()(
     } catch {
       // 존재하지 않거나 동일 — 무시.
     }
+  },
+
+  rebindPrimitiveShade: (primitiveId, fromShade, toShade) => {
+    if (fromShade === toShade) return;
+    const { ir } = get();
+    const nextIr = rebindShadeOp(ir, primitiveId, fromShade, toShade);
+    if (nextIr === ir) return;
+    set({ ir: nextIr });
+  },
+
+  selectAtlasShade: (primitiveId, shade) => {
+    set({ atlasSelection: { primitiveId, shade } });
+  },
+
+  moveAtlasSelection: (shade) => {
+    const { atlasSelection } = get();
+    if (!atlasSelection || atlasSelection.shade === shade) return;
+    set({ atlasSelection: { ...atlasSelection, shade } });
+  },
+
+  clearAtlasSelection: () => {
+    set({ atlasSelection: null });
   },
     }),
     {
