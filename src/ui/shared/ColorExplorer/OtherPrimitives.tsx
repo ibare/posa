@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { oklchToHex } from '../../../color/oklch';
 import {
   SHADE_INDICES,
@@ -17,12 +18,13 @@ type Props = {
 };
 
 export function OtherPrimitives({ familyLabel, items, onSelect }: Props) {
+  const { t } = useTranslation('explorer');
   if (items.length === 0) return null;
 
   return (
     <div>
       <div className="text-[10px] uppercase tracking-[0.2em] text-stone-600 font-mono mb-2">
-        Other {familyLabel}s you've used
+        {t('other.title', { family: familyLabel })}
       </div>
       <div className="space-y-1.5">
         {items.map(({ primitive, slotCount }) => (
@@ -49,7 +51,7 @@ export function OtherPrimitives({ familyLabel, items, onSelect }: Props) {
               })}
             </span>
             <span className="font-mono text-[10px] text-stone-500 tabular-nums shrink-0">
-              {slotCount} slot{slotCount === 1 ? '' : 's'}
+              {t('other.slotCount', { count: slotCount })}
             </span>
           </button>
         ))}

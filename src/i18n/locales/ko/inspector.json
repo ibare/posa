@@ -1,0 +1,35 @@
+{
+  "layer": {
+    "z0": "z0",
+    "z1": "z1",
+    "z2": "z2",
+    "zx": "zx"
+  },
+  "context": {
+    "symbol": "심볼",
+    "attribute": "어트리뷰트",
+    "slot": "슬롯"
+  },
+  "stateDefault": "상태 · 기본",
+  "state": "상태 · {{state}}",
+  "clearInherit": "해제 (상속)",
+  "descendStates": "내려가기 (상태)",
+  "slotCard": {
+    "setDirectly": "직접 설정됨",
+    "inheritsAttribute": "어트리뷰트 상속",
+    "stateOverride_one": "상태 오버라이드 {{count}}개",
+    "stateOverride_other": "상태 오버라이드 {{count}}개",
+    "clickToDescend": "클릭해서 내려가기",
+    "descendToState": "상태 레이어로 내려가기",
+    "states": "상태"
+  },
+  "swatch": {
+    "noColor": "색 없음",
+    "outsideGamut": "sRGB 색역 밖",
+    "directColor_one": "하위 직접 색 {{count}}개",
+    "directColor_other": "하위 직접 색 {{count}}개"
+  },
+  "paletteRibbon": {
+    "slots": "슬롯"
+  }
+}

@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { isInSrgbGamut, oklchToHex } from '../../color/oklch';
 import type { OKLCH } from '../../ir/types';
 
@@ -54,6 +55,7 @@ export function Swatch({
   dim = false,
   title,
 }: Props) {
+  const { t } = useTranslation('inspector');
   if (colors && colors.length > 0) {
     return (
       <MultiSwatch colors={colors} size={size} dim={dim} title={title} />
@@ -67,8 +69,8 @@ export function Swatch({
           dim ? 'opacity-40' : ''
         }`}
         style={checkerboardStyle(CHECKER_TILE_PX[size])}
-        title={title ?? 'no color'}
-        aria-label={title ?? 'no color'}
+        title={title ?? t('swatch.noColor')}
+        aria-label={title ?? t('swatch.noColor')}
       />
     );
   }
@@ -88,8 +90,8 @@ export function Swatch({
       {!inGamut && (
         <span
           className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-white"
-          title="outside sRGB gamut"
-          aria-label="outside sRGB gamut"
+          title={t('swatch.outsideGamut')}
+          aria-label={t('swatch.outsideGamut')}
         />
       )}
     </div>
@@ -107,13 +109,13 @@ function MultiSwatch({
   dim: boolean;
   title?: string;
 }) {
+  const { t } = useTranslation('inspector');
   const total = colors.length;
   const visible = colors.slice(0, 4);
   const overflow = total - visible.length;
   const hexes = visible.map((c) => oklchToHex(c.L, c.C, c.H));
 
-  const label =
-    title ?? `${total} direct color${total === 1 ? '' : 's'} below`;
+  const label = title ?? t('swatch.directColor', { count: total });
 
   return (
     <div

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { oklchToHex } from '../../color/oklch';
 import { computePaletteRibbon } from '../../ir/selectors';
 import { useActiveComponentDefs } from '../../store/hooks';
@@ -19,6 +20,7 @@ const NEUTRAL_SQUASH = 0.3;
 
 export function PaletteRibbon({ ir, width = 200 }: Props) {
   const components = useActiveComponentDefs();
+  const { t } = useTranslation('inspector');
   const { total, filled, segments } = useMemo(
     () => computePaletteRibbon(components, ir),
     [components, ir],
@@ -113,7 +115,7 @@ export function PaletteRibbon({ ir, width = 200 }: Props) {
           <span className="text-cream">{hoveredSeg.primitiveId}</span>
           <span className="mx-1.5 text-stone-500">·</span>
           <span>{hoveredSeg.count}</span>
-          <span className="ml-0.5 text-stone-400">slots</span>
+          <span className="ml-0.5 text-stone-400">{t('paletteRibbon.slots')}</span>
           <span className="mx-1.5 text-stone-500">·</span>
           <span>
             {total > 0 ? Math.round((hoveredSeg.count / total) * 100) : 0}%

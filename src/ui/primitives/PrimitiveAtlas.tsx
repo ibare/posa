@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   countPrimitiveReferences,
   findOrphanPrimitives,
@@ -16,6 +17,7 @@ type FamilyBucket = {
 export function PrimitiveAtlas() {
   const ir = usePosaStore((s) => s.ir);
   const [mergeSource, setMergeSource] = useState<string | null>(null);
+  const { t } = useTranslation(['primitives', 'common']);
 
   const primitives = useMemo(
     () =>
@@ -46,11 +48,9 @@ export function PrimitiveAtlas() {
     return (
       <div className="mx-auto max-w-3xl p-10 text-center border border-dashed border-stone-300 rounded-lg">
         <div className="font-display italic text-xl text-stone-700">
-          No primitives have been created yet
+          {t('atlas.empty')}
         </div>
-        <p className="text-sm text-stone-500 mt-2">
-          Pick a color for a symbol, attribute, or slot in Exploration and the primitive will appear here.
-        </p>
+        <p className="text-sm text-stone-500 mt-2">{t('atlas.emptyHint')}</p>
       </div>
     );
   }
@@ -60,25 +60,27 @@ export function PrimitiveAtlas() {
       <header className="px-1 flex items-end justify-between gap-4 flex-wrap">
         <div>
           <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
-            Primitive Atlas
+            {t('atlas.title')}
           </div>
           <div className="font-display italic text-2xl text-stone-900 mt-0.5">
-            {primitives.length} primitive{primitives.length === 1 ? '' : 's'} total, {usedCount} in use, {orphanIds.size} orphan{orphanIds.size === 1 ? '' : 's'}
+            {t('atlas.primitiveCount', { count: primitives.length })}{' '}
+            {t('atlas.total')}, {usedCount} {t('atlas.inUse')},{' '}
+            {t('atlas.orphanCount', { count: orphanIds.size })}
           </div>
           <div className="text-xs text-stone-500 mt-1 font-mono tabular-nums">
-            {hueSpread.toFixed(0)}° spread across {families.size} hue famil
-            {families.size === 1 ? 'y' : 'ies'}
+            {hueSpread.toFixed(0)}° {t('atlas.spreadAcross')}{' '}
+            {t('atlas.hueFamilyCount', { count: families.size })}
           </div>
         </div>
         {mergeSource && (
           <div className="text-xs text-stone-600 font-mono">
-            Selecting merge target · source: <b>{mergeSource}</b>
+            {t('atlas.mergeTarget', { name: mergeSource })}
             <button
               type="button"
               onClick={() => setMergeSource(null)}
               className="ml-2 underline underline-offset-2 text-stone-500 hover:text-stone-900"
             >
-              Cancel
+              {t('common:action.cancel')}
             </button>
           </div>
         )}
@@ -88,7 +90,7 @@ export function PrimitiveAtlas() {
         {grouped.map(({ family, primitives: list }) => (
           <section key={family}>
             <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400 mb-2">
-              {family} ({list.length} variant{list.length === 1 ? '' : 's'})
+              {family} ({t('atlas.variantCount', { count: list.length })})
             </div>
             <div className="grid grid-cols-1 gap-2.5">
               {list.map((p) => (

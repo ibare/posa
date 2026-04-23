@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { findComponentBySlotId } from '../../catalog/components';
 import {
   getDirectChildColorsForSlot,
@@ -24,6 +25,7 @@ export type SlotCardProps = {
 export function SlotCard({ slotId, focused, onFocusToggle }: SlotCardProps) {
   const ir = usePosaStore((s) => s.ir);
   const descendToSlot = usePosaStore((s) => s.descendToSlot);
+  const { t } = useTranslation('inspector');
 
   const color = resolveSlotStateColor(ir, slotId, 'default');
   const component = findComponentBySlotId(slotId);
@@ -62,12 +64,10 @@ export function SlotCard({ slotId, focused, onFocusToggle }: SlotCardProps) {
           </div>
           <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400 mt-0.5">
             {isMultiMode
-              ? `${directStateColors.length} state override${
-                  directStateColors.length === 1 ? '' : 's'
-                } — click to descend`
+              ? `${t('slotCard.stateOverride', { count: directStateColors.length })} — ${t('slotCard.clickToDescend')}`
               : isDirect
-                ? 'set directly'
-                : 'inherits attribute'}
+                ? t('slotCard.setDirectly')
+                : t('slotCard.inheritsAttribute')}
           </div>
         </div>
         {multiState && (
@@ -78,9 +78,9 @@ export function SlotCard({ slotId, focused, onFocusToggle }: SlotCardProps) {
               descendToSlot(slotId);
             }}
             className="flex-none inline-flex items-center gap-2 text-xs font-mono text-stone-600 px-2.5 py-1.5 rounded border border-stone-200 hover:border-stone-500 hover:text-stone-900 transition"
-            title="Descend to state layer"
+            title={t('slotCard.descendToState')}
           >
-            <span>states</span>
+            <span>{t('slotCard.states')}</span>
             <svg
               viewBox="0 0 12 12"
               className="w-3 h-3"

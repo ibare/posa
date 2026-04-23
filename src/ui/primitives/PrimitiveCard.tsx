@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   listPrimitiveReferences,
   shadeUsage,
@@ -29,6 +30,7 @@ export function PrimitiveCard({
   const removePrimitive = usePosaStore((s) => s.removePrimitive);
   const mergePrimitive = usePosaStore((s) => s.mergePrimitive);
   const [expanded, setExpanded] = useState(false);
+  const { t } = useTranslation('primitives');
 
   const refs = useMemo(
     () => listPrimitiveReferences(ir, primitive.id),
@@ -43,14 +45,14 @@ export function PrimitiveCard({
 
   const handleRemove = () => {
     if (refCount > 0) return;
-    if (!window.confirm(`Remove ${primitive.id}?`)) return;
+    if (!window.confirm(t('card.confirmRemove', { id: primitive.id }))) return;
     removePrimitive(primitive.id);
   };
 
   const handleMergeInto = () => {
     if (!mergeSource) return;
     const ok = window.confirm(
-      `All references from ${mergeSource} will be moved to ${primitive.id}, and ${mergeSource} will be removed. Continue?`,
+      t('card.confirmMerge', { source: mergeSource, target: primitive.id }),
     );
     if (!ok) return;
     mergePrimitive(mergeSource, primitive.id);
@@ -75,17 +77,17 @@ export function PrimitiveCard({
             </span>
             {isOrphan && (
               <span className="text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
-                Orphan
+                {t('card.orphan')}
               </span>
             )}
           </div>
           <div className="text-xs text-stone-500 mt-0.5 font-mono tabular-nums">
-            anchor at shade {primitive.anchorShade} ·{' '}
+            {t('card.anchorAtShade', { shade: primitive.anchorShade })} ·{' '}
             {oklchToCssString(primitive.anchor)}
           </div>
         </div>
         <span className="flex-none text-[10px] font-mono uppercase tracking-wider px-2 py-1 rounded bg-stone-100 text-stone-600">
-          used in {refCount} place{refCount === 1 ? '' : 's'}
+          {t('card.usedIn')} {t('card.placeCount', { count: refCount })}
         </span>
       </header>
 
@@ -105,7 +107,7 @@ export function PrimitiveCard({
                 {isAnchor && (
                   <span
                     className="absolute inset-0 pointer-events-none ring-2 ring-inset ring-stone-900/70"
-                    aria-label="anchor"
+                    aria-label={t('card.anchor')}
                   />
                 )}
               </span>
@@ -127,7 +129,7 @@ export function PrimitiveCard({
           onClick={() => setExpanded((v) => !v)}
           className="text-xs text-stone-600 hover:text-stone-900 underline underline-offset-2"
         >
-          {expanded ? 'Hide references' : 'Show references'}
+          {expanded ? t('card.hideReferences') : t('card.showReferences')}
         </button>
       )}
 
@@ -135,7 +137,7 @@ export function PrimitiveCard({
         <div className="text-xs font-mono space-y-1.5 pt-2 border-t border-stone-100">
           {refGroups.symbols.length > 0 && (
             <div>
-              <span className="text-stone-400">symbols: </span>
+              <span className="text-stone-400">{t('card.refSymbols')} </span>
               <span className="text-stone-800">
                 {refGroups.symbols.join(', ')}
               </span>
@@ -143,7 +145,7 @@ export function PrimitiveCard({
           )}
           {refGroups.attributes.length > 0 && (
             <div>
-              <span className="text-stone-400">attributes: </span>
+              <span className="text-stone-400">{t('card.refAttributes')} </span>
               <span className="text-stone-800">
                 {refGroups.attributes.join(', ')}
               </span>
@@ -151,7 +153,7 @@ export function PrimitiveCard({
           )}
           {refGroups.slots.length > 0 && (
             <div>
-              <span className="text-stone-400">slots: </span>
+              <span className="text-stone-400">{t('card.refSlots')} </span>
               <span className="text-stone-800">
                 {refGroups.slots.join(', ')}
               </span>
@@ -159,7 +161,7 @@ export function PrimitiveCard({
           )}
           {refGroups.slotStates.length > 0 && (
             <div>
-              <span className="text-stone-400">slot states: </span>
+              <span className="text-stone-400">{t('card.refSlotStates')} </span>
               <span className="text-stone-800">
                 {refGroups.slotStates.join(', ')}
               </span>
@@ -175,7 +177,7 @@ export function PrimitiveCard({
             onClick={handleMergeInto}
             className="text-xs px-3 py-1.5 rounded border border-stone-900 bg-stone-900 text-cream hover:opacity-90 transition"
           >
-            Merge here
+            {t('card.mergeHere')}
           </button>
         ) : (
           <button
@@ -187,11 +189,11 @@ export function PrimitiveCard({
             className="text-xs px-3 py-1.5 rounded border border-stone-200 text-stone-700 hover:border-stone-500 hover:text-stone-900 disabled:opacity-40 disabled:cursor-not-allowed transition"
             title={
               Object.keys(ir.primitives).length < 2
-                ? 'Merging requires another primitive'
-                : 'Start merging into another primitive'
+                ? t('card.mergeRequires')
+                : t('card.startMerging')
             }
           >
-            {isMergeSource ? 'Cancel merge' : 'Merge…'}
+            {isMergeSource ? t('card.cancelMerge') : t('card.merge')}
           </button>
         )}
         <button
@@ -199,9 +201,9 @@ export function PrimitiveCard({
           onClick={handleRemove}
           disabled={refCount > 0}
           className="text-xs px-3 py-1.5 rounded border border-stone-200 text-stone-700 hover:border-red-400 hover:text-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
-          title={refCount > 0 ? 'Still in use (cannot remove)' : 'Remove'}
+          title={refCount > 0 ? t('card.stillInUse') : t('card.remove')}
         >
-          Remove
+          {t('card.remove')}
         </button>
       </footer>
     </div>

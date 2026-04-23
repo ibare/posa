@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { findComponentBySlotId } from '../../catalog/components';
 import {
   getSlotDisplayName,
@@ -14,6 +15,7 @@ export function Z2Plane() {
   const selectedSlotId = usePosaStore((s) => s.selectedSlotId);
   const focusedNode = usePosaStore((s) => s.focusedNode);
   const setFocus = usePosaStore((s) => s.setFocus);
+  const { t } = useTranslation('planes');
 
   if (!selectedSlotId) return null;
 
@@ -26,14 +28,13 @@ export function Z2Plane() {
     <div className="mx-auto max-w-5xl space-y-6">
       <header className="px-1">
         <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
-          Z2 · slot
+          {t('z2.label')}
         </div>
         <div className="font-mono text-lg text-stone-900 break-all">
           {displayName}
         </div>
         <div className="text-xs text-stone-500 mt-0.5">
-          {component.states.length} state
-          {component.states.length === 1 ? '' : 's'}
+          {t('z2.stateCount', { count: component.states.length })}
         </div>
       </header>
 
@@ -80,6 +81,7 @@ function StateCard({
   focused,
   onFocusToggle,
 }: StateCardProps) {
+  const { t } = useTranslation('planes');
   return (
     <div className="relative">
       <div
@@ -95,7 +97,7 @@ function StateCard({
         <div className="min-w-0 flex-1">
           <div className="font-mono text-sm text-stone-900">{state}</div>
           <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400 mt-0.5">
-            {isDirect ? 'assigned' : 'inherits default'}
+            {isDirect ? t('z2.assigned') : t('z2.inheritsDefault')}
           </div>
         </div>
         <span
@@ -104,7 +106,7 @@ function StateCard({
             isDirect ? 'bg-stone-900 text-cream' : 'bg-stone-100 text-stone-500',
           ].join(' ')}
         >
-          {isDirect ? 'set' : 'inherit'}
+          {isDirect ? t('z2.set') : t('z2.inherit')}
         </span>
       </div>
       {focused && (

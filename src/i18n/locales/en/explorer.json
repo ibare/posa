@@ -1,0 +1,47 @@
+{
+  "suggested": "Suggested",
+  "suggestedAlt": "Try a different direction",
+  "suggestedHint": "Click a tile to commit.",
+  "suggestedHintAlt": "A new primitive will be created if you pick outside this scale.",
+  "referencesSymbol": "Currently references symbol",
+  "moreOptions": "More options",
+  "moreOptionsHint": "Less typical choices",
+  "fineTune": "Fine-tune",
+  "fineTuneHint": "Precision adjustment",
+  "useSymbol": "Use a symbol",
+  "useSymbolHint": "Reference a defined symbol instead of a raw color",
+  "noSymbols": "No symbols defined yet. Define one in Z0 to reference it here.",
+  "fine": {
+    "lightness": "Lightness",
+    "lightnessSub": "dark → light",
+    "chroma": "Chroma",
+    "chromaSub": "gray → vivid",
+    "hue": "Hue",
+    "hueRegion": "{{name}} region",
+    "hueNames": {
+      "red": "red",
+      "orange": "orange",
+      "yellow": "yellow",
+      "lime": "lime",
+      "green": "green",
+      "teal": "teal",
+      "cyan": "cyan",
+      "blue": "blue",
+      "purple": "purple",
+      "magenta": "magenta",
+      "pink": "pink",
+      "neutral": "neutral"
+    }
+  },
+  "myPrimitive": {
+    "label": "My",
+    "shadesInUse": "shades in use",
+    "shadeAria": "shade {{shade}}",
+    "pickDifferent": "Pick a different shade — click any position above. Primitive stays intact."
+  },
+  "other": {
+    "title": "Other {{family}}s you've used",
+    "slotCount_one": "{{count}} slot",
+    "slotCount_other": "{{count}} slots"
+  }
+}

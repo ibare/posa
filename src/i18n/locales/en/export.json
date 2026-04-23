@@ -1,0 +1,10 @@
+{
+  "empty": "Nothing to export",
+  "emptyHint": "Define at least one symbol, attribute, or slot before you can export.",
+  "compiler": "Compiler",
+  "snapshot": "This export is a snapshot of the current IR",
+  "primitives": "primitives",
+  "symbols": "symbols",
+  "attributes": "attributes",
+  "slotsAssigned": "slots assigned"
+}

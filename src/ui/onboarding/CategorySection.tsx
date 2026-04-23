@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type {
   ComponentDefinition,
   ComponentGroupDefinition,
@@ -20,6 +21,7 @@ export function CategorySection({
   onToggle,
   onToggleGroup,
 }: Props) {
+  const { t } = useTranslation('onboarding');
   const selectedCount = members.filter((m) => selected.has(m.id)).length;
   const allSelected = selectedCount === members.length;
   const noneSelected = selectedCount === 0;
@@ -45,7 +47,7 @@ export function CategorySection({
           onClick={onToggleGroup}
           className="text-[10px] font-mono uppercase tracking-wider text-stone-500 hover:text-stone-900 px-1.5 py-0.5 rounded hover:bg-stone-200/60 transition"
         >
-          {allSelected ? 'deselect group' : 'select group'}
+          {allSelected ? t('deselectGroup') : t('selectGroup')}
         </button>
       </div>
       <div className="columns-1 sm:columns-2 md:columns-3 gap-2.5">

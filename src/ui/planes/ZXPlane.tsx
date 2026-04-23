@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   COMPONENT_DEFINITIONS,
   type ComponentDefinition,
@@ -26,6 +27,7 @@ export function ComponentSlotGrid({
   setFocus: (nodeId: string | null) => void;
   ir: IR;
 }) {
+  const { t } = useTranslation('planes');
   const visibleVariants = getVisibleVariants(component, ir);
   const hasVariants = (component.variants?.length ?? 0) > 0;
 
@@ -45,9 +47,10 @@ export function ComponentSlotGrid({
   if (visibleVariants.length === 0) {
     return (
       <div className="p-6 text-center text-xs text-stone-500 border border-dashed border-stone-300 rounded-lg">
-        No variants visible. Define the corresponding symbols in Z0 to expose{' '}
-        <span className="font-mono">primary</span>,{' '}
-        <span className="font-mono">secondary</span>, etc.
+        {t('zx.noVariantsPrefix')}
+        <span className="font-mono">{t('zx.noVariantsExamples')}</span>,{' '}
+        <span className="font-mono">{t('zx.noVariantsExamplesAlt')}</span>
+        {t('zx.noVariantsSuffix')}
       </div>
     );
   }
@@ -83,6 +86,7 @@ export function ZXPlane() {
   const clearSelectedComponent = usePosaStore(
     (s) => s.clearSelectedComponent,
   );
+  const { t } = useTranslation('planes');
 
   const component = useMemo(
     () =>
@@ -100,7 +104,7 @@ export function ZXPlane() {
       <header className="flex items-start justify-between gap-4 px-1">
         <div className="min-w-0">
           <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
-            ZX · component
+            {t('zx.component')}
           </div>
           <div className="font-mono text-lg text-stone-900">
             {component.label}
@@ -113,9 +117,9 @@ export function ZXPlane() {
           type="button"
           onClick={clearSelectedComponent}
           className="flex-none text-xs font-mono text-stone-500 hover:text-stone-900 px-2.5 py-1.5 rounded border border-stone-200 hover:border-stone-500 transition"
-          title="Close ZX · back to Z*"
+          title={t('zx.closeTitle')}
         >
-          Close
+          {t('zx.close')}
         </button>
       </header>
 

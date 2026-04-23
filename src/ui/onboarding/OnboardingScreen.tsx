@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   COMPONENT_DEFINITIONS,
@@ -20,6 +21,7 @@ export function OnboardingScreen() {
   const navigate = useNavigate();
   const activeComponentIds = usePosaStore((s) => s.activeComponentIds);
   const setActiveComponents = usePosaStore((s) => s.setActiveComponents);
+  const { t } = useTranslation(['onboarding', 'common']);
 
   const [selected, setSelected] = useState<Set<ComponentId>>(
     () => new Set(activeComponentIds),
@@ -84,19 +86,15 @@ export function OnboardingScreen() {
         <header className="space-y-3">
           <div className="flex items-baseline gap-3">
             <h1 className="font-display italic text-4xl leading-none tracking-tight">
-              Posa
+              {t('common:app.title')}
             </h1>
             <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
-              onboarding
+              {t('caption')}
             </span>
           </div>
-          <h2 className="font-display text-2xl text-stone-900">
-            What are you making?
-          </h2>
+          <h2 className="font-display text-2xl text-stone-900">{t('title')}</h2>
           <p className="text-sm text-stone-600 max-w-2xl leading-relaxed">
-            Pick only the components you need to color. Attributes and slots
-            will be derived from your selection — you'll assign colors within
-            that scope.
+            {t('subtitle')}
           </p>
         </header>
 
@@ -106,14 +104,14 @@ export function OnboardingScreen() {
             onClick={selectAll}
             className="text-xs font-mono text-stone-600 px-2.5 py-1.5 rounded border border-stone-200 hover:border-stone-500 hover:text-stone-900 transition"
           >
-            Select all
+            {t('selectAll')}
           </button>
           <button
             type="button"
             onClick={clearAll}
             className="text-xs font-mono text-stone-600 px-2.5 py-1.5 rounded border border-stone-200 hover:border-stone-500 hover:text-stone-900 transition"
           >
-            Clear
+            {t('clear')}
           </button>
           <div className="flex-1" />
           <span className="text-xs font-mono tabular-nums text-stone-500">
@@ -143,10 +141,9 @@ export function OnboardingScreen() {
         <div className="sticky bottom-4 z-10">
           <div className="flex items-center justify-between gap-4 rounded-xl border border-stone-200 bg-white/95 backdrop-blur px-5 py-3 shadow-sm">
             <div className="text-sm text-stone-700">
-              <span className="font-mono tabular-nums text-stone-900">
-                {count}
+              <span className="text-stone-500">
+                {t('componentCount', { count })} {t('selected')}
               </span>
-              <span className="text-stone-500"> component{count === 1 ? '' : 's'} selected</span>
             </div>
             <button
               type="button"
@@ -159,7 +156,7 @@ export function OnboardingScreen() {
                   : 'bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed',
               ].join(' ')}
             >
-              Start →
+              {t('start')}
             </button>
           </div>
         </div>

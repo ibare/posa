@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "Posa"
+  },
+  "nav": {
+    "explore": "Explore",
+    "atlas": "Atlas",
+    "review": "Review",
+    "export": "Export"
+  },
+  "action": {
+    "reset": "Reset",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "download": "Download"
+  },
+  "locale": {
+    "en": "EN",
+    "ko": "KO",
+    "ariaLabel": "Language"
+  }
+}

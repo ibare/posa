@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { COMPONENT_GROUPS } from '../../catalog/components';
 import { useActiveComponentDefs } from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
@@ -20,6 +21,7 @@ export function ZXGroupPlane() {
   const selectComponent = usePosaStore((s) => s.selectComponent);
   const clearSelectedGroup = usePosaStore((s) => s.clearSelectedGroup);
   const components = useActiveComponentDefs();
+  const { t } = useTranslation('planes');
 
   const group = useMemo(
     () =>
@@ -44,20 +46,20 @@ export function ZXGroupPlane() {
       <header className="flex items-start justify-between gap-4 px-1">
         <div className="min-w-0">
           <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
-            ZX · group
+            {t('zxGroup.label')}
           </div>
           <div className="font-mono text-lg text-stone-900">{group.label}</div>
           <div className="text-xs text-stone-500 mt-0.5">
-            {members.length} component{members.length === 1 ? '' : 's'}
+            {t('zxGroup.componentCount', { count: members.length })}
           </div>
         </div>
         <button
           type="button"
           onClick={clearSelectedGroup}
           className="flex-none text-xs font-mono text-stone-500 hover:text-stone-900 px-2.5 py-1.5 rounded border border-stone-200 hover:border-stone-500 transition"
-          title="Close group · back to Z*"
+          title={t('zxGroup.closeTitle')}
         >
-          Close
+          {t('zxGroup.close')}
         </button>
       </header>
 
@@ -77,9 +79,9 @@ export function ZXGroupPlane() {
                 type="button"
                 onClick={() => selectComponent(component.id)}
                 className="text-[10px] font-mono uppercase tracking-wider text-stone-500 hover:text-stone-900 px-1.5 py-0.5 rounded hover:bg-stone-200/60 transition"
-                title="Focus this component"
+                title={t('zxGroup.focusTitle')}
               >
-                focus →
+                {t('zxGroup.focus')}
               </button>
             </div>
             <ComponentSlotGrid

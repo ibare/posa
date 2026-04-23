@@ -1,0 +1,47 @@
+{
+  "suggested": "추천",
+  "suggestedAlt": "다른 방향 시도",
+  "suggestedHint": "타일을 클릭해 확정하세요.",
+  "suggestedHintAlt": "이 스케일 밖을 고르면 새 프리미티브가 생성됩니다.",
+  "referencesSymbol": "현재 심볼 참조 중",
+  "moreOptions": "다른 옵션",
+  "moreOptionsHint": "덜 일반적인 선택",
+  "fineTune": "미세 조정",
+  "fineTuneHint": "정밀 조정",
+  "useSymbol": "심볼 사용",
+  "useSymbolHint": "원색 대신 정의된 심볼을 참조",
+  "noSymbols": "아직 정의된 심볼이 없습니다. Z0에서 심볼을 정의하세요.",
+  "fine": {
+    "lightness": "명도",
+    "lightnessSub": "어두움 → 밝음",
+    "chroma": "채도",
+    "chromaSub": "회색 → 선명",
+    "hue": "색상",
+    "hueRegion": "{{name}} 영역",
+    "hueNames": {
+      "red": "빨강",
+      "orange": "주황",
+      "yellow": "노랑",
+      "lime": "연두",
+      "green": "초록",
+      "teal": "청록",
+      "cyan": "하늘",
+      "blue": "파랑",
+      "purple": "보라",
+      "magenta": "자주",
+      "pink": "분홍",
+      "neutral": "무채색"
+    }
+  },
+  "myPrimitive": {
+    "label": "내 색",
+    "shadesInUse": "음영 사용 중",
+    "shadeAria": "음영 {{shade}}",
+    "pickDifferent": "다른 음영을 고르려면 위의 위치를 클릭하세요. 프리미티브는 그대로 유지됩니다."
+  },
+  "other": {
+    "title": "이전에 사용한 다른 {{family}}",
+    "slotCount_one": "슬롯 {{count}}개",
+    "slotCount_other": "슬롯 {{count}}개"
+  }
+}

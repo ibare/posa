@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { ComponentDefinition } from '../../catalog/components';
 import { ComponentPreview } from './ComponentPreview';
 
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export function ComponentTypeCard({ component, selected, onToggle }: Props) {
+  const { t } = useTranslation('onboarding');
   const variantCount = component.variants?.length ?? 0;
   const stateCount = component.states.length;
   const attrCount = component.attributes.length;
@@ -36,15 +38,15 @@ export function ComponentTypeCard({ component, selected, onToggle }: Props) {
           </div>
           <div className="mt-1.5 flex items-center gap-1.5 text-[10px] font-mono text-stone-400">
             <span className="tabular-nums">{attrCount}</span>
-            <span>attr</span>
+            <span>{t('metric.attr')}</span>
             <span className="text-stone-300">·</span>
             <span className="tabular-nums">{stateCount}</span>
-            <span>state</span>
+            <span>{t('metric.state')}</span>
             {variantCount > 0 && (
               <>
                 <span className="text-stone-300">·</span>
                 <span className="tabular-nums">{variantCount}</span>
-                <span>var</span>
+                <span>{t('metric.var')}</span>
               </>
             )}
           </div>

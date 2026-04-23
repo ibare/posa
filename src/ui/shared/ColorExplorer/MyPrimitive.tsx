@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { oklchToHex } from '../../../color/oklch';
 import {
   SHADE_INDICES,
@@ -18,6 +19,7 @@ export function MyPrimitive({
   usedShades,
   onSelectShade,
 }: Props) {
+  const { t } = useTranslation('explorer');
   const usedSet = new Set(usedShades);
   const usedExcludingCurrent = usedShades.filter((s) => s !== selectedShade);
 
@@ -26,14 +28,14 @@ export function MyPrimitive({
       <div className="flex items-baseline justify-between mb-2">
         <div className="flex items-baseline gap-2">
           <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono">
-            My
+            {t('myPrimitive.label')}
           </span>
           <span className="font-mono text-sm text-stone-900">
             {primitive.id}
           </span>
         </div>
         <span className="text-[10px] font-mono text-stone-500 tabular-nums">
-          {usedSet.size} / 11 shades in use
+          {usedSet.size} / 11 {t('myPrimitive.shadesInUse')}
         </span>
       </div>
 
@@ -56,7 +58,7 @@ export function MyPrimitive({
               <button
                 type="button"
                 onClick={() => onSelectShade(shade)}
-                aria-label={`shade ${shade}`}
+                aria-label={t('myPrimitive.shadeAria', { shade })}
                 className={[
                   'relative w-full h-12 rounded-sm transition transform origin-bottom',
                   'hover:scale-y-110 hover:z-10',
@@ -96,7 +98,7 @@ export function MyPrimitive({
       </div>
 
       <p className="text-[11px] text-stone-600 mt-2 leading-snug">
-        Pick a different shade — click any position above. Primitive stays intact.
+        {t('myPrimitive.pickDifferent')}
       </p>
     </div>
   );

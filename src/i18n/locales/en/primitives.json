@@ -1,0 +1,42 @@
+{
+  "atlas": {
+    "empty": "No primitives have been created yet",
+    "emptyHint": "Pick a color for a symbol, attribute, or slot in Exploration and the primitive will appear here.",
+    "title": "Primitive Atlas",
+    "primitiveCount_one": "{{count}} primitive",
+    "primitiveCount_other": "{{count}} primitives",
+    "total": "total",
+    "inUse": "in use",
+    "orphanCount_one": "{{count}} orphan",
+    "orphanCount_other": "{{count}} orphans",
+    "spreadAcross": "spread across",
+    "hueFamilyCount_one": "{{count}} hue family",
+    "hueFamilyCount_other": "{{count}} hue families",
+    "mergeTarget": "Selecting merge target · source: {{name}}",
+    "variantCount_one": "{{count}} variant",
+    "variantCount_other": "{{count}} variants"
+  },
+  "card": {
+    "orphan": "Orphan",
+    "anchorAtShade": "anchor at shade {{shade}}",
+    "usedIn": "used in",
+    "placeCount_one": "{{count}} place",
+    "placeCount_other": "{{count}} places",
+    "anchor": "anchor",
+    "hideReferences": "Hide references",
+    "showReferences": "Show references",
+    "refSymbols": "symbols:",
+    "refAttributes": "attributes:",
+    "refSlots": "slots:",
+    "refSlotStates": "slot states:",
+    "mergeHere": "Merge here",
+    "mergeRequires": "Merging requires another primitive",
+    "startMerging": "Start merging into another primitive",
+    "cancelMerge": "Cancel merge",
+    "merge": "Merge…",
+    "remove": "Remove",
+    "stillInUse": "Still in use (cannot remove)",
+    "confirmRemove": "Remove {{id}}?",
+    "confirmMerge": "All references from {{source}} will be moved to {{target}}, and {{source}} will be removed. Continue?"
+  }
+}

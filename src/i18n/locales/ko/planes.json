@@ -1,0 +1,60 @@
+{
+  "breadcrumb": {
+    "z0": "Z0 · 심볼 & 어트리뷰트",
+    "z1": "Z1 · 어트리뷰트의 슬롯",
+    "z2": "Z2 · 슬롯의 상태",
+    "symbolsAttributes": "심볼 & 어트리뷰트",
+    "zxComponent": "ZX · 컴포넌트",
+    "zxGroup": "ZX · 그룹",
+    "backToGroupZX": "그룹 ZX로 돌아가기",
+    "exitZX": "ZX 닫기 · Z*로 돌아가기",
+    "exitZXGroup": "ZX 그룹 닫기 · Z*로 돌아가기",
+    "backToZ0": "Z0으로 돌아가기",
+    "backToZ1": "Z1로 돌아가기"
+  },
+  "z0": {
+    "symbols": "심볼",
+    "symbolsHint": "독립적인 시그니처 색상. 필요한 것만 정의하세요.",
+    "attributes": "어트리뷰트",
+    "attributesHint": "모든 컴포넌트가 드러낼 수 있는 범용 시각 속성.",
+    "directColor_one": "직접 색 {{count}}개",
+    "directColor_other": "직접 색 {{count}}개",
+    "acrossSlots": "슬롯들에 — 클릭해서 내려가기",
+    "slotsLabel": "슬롯",
+    "descendToSlot": "슬롯 레이어로 내려가기"
+  },
+  "z1": {
+    "label": "Z1 · 어트리뷰트",
+    "slotCount_one": "슬롯 {{count}}개",
+    "slotCount_other": "슬롯 {{count}}개",
+    "acrossAll": "모든 컴포넌트 걸쳐",
+    "empty": "이 어트리뷰트를 선언한 컴포넌트가 아직 없습니다."
+  },
+  "z2": {
+    "label": "Z2 · 슬롯",
+    "stateCount_one": "상태 {{count}}개",
+    "stateCount_other": "상태 {{count}}개",
+    "assigned": "할당됨",
+    "inheritsDefault": "기본값 상속",
+    "set": "설정",
+    "inherit": "상속"
+  },
+  "zxGroup": {
+    "label": "ZX · 그룹",
+    "componentCount_one": "컴포넌트 {{count}}개",
+    "componentCount_other": "컴포넌트 {{count}}개",
+    "close": "닫기",
+    "closeTitle": "그룹 닫기 · Z*로 돌아가기",
+    "focus": "포커스 →",
+    "focusTitle": "이 컴포넌트에 집중"
+  },
+  "zx": {
+    "component": "ZX · 컴포넌트",
+    "close": "닫기",
+    "closeTitle": "ZX 닫기 · Z*로 돌아가기",
+    "noVariantsPrefix": "표시할 변형이 없습니다. Z0에서 해당 심볼을 정의하면 ",
+    "noVariantsExamples": "primary",
+    "noVariantsExamplesAlt": "secondary",
+    "noVariantsSuffix": " 등이 나타납니다."
+  }
+}

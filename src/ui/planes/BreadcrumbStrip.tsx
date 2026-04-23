@@ -1,12 +1,7 @@
+import { useTranslation } from 'react-i18next';
 import { COMPONENT_GROUPS } from '../../catalog/components';
 import { useAttributeLabel } from '../../store/hooks';
 import { usePosaStore, type Layer } from '../../store/posa-store';
-
-const LAYER_LABEL: Record<Layer, string> = {
-  z0: 'Z0 · symbols & attributes',
-  z1: 'Z1 · slots of attribute',
-  z2: 'Z2 · states of slot',
-};
 
 export function BreadcrumbStrip() {
   const layer = usePosaStore((s) => s.layer);
@@ -18,6 +13,13 @@ export function BreadcrumbStrip() {
     (s) => s.clearSelectedComponent,
   );
   const clearSelectedGroup = usePosaStore((s) => s.clearSelectedGroup);
+  const { t } = useTranslation('planes');
+
+  const LAYER_LABEL: Record<Layer, string> = {
+    z0: t('breadcrumb.z0'),
+    z1: t('breadcrumb.z1'),
+    z2: t('breadcrumb.z2'),
+  };
 
   const attrLabel = useAttributeLabel(selectedAttributeId);
   const groupLabel = selectedGroupId
@@ -37,12 +39,16 @@ export function BreadcrumbStrip() {
           type="button"
           onClick={clearSelectedComponent}
           className="text-[10px] font-mono uppercase tracking-wider text-stone-500 hover:text-stone-900 px-2 py-1 rounded hover:bg-stone-200/60 transition"
-          title={selectedGroupId ? 'Back to group ZX' : 'Exit ZX · back to Z*'}
+          title={
+            selectedGroupId
+              ? t('breadcrumb.backToGroupZX')
+              : t('breadcrumb.exitZX')
+          }
         >
-          {selectedGroupId ? groupLabel : 'symbols & attributes'}
+          {selectedGroupId ? groupLabel : t('breadcrumb.symbolsAttributes')}
         </button>
         <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
-          ZX · component
+          {t('breadcrumb.zxComponent')}
         </span>
       </div>
     );
@@ -55,12 +61,12 @@ export function BreadcrumbStrip() {
           type="button"
           onClick={clearSelectedGroup}
           className="text-[10px] font-mono uppercase tracking-wider text-stone-500 hover:text-stone-900 px-2 py-1 rounded hover:bg-stone-200/60 transition"
-          title="Exit ZX group · back to Z*"
+          title={t('breadcrumb.exitZXGroup')}
         >
-          symbols & attributes
+          {t('breadcrumb.symbolsAttributes')}
         </button>
         <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
-          ZX · group
+          {t('breadcrumb.zxGroup')}
         </span>
       </div>
     );
@@ -73,9 +79,9 @@ export function BreadcrumbStrip() {
           type="button"
           onClick={() => jumpToLayer('z0')}
           className="text-[10px] font-mono uppercase tracking-wider text-stone-500 hover:text-stone-900 px-2 py-1 rounded hover:bg-stone-200/60 transition"
-          title="Back to Z0"
+          title={t('breadcrumb.backToZ0')}
         >
-          symbols & attributes
+          {t('breadcrumb.symbolsAttributes')}
         </button>
       )}
 
@@ -86,7 +92,7 @@ export function BreadcrumbStrip() {
             type="button"
             onClick={() => jumpToLayer('z1')}
             className="text-[10px] font-mono uppercase tracking-wider text-stone-500 hover:text-stone-900 px-2 py-1 rounded hover:bg-stone-200/60 transition"
-            title="Back to Z1"
+            title={t('breadcrumb.backToZ1')}
           >
             {attrLabel}
           </button>

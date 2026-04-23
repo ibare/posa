@@ -1,0 +1,18 @@
+{
+  "caption": "onboarding",
+  "title": "What are you making?",
+  "subtitle": "Pick only the components you need to color. Attributes and slots will be derived from your selection — you'll assign colors within that scope.",
+  "selectAll": "Select all",
+  "clear": "Clear",
+  "selected": "selected",
+  "start": "Start →",
+  "selectGroup": "select group",
+  "deselectGroup": "deselect group",
+  "componentCount_one": "{{count}} component",
+  "componentCount_other": "{{count}} components",
+  "metric": {
+    "attr": "attr",
+    "state": "state",
+    "var": "var"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "breadcrumb": {
+    "z0": "Z0 · symbols & attributes",
+    "z1": "Z1 · slots of attribute",
+    "z2": "Z2 · states of slot",
+    "symbolsAttributes": "symbols & attributes",
+    "zxComponent": "ZX · component",
+    "zxGroup": "ZX · group",
+    "backToGroupZX": "Back to group ZX",
+    "exitZX": "Exit ZX · back to Z*",
+    "exitZXGroup": "Exit ZX group · back to Z*",
+    "backToZ0": "Back to Z0",
+    "backToZ1": "Back to Z1"
+  },
+  "z0": {
+    "symbols": "Symbols",
+    "symbolsHint": "Standalone signature colors. Define only the ones you need.",
+    "attributes": "Attributes",
+    "attributesHint": "Universal visual properties every component may expose.",
+    "directColor_one": "{{count}} direct color",
+    "directColor_other": "{{count}} direct colors",
+    "acrossSlots": "across slots — click to descend",
+    "slotsLabel": "slots",
+    "descendToSlot": "Descend to slot layer"
+  },
+  "z1": {
+    "label": "Z1 · attribute",
+    "slotCount_one": "{{count}} slot",
+    "slotCount_other": "{{count}} slots",
+    "acrossAll": "across all components",
+    "empty": "No component declares this attribute yet."
+  },
+  "z2": {
+    "label": "Z2 · slot",
+    "stateCount_one": "{{count}} state",
+    "stateCount_other": "{{count}} states",
+    "assigned": "assigned",
+    "inheritsDefault": "inherits default",
+    "set": "set",
+    "inherit": "inherit"
+  },
+  "zxGroup": {
+    "label": "ZX · group",
+    "componentCount_one": "{{count}} component",
+    "componentCount_other": "{{count}} components",
+    "close": "Close",
+    "closeTitle": "Close group · back to Z*",
+    "focus": "focus →",
+    "focusTitle": "Focus this component"
+  },
+  "zx": {
+    "component": "ZX · component",
+    "close": "Close",
+    "closeTitle": "Close ZX · back to Z*",
+    "noVariantsPrefix": "No variants visible. Define the corresponding symbols in Z0 to expose ",
+    "noVariantsExamples": "primary",
+    "noVariantsExamplesAlt": "secondary",
+    "noVariantsSuffix": ", etc."
+  }
+}

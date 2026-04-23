@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   getSlotsByAttribute,
   resolveAttributeColor,
@@ -18,6 +19,7 @@ export function Z1Plane() {
   const setFocus = usePosaStore((s) => s.setFocus);
   const components = useActiveComponentDefs();
   const attrLabel = useAttributeLabel(selectedAttributeId);
+  const { t } = useTranslation('planes');
 
   const slotIds = useMemo(() => {
     if (!selectedAttributeId) return [];
@@ -34,11 +36,11 @@ export function Z1Plane() {
         <Swatch color={attrColor} size="lg" />
         <div className="min-w-0">
           <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
-            Z1 · attribute
+            {t('z1.label')}
           </div>
           <div className="font-mono text-lg text-stone-900">{attrLabel}</div>
           <div className="text-xs text-stone-500 mt-0.5">
-            {slotIds.length} slot{slotIds.length === 1 ? '' : 's'} across all components
+            {t('z1.slotCount', { count: slotIds.length })} {t('z1.acrossAll')}
           </div>
         </div>
       </header>
@@ -58,7 +60,7 @@ export function Z1Plane() {
         ))}
         {slotIds.length === 0 && (
           <div className="col-span-full p-8 text-center text-sm text-stone-500 border border-dashed border-stone-300 rounded-lg">
-            No component declares this attribute yet.
+            {t('z1.empty')}
           </div>
         )}
       </div>

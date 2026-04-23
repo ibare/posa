@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { oklchToHex } from '../../../color/oklch';
 import type { OKLCH } from '../../../ir/types';
 
@@ -9,7 +10,7 @@ type Props = {
 
 const C_MAX = 0.37;
 
-function hueName(H: number, C: number): string {
+function hueNameKey(H: number, C: number): string {
   if (C < 0.03) return 'neutral';
   const h = ((H % 360) + 360) % 360;
   if (h < 15 || h >= 345) return 'red';
@@ -37,6 +38,7 @@ function buildGradient(
 }
 
 export function FineTune({ value, onChange }: Props) {
+  const { t } = useTranslation('explorer');
   const lGradient = useMemo(
     () => buildGradient((t) => oklchToHex(t, value.C, value.H), 12),
     [value.C, value.H],
@@ -54,13 +56,15 @@ export function FineTune({ value, onChange }: Props) {
     [value.L, value.C],
   );
 
-  const hueLabel = `${hueName(value.H, value.C)} region`;
+  const hueLabel = t('fine.hueRegion', {
+    name: t(`fine.hueNames.${hueNameKey(value.H, value.C)}`),
+  });
 
   return (
     <div className="space-y-4">
       <SliderRow
-        label="Lightness"
-        sublabel="dark → light"
+        label={t('fine.lightness')}
+        sublabel={t('fine.lightnessSub')}
         valueText={value.L.toFixed(2)}
         min={0}
         max={1}
@@ -70,8 +74,8 @@ export function FineTune({ value, onChange }: Props) {
         onChange={(L) => onChange({ ...value, L })}
       />
       <SliderRow
-        label="Chroma"
-        sublabel="gray → vivid"
+        label={t('fine.chroma')}
+        sublabel={t('fine.chromaSub')}
         valueText={value.C.toFixed(2)}
         min={0}
         max={C_MAX}
@@ -81,7 +85,7 @@ export function FineTune({ value, onChange }: Props) {
         onChange={(C) => onChange({ ...value, C })}
       />
       <SliderRow
-        label="Hue"
+        label={t('fine.hue')}
         sublabel={hueLabel}
         valueText={`${Math.round(value.H)}°`}
         min={0}

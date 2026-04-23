@@ -1,0 +1,18 @@
+{
+  "caption": "온보딩",
+  "title": "무엇을 만들고 있나요?",
+  "subtitle": "색을 지정할 컴포넌트만 고르세요. 어트리뷰트와 슬롯은 선택한 범위에서 자동으로 파생됩니다.",
+  "selectAll": "전체 선택",
+  "clear": "초기화",
+  "selected": "선택됨",
+  "start": "시작 →",
+  "selectGroup": "그룹 선택",
+  "deselectGroup": "그룹 해제",
+  "componentCount_one": "컴포넌트 {{count}}개",
+  "componentCount_other": "컴포넌트 {{count}}개",
+  "metric": {
+    "attr": "어트리뷰트",
+    "state": "상태",
+    "var": "변형"
+  }
+}

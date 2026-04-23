@@ -1,0 +1,35 @@
+{
+  "layer": {
+    "z0": "z0",
+    "z1": "z1",
+    "z2": "z2",
+    "zx": "zx"
+  },
+  "context": {
+    "symbol": "symbol",
+    "attribute": "attribute",
+    "slot": "slot"
+  },
+  "stateDefault": "state · default",
+  "state": "state · {{state}}",
+  "clearInherit": "Clear (inherit)",
+  "descendStates": "Descend (states)",
+  "slotCard": {
+    "setDirectly": "set directly",
+    "inheritsAttribute": "inherits attribute",
+    "stateOverride_one": "{{count}} state override",
+    "stateOverride_other": "{{count}} state overrides",
+    "clickToDescend": "click to descend",
+    "descendToState": "Descend to state layer",
+    "states": "states"
+  },
+  "swatch": {
+    "noColor": "no color",
+    "outsideGamut": "outside sRGB gamut",
+    "directColor_one": "{{count}} direct color below",
+    "directColor_other": "{{count}} direct colors below"
+  },
+  "paletteRibbon": {
+    "slots": "slots"
+  }
+}

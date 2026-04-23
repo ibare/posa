@@ -11,6 +11,7 @@ import {
   pruneOrphanPrimitives,
 } from '../color/primitive-ops';
 import type { ComponentGroupId } from '../catalog/components';
+import { DEFAULT_LOCALE, i18n, type Locale } from '../i18n';
 import {
   createEmptyIR,
   type AttributeId,
@@ -57,9 +58,13 @@ type PosaState = {
   focusedNode: string | null; // 현재 평면에서 inspector 열린 node id
   lastDirection: LayerDirection;
 
+  /** UI locale. i18next와 동기화된다. */
+  locale: Locale;
+
   // Lifecycle
   startFresh: () => void;
   setActiveComponents: (ids: ComponentId[]) => void;
+  setLocale: (locale: Locale) => void;
 
   // Symbol assignment
   setSymbolColor: (symbolId: SymbolId, color: OKLCH | null) => void;
@@ -199,6 +204,12 @@ export const usePosaStore = create<PosaState>((set, get) => ({
   selectedGroupId: null,
   focusedNode: null,
   lastDirection: 'neutral',
+  locale: DEFAULT_LOCALE,
+
+  setLocale: (locale) => {
+    void i18n.changeLanguage(locale);
+    set({ locale });
+  },
 
   startFresh: () => {
     set({

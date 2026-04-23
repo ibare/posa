@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { COMPILERS, type CompileResult, type Compiler } from '../../compilers';
 import { useActiveComponentDefs } from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
@@ -8,6 +9,7 @@ export function ExportView() {
   const components = useActiveComponentDefs();
   const [selectedId, setSelectedId] = useState<string>(COMPILERS[0].id);
   const [copied, setCopied] = useState(false);
+  const { t } = useTranslation(['export', 'common']);
 
   const selected: Compiler =
     COMPILERS.find((c) => c.id === selectedId) ?? COMPILERS[0];
@@ -52,11 +54,9 @@ export function ExportView() {
     return (
       <div className="mx-auto max-w-3xl p-10 text-center border border-dashed border-stone-300 rounded-lg">
         <div className="font-display italic text-xl text-stone-700">
-          Nothing to export
+          {t('empty')}
         </div>
-        <p className="text-sm text-stone-500 mt-2">
-          Define at least one symbol, attribute, or slot before you can export.
-        </p>
+        <p className="text-sm text-stone-500 mt-2">{t('emptyHint')}</p>
       </div>
     );
   }
@@ -65,7 +65,7 @@ export function ExportView() {
     <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6">
       <aside className="space-y-2">
         <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400 mb-1">
-          Compiler
+          {t('compiler')}
         </div>
         {COMPILERS.map((c) => {
           const active = c.id === selectedId;
@@ -96,19 +96,22 @@ export function ExportView() {
 
         <div className="mt-4 p-3 rounded border border-stone-200 bg-white/60 text-xs text-stone-600 space-y-1">
           <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
-            This export is a snapshot of the current IR
+            {t('snapshot')}
           </div>
           <div className="font-mono tabular-nums">
-            primitives <span className="text-stone-900">{primitiveCount}</span>
+            {t('primitives')}{' '}
+            <span className="text-stone-900">{primitiveCount}</span>
           </div>
           <div className="font-mono tabular-nums">
-            symbols <span className="text-stone-900">{symbolCount}</span>
+            {t('symbols')} <span className="text-stone-900">{symbolCount}</span>
           </div>
           <div className="font-mono tabular-nums">
-            attributes <span className="text-stone-900">{attributeCount}</span>
+            {t('attributes')}{' '}
+            <span className="text-stone-900">{attributeCount}</span>
           </div>
           <div className="font-mono tabular-nums">
-            slots assigned <span className="text-stone-900">{slotCount}</span>
+            {t('slotsAssigned')}{' '}
+            <span className="text-stone-900">{slotCount}</span>
           </div>
         </div>
       </aside>
@@ -129,14 +132,14 @@ export function ExportView() {
               onClick={handleCopy}
               className="text-xs px-2.5 py-1.5 rounded border border-stone-200 hover:border-stone-500 hover:text-stone-900 text-stone-700 transition"
             >
-              {copied ? 'Copied!' : 'Copy'}
+              {copied ? t('common:action.copied') : t('common:action.copy')}
             </button>
             <button
               type="button"
               onClick={handleDownload}
               className="text-xs px-2.5 py-1.5 rounded border border-stone-900 bg-stone-900 text-cream hover:opacity-90 transition"
             >
-              Download
+              {t('common:action.download')}
             </button>
           </div>
         </header>

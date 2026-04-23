@@ -1,0 +1,10 @@
+{
+  "empty": "내보낼 항목이 없습니다",
+  "emptyHint": "내보내기 전에 심볼, 어트리뷰트, 슬롯 중 하나 이상을 정의하세요.",
+  "compiler": "컴파일러",
+  "snapshot": "현재 IR의 스냅샷을 내보냅니다",
+  "primitives": "프리미티브",
+  "symbols": "심볼",
+  "attributes": "어트리뷰트",
+  "slotsAssigned": "할당된 슬롯"
+}

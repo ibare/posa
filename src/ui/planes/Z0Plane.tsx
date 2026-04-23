@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { AttributeDefinition } from '../../catalog/attributes';
 import type { SymbolDefinition } from '../../catalog/symbols';
 import { oklchToHex } from '../../color/oklch';
@@ -31,6 +32,7 @@ export function Z0Plane() {
   const components = useActiveComponentDefs();
   const activeAttributes = useActiveAttributeDefs();
   const activeSymbols = useActiveSymbolDefs();
+  const { t } = useTranslation('planes');
 
   const slotCountByAttribute = useMemo(() => {
     const m: Record<string, number> = {};
@@ -46,10 +48,10 @@ export function Z0Plane() {
       {activeSymbols.length > 0 && (
         <section>
           <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400 mb-2">
-            Symbols
+            {t('z0.symbols')}
           </div>
           <div className="text-xs text-stone-500 mb-3">
-            Standalone signature colors. Define only the ones you need.
+            {t('z0.symbolsHint')}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {activeSymbols.map((sym) => (
@@ -71,10 +73,10 @@ export function Z0Plane() {
       {activeAttributes.length > 0 && (
         <section>
           <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400 mb-2">
-            Attributes
+            {t('z0.attributes')}
           </div>
           <div className="text-xs text-stone-500 mb-3">
-            Universal visual properties every component may expose.
+            {t('z0.attributesHint')}
           </div>
           <div className="flex flex-col gap-2">
             {activeAttributes.map((attr) => (
@@ -160,6 +162,7 @@ function AttributeRow({
   const ir = usePosaStore((s) => s.ir);
   const components = useActiveComponentDefs();
   const color = resolveAttributeColor(ir, attr.id);
+  const { t } = useTranslation('planes');
   const directChildColors = useMemo(
     () => getDirectChildColorsForAttribute(components, ir, attr.id),
     [components, ir, attr.id],
@@ -196,9 +199,7 @@ function AttributeRow({
           </div>
           <div className="text-xs text-stone-500 leading-snug mt-0.5">
             {isMultiMode
-              ? `${directChildColors.length} direct color${
-                  directChildColors.length === 1 ? '' : 's'
-                } across slots — click to descend`
+              ? `${t('z0.directColor', { count: directChildColors.length })} ${t('z0.acrossSlots')}`
               : attr.description}
           </div>
         </div>
@@ -209,10 +210,10 @@ function AttributeRow({
             onDescend();
           }}
           className="flex-none inline-flex items-center gap-2 text-xs font-mono text-stone-600 px-2.5 py-1.5 rounded border border-stone-200 hover:border-stone-500 hover:text-stone-900 transition"
-          title="Descend to slot layer"
+          title={t('z0.descendToSlot')}
         >
           <span className="tabular-nums">{slotCount}</span>
-          <span className="text-stone-400">slots</span>
+          <span className="text-stone-400">{t('z0.slotsLabel')}</span>
           <svg
             viewBox="0 0 12 12"
             className="w-3 h-3"

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { oklchToHex } from '../../../color/oklch';
 import { hueFamily } from '../../../color/primitive-ops';
 import {
@@ -89,6 +90,7 @@ export function ColorExplorer({
   onSelectSymbol,
   ir,
 }: ColorExplorerProps) {
+  const { t } = useTranslation('explorer');
   const [moreOpen, setMoreOpen] = useState(false);
   const [fineOpen, setFineOpen] = useState(false);
 
@@ -130,11 +132,11 @@ export function ColorExplorer({
   );
 
   const suggestedHeading = assignment
-    ? 'Try a different direction'
-    : 'Suggested';
+    ? t('suggestedAlt')
+    : t('suggested');
   const suggestedHint = assignment
-    ? 'A new primitive will be created if you pick outside this scale.'
-    : 'Click a tile to commit.';
+    ? t('suggestedHintAlt')
+    : t('suggestedHint');
 
   const fineValue: OKLCH = value ?? { L: 0.58, C: 0.12, H: 220 };
 
@@ -167,7 +169,7 @@ export function ColorExplorer({
         <>
           <div className="rounded-md border border-stone-200 bg-stone-50 p-3">
             <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono">
-              Currently references symbol
+              {t('referencesSymbol')}
             </div>
             <div className="font-mono text-sm text-stone-900 mt-0.5">
               {symbolRef.symbol}
@@ -205,8 +207,8 @@ export function ColorExplorer({
       <Collapsible
         open={moreOpen}
         onToggle={() => setMoreOpen((v) => !v)}
-        label="More options"
-        sublabel="Less typical choices"
+        label={t('moreOptions')}
+        sublabel={t('moreOptionsHint')}
       >
         <Sea rows={tierB} value={value} onPick={onChange} />
       </Collapsible>
@@ -216,8 +218,8 @@ export function ColorExplorer({
       <Collapsible
         open={fineOpen}
         onToggle={() => setFineOpen((v) => !v)}
-        label="Fine-tune"
-        sublabel="Precision adjustment"
+        label={t('fineTune')}
+        sublabel={t('fineTuneHint')}
       >
         <FineTune value={fineValue} onChange={onChange} />
       </Collapsible>
@@ -232,19 +234,20 @@ type UseASymbolProps = {
 };
 
 function UseASymbol({ symbols, activeSymbol, onSelect }: UseASymbolProps) {
+  const { t } = useTranslation('explorer');
   return (
     <div>
       <div className="flex items-baseline gap-2 mb-1.5">
         <span className="text-[11px] uppercase tracking-[0.15em] text-stone-600 font-mono">
-          Use a symbol
+          {t('useSymbol')}
         </span>
         <span className="text-[10px] text-stone-400 italic">
-          Reference a defined symbol instead of a raw color
+          {t('useSymbolHint')}
         </span>
       </div>
       {symbols.length === 0 ? (
         <div className="text-[11px] text-stone-500 italic px-1">
-          No symbols defined yet. Define one in Z0 to reference it here.
+          {t('noSymbols')}
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
