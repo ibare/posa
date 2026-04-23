@@ -75,6 +75,56 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     attributes: ['background', 'text', 'border'],
     states: ['default'],
   },
+  // ===== Overlay 계열 =====
+  {
+    id: 'dialog',
+    label: 'Dialog',
+    description: 'Modal dialog with backdrop',
+    attributes: ['overlay', 'background', 'text', 'border'],
+    states: ['default'],
+  },
+  {
+    id: 'alert-dialog',
+    label: 'Alert Dialog',
+    description: 'Modal confirmation dialog',
+    attributes: ['overlay', 'background', 'text', 'border'],
+    states: ['default'],
+  },
+  {
+    id: 'sheet',
+    label: 'Sheet',
+    description: 'Side-anchored overlay panel',
+    attributes: ['overlay', 'background', 'text', 'border'],
+    states: ['default'],
+  },
+  {
+    id: 'drawer',
+    label: 'Drawer',
+    description: 'Bottom-anchored overlay panel',
+    attributes: ['overlay', 'background', 'text', 'border'],
+    states: ['default'],
+  },
+  {
+    id: 'popover',
+    label: 'Popover',
+    description: 'Floating panel anchored to a trigger',
+    attributes: ['background', 'text', 'border'],
+    states: ['default'],
+  },
+  {
+    id: 'hover-card',
+    label: 'Hover Card',
+    description: 'Popover surfaced on hover',
+    attributes: ['background', 'text', 'border'],
+    states: ['default'],
+  },
+  {
+    id: 'tooltip',
+    label: 'Tooltip',
+    description: 'Short hint label',
+    attributes: ['background', 'text', 'border'],
+    states: ['default'],
+  },
 ];
 
 export function findComponent(componentId: ComponentId): ComponentDefinition | undefined {

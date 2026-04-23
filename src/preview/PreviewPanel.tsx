@@ -16,11 +16,18 @@ import { usePosaStore, type Layer } from '../store/posa-store';
 import { PosaPreviewRoot } from './PosaPreviewRoot';
 import { StateGroup } from './StateGroup';
 import {
+  AlertDialogShape,
   BadgeShape,
   ButtonShape,
   CardShape,
+  DialogShape,
+  DrawerShape,
+  HoverCardShape,
   InputShape,
+  PopoverShape,
+  SheetShape,
   ToastShape,
+  TooltipShape,
   type BadgeVariant,
   type ButtonVariant,
   type ToastVariant,
@@ -29,6 +36,26 @@ import {
 const BUTTON_VARIANTS: ButtonVariant[] = ['primary', 'secondary', 'error'];
 const BADGE_VARIANTS: BadgeVariant[] = ['secondary', 'error'];
 const TOAST_VARIANTS: ToastVariant[] = ['error', 'warning', 'success'];
+
+/**
+ * Variants가 없는 단일-shape 컴포넌트들. 각 항목은 scope에 해당 id가 있으면
+ * PreviewSection 한 개로 렌더된다. 섹션 순서는 본 배열 순서를 따른다.
+ */
+type SimplePreviewEntry = {
+  id: ComponentId;
+  title: string;
+  render: () => ReactNode;
+};
+
+const SIMPLE_ENTRIES: SimplePreviewEntry[] = [
+  { id: 'dialog', title: 'Dialog', render: () => <DialogShape /> },
+  { id: 'alert-dialog', title: 'Alert Dialog', render: () => <AlertDialogShape /> },
+  { id: 'sheet', title: 'Sheet', render: () => <SheetShape /> },
+  { id: 'drawer', title: 'Drawer', render: () => <DrawerShape /> },
+  { id: 'popover', title: 'Popover', render: () => <PopoverShape /> },
+  { id: 'hover-card', title: 'Hover Card', render: () => <HoverCardShape /> },
+  { id: 'tooltip', title: 'Tooltip', render: () => <TooltipShape /> },
+];
 
 type ComponentScope = {
   /** null이면 카탈로그의 모든 variant, []면 variant는 렌더하지 않음. */
@@ -215,12 +242,15 @@ export function PreviewPanel() {
     toastScope && (toastScope.includeBase || visibleToastVariants.length > 0),
   );
 
+  const visibleSimpleEntries = SIMPLE_ENTRIES.filter((e) => scope.has(e.id));
+
   const visibleCount =
     (hasButton ? 1 : 0) +
     (inputScope ? 1 : 0) +
     (cardScope ? 1 : 0) +
     (hasBadge ? 1 : 0) +
-    (hasToast ? 1 : 0);
+    (hasToast ? 1 : 0) +
+    visibleSimpleEntries.length;
   const totalCount = COMPONENT_DEFINITIONS.length;
 
   return (
@@ -366,6 +396,20 @@ export function PreviewPanel() {
                 </div>
               </PreviewSection>
             )}
+
+            {visibleSimpleEntries.map((entry) => (
+              <PreviewSection
+                key={entry.id}
+                title={entry.title}
+                componentId={entry.id}
+                selected={selectedComponentId === entry.id}
+                canSelect={canSelectComponent}
+                onSelect={selectComponent}
+                onDeselect={clearSelectedComponent}
+              >
+                {entry.render()}
+              </PreviewSection>
+            ))}
           </PosaPreviewRoot>
         )}
       </div>
