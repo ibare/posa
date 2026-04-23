@@ -18,6 +18,7 @@ import { StateGroup } from './StateGroup';
 import {
   AlertDialogShape,
   BadgeShape,
+  BreadcrumbShape,
   ButtonShape,
   CardShape,
   CheckboxShape,
@@ -33,13 +34,16 @@ import {
   MenubarShape,
   NativeSelectShape,
   NavigationMenuShape,
+  PaginationShape,
   PopoverShape,
   ProgressShape,
   RadioGroupShape,
   SelectShape,
   SheetShape,
+  SidebarShape,
   SliderShape,
   SwitchShape,
+  TabsShape,
   TextareaShape,
   ToastShape,
   ToggleShape,
@@ -155,6 +159,27 @@ const SIMPLE_ENTRIES: SimplePreviewEntry[] = [
     id: 'select',
     title: 'Select',
     render: (state) => <SelectShape state={state} />,
+  },
+  // Navigation 4종
+  {
+    id: 'breadcrumb',
+    title: 'Breadcrumb',
+    render: (state) => <BreadcrumbShape state={state} />,
+  },
+  {
+    id: 'tabs',
+    title: 'Tabs',
+    render: (state) => <TabsShape state={state} />,
+  },
+  {
+    id: 'pagination',
+    title: 'Pagination',
+    render: (state) => <PaginationShape state={state} />,
+  },
+  {
+    id: 'sidebar',
+    title: 'Sidebar',
+    render: (state) => <SidebarShape state={state} />,
   },
 ];
 

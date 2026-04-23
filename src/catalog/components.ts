@@ -241,6 +241,35 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     attributes: ['background', 'text', 'border', 'outline', 'icon'],
     states: ['default', 'hover', 'focus', 'active', 'disabled'],
   },
+  // ===== Navigation 계열 =====
+  {
+    id: 'breadcrumb',
+    label: 'Breadcrumb',
+    description: 'Hierarchical path showing the current page location',
+    attributes: ['background', 'text', 'border', 'muted'],
+    states: ['default', 'hover', 'active', 'disabled'],
+  },
+  {
+    id: 'tabs',
+    label: 'Tabs',
+    description: 'Switch between views with horizontal tab list',
+    attributes: ['background', 'text', 'border', 'muted'],
+    states: ['default', 'hover', 'active'],
+  },
+  {
+    id: 'pagination',
+    label: 'Pagination',
+    description: 'Paged navigation with numbered buttons',
+    attributes: ['background', 'text', 'border', 'muted'],
+    states: ['default', 'hover', 'active', 'disabled'],
+  },
+  {
+    id: 'sidebar',
+    label: 'Sidebar',
+    description: 'Vertical application-level navigation panel',
+    attributes: ['background', 'text', 'border', 'muted', 'icon'],
+    states: ['default', 'hover', 'active'],
+  },
 ];
 
 export function findComponent(componentId: ComponentId): ComponentDefinition | undefined {

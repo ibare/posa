@@ -26,3 +26,7 @@ export { InputGroupShape } from './InputGroupShape';
 export { InputOTPShape } from './InputOTPShape';
 export { NativeSelectShape } from './NativeSelectShape';
 export { SelectShape } from './SelectShape';
+export { BreadcrumbShape } from './BreadcrumbShape';
+export { TabsShape } from './TabsShape';
+export { PaginationShape } from './PaginationShape';
+export { SidebarShape } from './SidebarShape';
