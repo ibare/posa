@@ -794,6 +794,14 @@ function GroupChipBar({
   onSelect: (id: ComponentGroupId) => void;
   onClear: () => void;
 }) {
+  const activeComponents = useActiveComponentDefs();
+  const visibleGroups = useMemo(() => {
+    const active = new Set(activeComponents.map((c) => c.group));
+    return COMPONENT_GROUPS.filter((g) => active.has(g.id));
+  }, [activeComponents]);
+
+  if (visibleGroups.length <= 1) return null;
+
   return (
     <div className="flex flex-wrap gap-1 border-b border-stone-200 px-3 py-2">
       <button
@@ -808,7 +816,7 @@ function GroupChipBar({
       >
         All
       </button>
-      {COMPONENT_GROUPS.map((g) => (
+      {visibleGroups.map((g) => (
         <GroupChip
           key={g.id}
           id={g.id}
