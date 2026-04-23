@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { PreviewPanel } from '../../preview';
 import { usePosaStore } from '../../store/posa-store';
-import { AdjustOrReplaceDialog } from '../shared/AdjustOrReplaceDialog';
 import { BreadcrumbStrip } from './BreadcrumbStrip';
 import { Z0Plane } from './Z0Plane';
 import { Z1Plane } from './Z1Plane';
@@ -13,16 +12,12 @@ export function ExplorationView() {
   const selectedSlotId = usePosaStore((s) => s.selectedSlotId);
   const focusedNode = usePosaStore((s) => s.focusedNode);
   const lastDirection = usePosaStore((s) => s.lastDirection);
-  const pendingPrimitiveDecision = usePosaStore(
-    (s) => s.pendingPrimitiveDecision,
-  );
   const setFocus = usePosaStore((s) => s.setFocus);
   const ascend = usePosaStore((s) => s.ascend);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
-      if (pendingPrimitiveDecision) return;
       if (focusedNode) {
         setFocus(null);
       } else {
@@ -31,7 +26,7 @@ export function ExplorationView() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [focusedNode, setFocus, ascend, pendingPrimitiveDecision]);
+  }, [focusedNode, setFocus, ascend]);
 
   const animClass =
     lastDirection === 'descend'
@@ -55,7 +50,6 @@ export function ExplorationView() {
       <div className="hidden xl:block">
         <PreviewPanel />
       </div>
-      <AdjustOrReplaceDialog />
     </div>
   );
 }

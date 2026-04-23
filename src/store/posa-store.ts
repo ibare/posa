@@ -5,7 +5,6 @@ import {
 } from '../color/atlas-ops';
 import {
   addPrimitive,
-  adjustPrimitiveAnchor,
   findNearestPrimitive,
   findNearestShade,
   isWithinScale,
@@ -34,19 +33,6 @@ export type Phase = 'exploration' | 'atlas' | 'export';
 export type Layer = 'z0' | 'z1' | 'z2';
 export type LayerDirection = 'ascend' | 'descend' | 'neutral';
 
-export type PendingPrimitiveTarget =
-  | { kind: 'symbol'; symbolId: SymbolId }
-  | { kind: 'attribute'; attributeId: AttributeId }
-  | { kind: 'slot'; slotId: SlotId }
-  | { kind: 'slot-state'; slotId: SlotId; state: Exclude<StateId, 'default'> };
-
-export type PendingPrimitiveDecision = {
-  target: PendingPrimitiveTarget;
-  newAnchor: OKLCH;
-  currentPrimitiveId: PrimitiveId;
-  shadeForAnchor: ShadeIndex;
-};
-
 type PosaState = {
   phase: Phase;
   ir: IR;
@@ -57,7 +43,6 @@ type PosaState = {
   selectedSlotId: SlotId | null; // Z2 descent target
   focusedNode: string | null; // 현재 평면에서 inspector 열린 node id
   lastDirection: LayerDirection;
-  pendingPrimitiveDecision: PendingPrimitiveDecision | null;
 
   // Lifecycle
   startFresh: () => void;
@@ -113,10 +98,6 @@ type PosaState = {
     symbolId: SymbolId,
   ) => void;
 
-  // Pending primitive decisions (scale-외 색 선택 시)
-  resolvePendingPrimitive: (choice: 'adjust' | 'replace') => void;
-  cancelPendingPrimitive: () => void;
-
   // Navigation
   descendToAttribute: (attrId: AttributeId) => void;
   descendToSlot: (slotId: SlotId) => void;
@@ -138,72 +119,34 @@ const LAYER_INDEX: Record<Layer, number> = { z0: 0, z1: 1, z2: 2 };
 // ──────────────────────────────────────────────────────────────────────────
 
 /**
- * color → IR 패치.
- * 가까운 기존 primitive가 있으면 그걸 재사용, 없으면 새 primitive 생성.
- * scale 내부에 있으면 anchor 조정 path를 선택하고, 외부면 caller가 pending decision을 띄울 수 있도록
- * 결과에 `needsDecision` 플래그를 단다.
+ * 소비자(symbol/attribute/slot/slot-state)가 새 색을 요청했을 때의 IR 패치.
+ *
+ * 원칙:
+ *   - 원천(primitive) anchor는 절대 건드리지 않는다.
+ *   - 가장 가까운 기존 primitive가 그 색의 scale 안에 들어오면 그걸 재사용 (자기 ref만 갈아끼움).
+ *   - 그렇지 않으면 새 primitive를 생성해서 거기에 ref를 꽂는다.
+ *
+ * 이렇게 해야 "원천이 바뀌면 참조한 모두가 바뀐다, 소비자가 바꾸면 자기 연결만 바뀐다"는
+ * 분리가 유지된다. (이전엔 같은 scale 안의 색을 고르면 primitive anchor를 옮겨 cascade가 발생.)
  */
 function rebindColor(
   ir: IR,
   color: OKLCH,
-  currentPrimitiveId: PrimitiveId | null,
   fallbackShade: ShadeIndex,
-): {
-  ir: IR;
-  ref: ColorRef;
-  needsDecision: boolean;
-  currentPrimitiveId: PrimitiveId | null;
-} {
-  // 기존 참조 primitive가 있고 scale 내부면 anchor 조정. 그대로 그 primitive 재사용.
-  if (currentPrimitiveId) {
-    const current = ir.primitives[currentPrimitiveId];
-    if (current && isWithinScale(color, current)) {
-      const nextIr = adjustPrimitiveAnchor(ir, current.id, color);
-      // shade는 target L에서 재계산 — 사용자가 anchor를 옮겨 기존 shade가 색을 덜 대표하게 되었을 수 있음.
-      const nextPrim = nextIr.primitives[current.id];
-      const shade = nextPrim ? findNearestShade(nextPrim, color.L) : fallbackShade;
-      return {
-        ir: nextIr,
-        ref: { kind: 'primitive', primitive: current.id, shade },
-        needsDecision: false,
-        currentPrimitiveId: current.id,
-      };
-    }
-    // scale 외부 — 결정 필요.
-    if (current) {
-      return {
-        ir,
-        ref: { kind: 'primitive', primitive: current.id, shade: fallbackShade },
-        needsDecision: true,
-        currentPrimitiveId: current.id,
-      };
-    }
-  }
-
-  // 기존 참조가 없거나 손실됨. 가장 가까운 primitive 재사용 or 생성.
+): { ir: IR; ref: ColorRef } {
   const nearest = findNearestPrimitive(ir, color);
-  if (nearest) {
+  if (nearest && isWithinScale(color, nearest)) {
     const shade = findNearestShade(nearest, color.L);
     return {
       ir,
       ref: { kind: 'primitive', primitive: nearest.id, shade },
-      needsDecision: false,
-      currentPrimitiveId: nearest.id,
     };
   }
   const { ir: next, primitiveId } = addPrimitive(ir, color, fallbackShade);
   return {
     ir: next,
     ref: { kind: 'primitive', primitive: primitiveId, shade: fallbackShade },
-    needsDecision: false,
-    currentPrimitiveId: primitiveId,
   };
-}
-
-function refToPrimitiveId(ref: ColorRef | null | undefined): PrimitiveId | null {
-  if (!ref) return null;
-  if (ref.kind !== 'primitive') return null;
-  return ref.primitive;
 }
 
 function bumpMeta(ir: IR): IR {
@@ -233,7 +176,6 @@ export const usePosaStore = create<PosaState>((set, get) => ({
   selectedSlotId: null,
   focusedNode: null,
   lastDirection: 'neutral',
-  pendingPrimitiveDecision: null,
 
   startFresh: () => {
     set({
@@ -244,7 +186,6 @@ export const usePosaStore = create<PosaState>((set, get) => ({
       selectedSlotId: null,
       focusedNode: null,
       lastDirection: 'neutral',
-      pendingPrimitiveDecision: null,
     });
   },
 
@@ -259,25 +200,8 @@ export const usePosaStore = create<PosaState>((set, get) => ({
       return;
     }
 
-    const current = ir.symbols[symbolId];
-    const currentPrimitiveId = current?.primitive ?? null;
-    const fallbackShade = current?.shade ?? DEFAULT_SHADE;
-
-    const { ir: nextIr, ref, needsDecision, currentPrimitiveId: nextPrim } =
-      rebindColor(ir, color, currentPrimitiveId, fallbackShade);
-
-    if (needsDecision && nextPrim) {
-      set({
-        pendingPrimitiveDecision: {
-          target: { kind: 'symbol', symbolId },
-          newAnchor: color,
-          currentPrimitiveId: nextPrim,
-          shadeForAnchor: fallbackShade,
-        },
-      });
-      return;
-    }
-
+    const fallbackShade = ir.symbols[symbolId]?.shade ?? DEFAULT_SHADE;
+    const { ir: nextIr, ref } = rebindColor(ir, color, fallbackShade);
     if (ref.kind !== 'primitive') return; // 방어적
     const nextSymbols = {
       ...nextIr.symbols,
@@ -315,25 +239,8 @@ export const usePosaStore = create<PosaState>((set, get) => ({
       return;
     }
 
-    const current = ir.attributes[attrId];
-    const currentPrimitiveId = current?.primitive ?? null;
-    const fallbackShade = current?.shade ?? DEFAULT_SHADE;
-
-    const { ir: nextIr, ref, needsDecision, currentPrimitiveId: nextPrim } =
-      rebindColor(ir, color, currentPrimitiveId, fallbackShade);
-
-    if (needsDecision && nextPrim) {
-      set({
-        pendingPrimitiveDecision: {
-          target: { kind: 'attribute', attributeId: attrId },
-          newAnchor: color,
-          currentPrimitiveId: nextPrim,
-          shadeForAnchor: fallbackShade,
-        },
-      });
-      return;
-    }
-
+    const fallbackShade = ir.attributes[attrId]?.shade ?? DEFAULT_SHADE;
+    const { ir: nextIr, ref } = rebindColor(ir, color, fallbackShade);
     if (ref.kind !== 'primitive') return; // 방어적: rebindColor는 항상 primitive ref 반환
     const nextAttrs = {
       ...nextIr.attributes,
@@ -384,25 +291,9 @@ export const usePosaStore = create<PosaState>((set, get) => ({
       return;
     }
 
-    const currentPrimitiveId = refToPrimitiveId(slot.ref);
     const fallbackShade =
       slot.ref?.kind === 'primitive' ? slot.ref.shade : DEFAULT_SHADE;
-
-    const { ir: nextIr, ref, needsDecision, currentPrimitiveId: nextPrim } =
-      rebindColor(withShell, color, currentPrimitiveId, fallbackShade);
-
-    if (needsDecision && nextPrim) {
-      set({
-        pendingPrimitiveDecision: {
-          target: { kind: 'slot', slotId },
-          newAnchor: color,
-          currentPrimitiveId: nextPrim,
-          shadeForAnchor: fallbackShade,
-        },
-      });
-      return;
-    }
-
+    const { ir: nextIr, ref } = rebindColor(withShell, color, fallbackShade);
     const nextSlots = {
       ...nextIr.slots,
       [slotId]: { ...nextIr.slots[slotId], ref },
@@ -463,24 +354,9 @@ export const usePosaStore = create<PosaState>((set, get) => ({
     }
 
     const existing = slot.states[state];
-    const currentPrimitiveId = refToPrimitiveId(existing);
     const fallbackShade =
       existing?.kind === 'primitive' ? existing.shade : DEFAULT_SHADE;
-
-    const { ir: nextIr, ref, needsDecision, currentPrimitiveId: nextPrim } =
-      rebindColor(withShell, color, currentPrimitiveId, fallbackShade);
-
-    if (needsDecision && nextPrim) {
-      set({
-        pendingPrimitiveDecision: {
-          target: { kind: 'slot-state', slotId, state },
-          newAnchor: color,
-          currentPrimitiveId: nextPrim,
-          shadeForAnchor: fallbackShade,
-        },
-      });
-      return;
-    }
+    const { ir: nextIr, ref } = rebindColor(withShell, color, fallbackShade);
 
     const nextSlots = {
       ...nextIr.slots,
@@ -537,42 +413,6 @@ export const usePosaStore = create<PosaState>((set, get) => ({
     };
     set({ ir: pruneOrphanPrimitives(bumpMeta({ ...withShell, slots: nextSlots })) });
   },
-
-  // ── Pending decision ──────────────────────────────────────────────────
-  resolvePendingPrimitive: (choice) => {
-    const { pendingPrimitiveDecision: pending, ir } = get();
-    if (!pending) return;
-
-    if (choice === 'adjust') {
-      const next = adjustPrimitiveAnchor(ir, pending.currentPrimitiveId, pending.newAnchor);
-      const prim = next.primitives[pending.currentPrimitiveId];
-      const shade = prim
-        ? findNearestShade(prim, pending.newAnchor.L)
-        : pending.shadeForAnchor;
-      const applied = applyRef(next, pending.target, {
-        kind: 'primitive',
-        primitive: pending.currentPrimitiveId,
-        shade,
-      });
-      set({ ir: applied, pendingPrimitiveDecision: null });
-      return;
-    }
-
-    // replace: 새 primitive 생성 후 target이 새 것을 참조.
-    const { ir: withNew, primitiveId } = addPrimitive(
-      ir,
-      pending.newAnchor,
-      pending.shadeForAnchor,
-    );
-    const applied = applyRef(withNew, pending.target, {
-      kind: 'primitive',
-      primitive: primitiveId,
-      shade: pending.shadeForAnchor,
-    });
-    set({ ir: pruneOrphanPrimitives(applied), pendingPrimitiveDecision: null });
-  },
-
-  cancelPendingPrimitive: () => set({ pendingPrimitiveDecision: null }),
 
   // ── Navigation ────────────────────────────────────────────────────────
   descendToAttribute: (attrId) => {
@@ -637,7 +477,7 @@ export const usePosaStore = create<PosaState>((set, get) => ({
 
   // ── Phase / atlas ─────────────────────────────────────────────────────
   goToPhase: (phase) => {
-    set({ phase, focusedNode: null, pendingPrimitiveDecision: null });
+    set({ phase, focusedNode: null });
   },
 
   removePrimitive: (primitiveId) => {
@@ -658,45 +498,3 @@ export const usePosaStore = create<PosaState>((set, get) => ({
     }
   },
 }));
-
-// ──────────────────────────────────────────────────────────────────────────
-// Target에 ref를 꽂는 helper.
-// ──────────────────────────────────────────────────────────────────────────
-function applyRef(ir: IR, target: PendingPrimitiveTarget, ref: ColorRef): IR {
-  if (target.kind === 'symbol') {
-    if (ref.kind !== 'primitive') return ir;
-    const nextSymbols = {
-      ...ir.symbols,
-      [target.symbolId]: { primitive: ref.primitive, shade: ref.shade },
-    };
-    return bumpMeta({ ...ir, symbols: nextSymbols });
-  }
-  if (target.kind === 'attribute') {
-    if (ref.kind !== 'primitive') return ir; // attribute는 primitive만
-    const nextAttrs = {
-      ...ir.attributes,
-      [target.attributeId]: { primitive: ref.primitive, shade: ref.shade },
-    };
-    return bumpMeta({ ...ir, attributes: nextAttrs });
-  }
-  if (target.kind === 'slot') {
-    const withShell = ensureSlot(ir, target.slotId);
-    const slot = withShell.slots[target.slotId];
-    const nextSlots = {
-      ...withShell.slots,
-      [target.slotId]: { ...slot, ref },
-    };
-    return bumpMeta({ ...withShell, slots: nextSlots });
-  }
-  // slot-state
-  const withShell = ensureSlot(ir, target.slotId);
-  const slot = withShell.slots[target.slotId];
-  const nextSlots = {
-    ...withShell.slots,
-    [target.slotId]: {
-      ...slot,
-      states: { ...slot.states, [target.state]: ref },
-    },
-  };
-  return bumpMeta({ ...withShell, slots: nextSlots });
-}
