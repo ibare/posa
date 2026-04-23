@@ -66,6 +66,11 @@ const SEA_REGISTRY: Record<string, SeaModule> = {
   outline: primarySea,
   icon: foregroundSea,
   mark: primarySea,
+  overlay: foregroundSea,
+  track: genericSea,
+  fill: primarySea,
+  thumb: genericSea,
+  muted: foregroundSea,
 };
 
 function getSea(seaKey: string): SeaModule {

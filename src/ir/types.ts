@@ -78,7 +78,12 @@ export type AttributeId =
   | 'border'
   | 'outline'
   | 'icon'
-  | 'mark';
+  | 'mark'
+  | 'overlay'
+  | 'track'
+  | 'fill'
+  | 'thumb'
+  | 'muted';
 
 export const ATTRIBUTE_IDS: AttributeId[] = [
   'background',
@@ -88,6 +93,11 @@ export const ATTRIBUTE_IDS: AttributeId[] = [
   'outline',
   'icon',
   'mark',
+  'overlay',
+  'track',
+  'fill',
+  'thumb',
+  'muted',
 ];
 
 // ColorRef — 어떤 색을 가리키느냐. primitive 직접 참조, 아니면 symbol 경유.
@@ -108,7 +118,13 @@ export type ComponentId = string;
 // Variant 없음: `${componentId}.${attributeId}`
 export type SlotId = string;
 
-export type StateId = 'default' | 'hover' | 'active' | 'disabled' | 'focus';
+export type StateId =
+  | 'default'
+  | 'hover'
+  | 'active'
+  | 'disabled'
+  | 'focus'
+  | 'checked';
 
 export const STATE_IDS: StateId[] = [
   'default',
@@ -116,6 +132,7 @@ export const STATE_IDS: StateId[] = [
   'active',
   'disabled',
   'focus',
+  'checked',
 ];
 
 export type SlotAssignment = {

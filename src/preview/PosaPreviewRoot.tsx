@@ -11,18 +11,23 @@ import { slotVarName } from './slotVarName';
 
 /**
  * Resolve 실패(= 아무것도 할당 안 됨) 시 shape에 그려질 대체 색.
- *   - box-ish (background/border/outline): transparent — 면이 비어 있음을 그대로 보여준다.
- *   - ink-ish  (text/placeholder/icon/mark): 옅은 스톤 회색 — "아직 미지정"을 구분 가능한 고스트로 표시.
+ *   - box-ish (background/border/outline/overlay/track/fill): transparent — 면이 비어 있음을 그대로 보여준다.
+ *   - ink-ish  (text/placeholder/icon/mark/thumb/muted): 옅은 스톤 회색 — "아직 미지정"을 구분 가능한 고스트로 표시.
  * body의 기본 텍스트 색(stone-900)이 상속되며 '진짜 검정'처럼 보이는 것을 막기 위함.
  */
 const UNSET_PLACEHOLDER: Record<AttributeId, string> = {
   background: 'transparent',
   border: 'transparent',
   outline: 'transparent',
+  overlay: 'transparent',
+  track: 'transparent',
+  fill: 'transparent',
   text: 'rgba(68, 64, 60, 0.25)',
   placeholder: 'rgba(68, 64, 60, 0.18)',
   icon: 'rgba(68, 64, 60, 0.25)',
   mark: 'rgba(68, 64, 60, 0.25)',
+  thumb: 'rgba(68, 64, 60, 0.25)',
+  muted: 'rgba(68, 64, 60, 0.18)',
 };
 
 type Props = {
