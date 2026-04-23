@@ -4,6 +4,7 @@ import {
   getSlotsByAttribute,
   resolveAttributeColor,
 } from '../../ir/selectors';
+import { useActiveComponentDefs } from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
 import { SlotCard } from '../shared/SlotCard';
 import { Swatch } from '../shared/Swatch';
@@ -13,11 +14,12 @@ export function Z1Plane() {
   const selectedAttributeId = usePosaStore((s) => s.selectedAttributeId);
   const focusedNode = usePosaStore((s) => s.focusedNode);
   const setFocus = usePosaStore((s) => s.setFocus);
+  const components = useActiveComponentDefs();
 
   const slotIds = useMemo(() => {
     if (!selectedAttributeId) return [];
-    return getSlotsByAttribute(selectedAttributeId, ir);
-  }, [selectedAttributeId, ir]);
+    return getSlotsByAttribute(components, selectedAttributeId, ir);
+  }, [components, selectedAttributeId, ir]);
 
   if (!selectedAttributeId) return null;
 

@@ -1,8 +1,6 @@
 import { useMemo } from 'react';
-import {
-  COMPONENT_DEFINITIONS,
-  COMPONENT_GROUPS,
-} from '../../catalog/components';
+import { COMPONENT_GROUPS } from '../../catalog/components';
+import { useActiveComponentDefs } from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
 import { ComponentSlotGrid } from './ZXPlane';
 
@@ -21,6 +19,7 @@ export function ZXGroupPlane() {
   const setFocus = usePosaStore((s) => s.setFocus);
   const selectComponent = usePosaStore((s) => s.selectComponent);
   const clearSelectedGroup = usePosaStore((s) => s.clearSelectedGroup);
+  const components = useActiveComponentDefs();
 
   const group = useMemo(
     () =>
@@ -33,9 +32,9 @@ export function ZXGroupPlane() {
   const members = useMemo(
     () =>
       selectedGroupId
-        ? COMPONENT_DEFINITIONS.filter((c) => c.group === selectedGroupId)
+        ? components.filter((c) => c.group === selectedGroupId)
         : [],
-    [selectedGroupId],
+    [components, selectedGroupId],
   );
 
   if (!group) return null;

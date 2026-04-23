@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && cp dist/index.html dist/404.html",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -17,6 +17,7 @@
     "lucide-react": "^1.8.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-router-dom": "^7.14.2",
     "zustand": "^4.5.5"
   },
   "devDependencies": {

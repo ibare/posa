@@ -24,7 +24,7 @@ function seed(): { ir: IR; pid: string } {
 
 describe('enumerateAllSlotIds', () => {
   it('모든 component × (기본형 + variant들) × attribute 조합을 나열한다', () => {
-    const ids = enumerateAllSlotIds();
+    const ids = enumerateAllSlotIds(COMPONENT_DEFINITIONS);
     let expected = 0;
     for (const c of COMPONENT_DEFINITIONS) {
       // 기본형 1 + variant 수
@@ -37,7 +37,7 @@ describe('enumerateAllSlotIds', () => {
 
   it('모든 slot id는 등록된 attribute id로 끝난다', () => {
     const valid = new Set<string>(ATTRIBUTE_IDS);
-    for (const id of enumerateAllSlotIds()) {
+    for (const id of enumerateAllSlotIds(COMPONENT_DEFINITIONS)) {
       expect(valid.has(getAttributeFromSlotId(id))).toBe(true);
     }
   });
@@ -46,14 +46,14 @@ describe('enumerateAllSlotIds', () => {
 describe('getSlotsByAttribute', () => {
   it('주어진 attribute로 끝나는 활성 slot만 반환', () => {
     const { ir } = seed();
-    const slots = getSlotsByAttribute('background', ir);
+    const slots = getSlotsByAttribute(COMPONENT_DEFINITIONS, 'background', ir);
     for (const s of slots) expect(s.endsWith('.background')).toBe(true);
     expect(slots.length).toBeGreaterThan(0);
   });
 
   it('symbol 미할당 시 그 symbol을 이름으로 가진 variant slot은 제외된다', () => {
     const ir = createEmptyIR();
-    const slots = getSlotsByAttribute('background', ir);
+    const slots = getSlotsByAttribute(COMPONENT_DEFINITIONS, 'background', ir);
     expect(slots).not.toContain('button.primary.background');
     expect(slots).not.toContain('badge.error.background');
     // 기본형 slot과 variants 없는 컴포넌트는 남는다.
@@ -67,7 +67,7 @@ describe('getSlotsByAttribute', () => {
       ...ir1,
       symbols: { ...ir1.symbols, primary: { primitive: pid, shade: 500 } },
     };
-    const slots = getSlotsByAttribute('background', ir2);
+    const slots = getSlotsByAttribute(COMPONENT_DEFINITIONS, 'background', ir2);
     expect(slots).toContain('button.primary.background');
   });
 });

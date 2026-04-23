@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { oklchToHex } from '../../color/oklch';
 import { computePaletteRibbon } from '../../ir/selectors';
+import { useActiveComponentDefs } from '../../store/hooks';
 import type { IR } from '../../ir/types';
 
 type Props = {
@@ -17,9 +18,10 @@ const NEUTRAL_CHROMA_THRESHOLD = 0.03;
 const NEUTRAL_SQUASH = 0.3;
 
 export function PaletteRibbon({ ir, width = 200 }: Props) {
+  const components = useActiveComponentDefs();
   const { total, filled, segments } = useMemo(
-    () => computePaletteRibbon(ir),
-    [ir],
+    () => computePaletteRibbon(components, ir),
+    [components, ir],
   );
   const [hovered, setHovered] = useState<string | null>(null);
 

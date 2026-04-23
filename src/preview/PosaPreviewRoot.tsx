@@ -6,6 +6,7 @@ import {
   getAttributeFromSlotId,
   resolveSlotStateColor,
 } from '../ir/selectors';
+import { useActiveComponentDefs } from '../store/hooks';
 import type { AttributeId, IR } from '../ir/types';
 import { slotVarName } from './slotVarName';
 
@@ -44,9 +45,10 @@ type Props = {
  * 3축의 변수 이름만 알면 된다.
  */
 export function PosaPreviewRoot({ ir, children, className }: Props) {
+  const components = useActiveComponentDefs();
   const cssVars = useMemo(() => {
     const vars: Record<string, string> = {};
-    for (const slotId of enumerateAllSlotIds()) {
+    for (const slotId of enumerateAllSlotIds(components)) {
       const comp = findComponentBySlotId(slotId);
       if (!comp) continue;
       const attr = getAttributeFromSlotId(slotId);
@@ -59,7 +61,7 @@ export function PosaPreviewRoot({ ir, children, className }: Props) {
       }
     }
     return vars;
-  }, [ir]);
+  }, [ir, components]);
 
   return (
     <div style={cssVars as CSSProperties} className={className}>

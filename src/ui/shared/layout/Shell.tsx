@@ -1,14 +1,20 @@
 import type { ReactNode } from 'react';
-import { usePosaStore, type Phase } from '../../../store/posa-store';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { usePosaStore } from '../../../store/posa-store';
 import { PaletteRibbon } from '../PaletteRibbon';
 
 type Props = { children: ReactNode };
 
+const NAV: { to: string; label: string }[] = [
+  { to: '/explore', label: 'Explore' },
+  { to: '/atlas', label: 'Atlas' },
+  { to: '/review', label: 'Review' },
+];
+
 export function Shell({ children }: Props) {
-  const phase = usePosaStore((s) => s.phase);
   const ir = usePosaStore((s) => s.ir);
   const startFresh = usePosaStore((s) => s.startFresh);
-  const goToPhase = usePosaStore((s) => s.goToPhase);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-cream text-stone-900 font-body antialiased">
@@ -16,34 +22,32 @@ export function Shell({ children }: Props) {
         <h1 className="font-display italic text-2xl leading-none tracking-tight select-none">
           Posa
         </h1>
-        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
-          {phase}
-        </span>
         <nav className="flex items-center gap-1">
-          <PhaseButton
-            label="Explore"
-            phase="exploration"
-            current={phase}
-            onClick={() => goToPhase('exploration')}
-          />
-          <PhaseButton
-            label="Atlas"
-            phase="atlas"
-            current={phase}
-            onClick={() => goToPhase('atlas')}
-          />
-          <PhaseButton
-            label="Export"
-            phase="export"
-            current={phase}
-            onClick={() => goToPhase('export')}
-          />
+          {NAV.map(({ to, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                [
+                  'text-xs px-2.5 py-1 rounded border transition',
+                  isActive
+                    ? 'border-stone-900 bg-stone-900 text-cream'
+                    : 'border-stone-200 text-stone-600 hover:border-stone-400 hover:text-stone-900',
+                ].join(' ')
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
         </nav>
         <div className="flex-1" />
         <PaletteRibbon ir={ir} />
         <button
           type="button"
-          onClick={startFresh}
+          onClick={() => {
+            startFresh();
+            navigate('/');
+          }}
           className="text-xs text-stone-500 hover:text-stone-900 px-2.5 py-1 rounded border border-stone-200 hover:border-stone-400 transition"
         >
           Reset
@@ -51,33 +55,5 @@ export function Shell({ children }: Props) {
       </header>
       <main className="px-6 py-6">{children}</main>
     </div>
-  );
-}
-
-function PhaseButton({
-  label,
-  phase,
-  current,
-  onClick,
-}: {
-  label: string;
-  phase: Phase;
-  current: Phase;
-  onClick: () => void;
-}) {
-  const active = phase === current;
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        'text-xs px-2.5 py-1 rounded border transition',
-        active
-          ? 'border-stone-900 bg-stone-900 text-cream'
-          : 'border-stone-200 text-stone-600 hover:border-stone-400 hover:text-stone-900',
-      ].join(' ')}
-    >
-      {label}
-    </button>
   );
 }

@@ -1,4 +1,7 @@
-import { COMPONENT_DEFINITIONS, findComponentBySlotId } from '../catalog/components';
+import {
+  findComponentBySlotId,
+  type ComponentDefinition,
+} from '../catalog/components';
 import {
   SYMBOL_IDS,
   type AttributeId,
@@ -17,15 +20,20 @@ const SYMBOL_ID_SET: Set<string> = new Set(SYMBOL_IDS);
 /**
  * IR을 읽기만 해서 파생 뷰를 계산하는 순수 셀렉터.
  * 어떤 함수도 IR을 수정하거나 primitive를 생성하지 않는다.
+ *
+ * 모든 "컴포넌트 전체 순회" 셀렉터는 `components: ComponentDefinition[]`을 받는다.
+ * 카탈로그 상수를 직접 참조하지 않기 때문에 호출 쪽에서 온보딩 스코프를 주입해야 한다.
  */
 
 // ──────────────────────────────────────────────────────────────────────────
 // Slot id 생성 / 질의
 // ──────────────────────────────────────────────────────────────────────────
 
-export function enumerateAllSlotIds(): SlotId[] {
+export function enumerateAllSlotIds(
+  components: ComponentDefinition[],
+): SlotId[] {
   const ids: SlotId[] = [];
-  for (const comp of COMPONENT_DEFINITIONS) {
+  for (const comp of components) {
     // 기본형은 모든 컴포넌트가 동일하게 가진다.
     for (const attr of comp.attributes) {
       ids.push(`${comp.id}.${attr}`);
@@ -54,8 +62,11 @@ export function isSlotActive(slotId: SlotId, ir: IR): boolean {
 }
 
 /** Symbol 미할당으로 인해 비활성화된 slot을 걸러낸 활성 slot id 목록. */
-export function enumerateActiveSlotIds(ir: IR): SlotId[] {
-  return enumerateAllSlotIds().filter((id) => isSlotActive(id, ir));
+export function enumerateActiveSlotIds(
+  components: ComponentDefinition[],
+  ir: IR,
+): SlotId[] {
+  return enumerateAllSlotIds(components).filter((id) => isSlotActive(id, ir));
 }
 
 export type PaletteRibbonSegment = {
@@ -73,7 +84,10 @@ export type PaletteRibbonSegment = {
  *     attribute에 색을 지정하면 그 attribute를 쓰는 모든 슬롯이 함께 채워진다.
  *   - segments: 도달한 primitive별 개수와 대표색(가장 자주 쓰인 shade).
  */
-export function computePaletteRibbon(ir: IR): {
+export function computePaletteRibbon(
+  components: ComponentDefinition[],
+  ir: IR,
+): {
   total: number;
   filled: number;
   segments: PaletteRibbonSegment[];
@@ -95,7 +109,7 @@ export function computePaletteRibbon(ir: IR): {
     bucket.shadeFreq.set(shade, (bucket.shadeFreq.get(shade) ?? 0) + 1);
   };
 
-  for (const comp of COMPONENT_DEFINITIONS) {
+  for (const comp of components) {
     const variantIds: (string | null)[] = comp.variants?.length
       ? comp.variants.map((v) => v.id)
       : [null];
@@ -183,8 +197,14 @@ function resolveEffectivePrimitiveShade(
 }
 
 /** 주어진 attribute로 끝나는 활성 slot id만 골라낸다. Z1 리스트용. */
-export function getSlotsByAttribute(attrId: AttributeId, ir: IR): SlotId[] {
-  return enumerateActiveSlotIds(ir).filter((id) => id.endsWith(`.${attrId}`));
+export function getSlotsByAttribute(
+  components: ComponentDefinition[],
+  attrId: AttributeId,
+  ir: IR,
+): SlotId[] {
+  return enumerateActiveSlotIds(components, ir).filter((id) =>
+    id.endsWith(`.${attrId}`),
+  );
 }
 
 /** slot id 끝부분에서 attribute id 추출. */
@@ -280,11 +300,12 @@ export function resolveSlotStateColor(
  * distinct(OKLCH 정확 일치 dedup)하게 모은다.
  */
 export function getDirectChildColorsForAttribute(
+  components: ComponentDefinition[],
   ir: IR,
   attrId: AttributeId,
 ): OKLCH[] {
   const out: OKLCH[] = [];
-  for (const slotId of getSlotsByAttribute(attrId, ir)) {
+  for (const slotId of getSlotsByAttribute(components, attrId, ir)) {
     const slot = ir.slots[slotId];
     if (!slot?.ref) continue;
     const color = resolveColorRef(ir, slot.ref);

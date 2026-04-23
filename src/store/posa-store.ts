@@ -31,12 +31,15 @@ import {
  * 카탈로그(Symbol/Attribute/Component 정의)는 정적이라 여기 들어오지 않는다.
  */
 
-export type Phase = 'exploration' | 'atlas' | 'export';
 export type Layer = 'z0' | 'z1' | 'z2';
 export type LayerDirection = 'ascend' | 'descend' | 'neutral';
 
 type PosaState = {
-  phase: Phase;
+  /**
+   * 온보딩에서 사용자가 선택한 컴포넌트 id 목록. 색 지정 대상 스코프.
+   * 빈 배열이면 아직 온보딩 전으로 간주되어 라우트 가드에 쓰인다.
+   */
+  activeComponentIds: ComponentId[];
   ir: IR;
 
   // Navigation
@@ -56,6 +59,7 @@ type PosaState = {
 
   // Lifecycle
   startFresh: () => void;
+  setActiveComponents: (ids: ComponentId[]) => void;
 
   // Symbol assignment
   setSymbolColor: (symbolId: SymbolId, color: OKLCH | null) => void;
@@ -123,8 +127,7 @@ type PosaState = {
   selectGroup: (groupId: ComponentGroupId) => void;
   clearSelectedGroup: () => void;
 
-  // Phase / atlas
-  goToPhase: (phase: Phase) => void;
+  // Atlas
   removePrimitive: (primitiveId: PrimitiveId) => void;
   mergePrimitive: (sourceId: PrimitiveId, targetId: PrimitiveId) => void;
 };
@@ -187,7 +190,7 @@ function ensureSlot(ir: IR, slotId: SlotId): IR {
 // ──────────────────────────────────────────────────────────────────────────
 
 export const usePosaStore = create<PosaState>((set, get) => ({
-  phase: 'exploration',
+  activeComponentIds: [],
   ir: createEmptyIR(),
   layer: 'z0',
   selectedAttributeId: null,
@@ -199,7 +202,23 @@ export const usePosaStore = create<PosaState>((set, get) => ({
 
   startFresh: () => {
     set({
-      phase: 'exploration',
+      activeComponentIds: [],
+      ir: createEmptyIR(),
+      layer: 'z0',
+      selectedAttributeId: null,
+      selectedSlotId: null,
+      selectedComponentId: null,
+      selectedGroupId: null,
+      focusedNode: null,
+      lastDirection: 'neutral',
+    });
+  },
+
+  setActiveComponents: (ids) => {
+    // 온보딩에서 새 스코프 확정. 기존 IR/네비게이션 모두 리셋 — 스코프 밖 slot의
+    // 할당이 유령처럼 남는 것을 방지.
+    set({
+      activeComponentIds: ids,
       ir: createEmptyIR(),
       layer: 'z0',
       selectedAttributeId: null,
@@ -515,11 +534,7 @@ export const usePosaStore = create<PosaState>((set, get) => ({
     }),
   clearSelectedGroup: () => set({ selectedGroupId: null }),
 
-  // ── Phase / atlas ─────────────────────────────────────────────────────
-  goToPhase: (phase) => {
-    set({ phase, focusedNode: null });
-  },
-
+  // ── Atlas ─────────────────────────────────────────────────────────────
   removePrimitive: (primitiveId) => {
     const { ir } = get();
     try {

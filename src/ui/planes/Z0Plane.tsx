@@ -10,6 +10,7 @@ import {
   resolveSymbolColor,
 } from '../../ir/selectors';
 import type { AttributeId, SymbolId } from '../../ir/types';
+import { useActiveComponentDefs } from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
 import { InspectorBody } from '../shared/InspectorBody';
 import { Swatch, checkerboardStyle } from '../shared/Swatch';
@@ -24,15 +25,16 @@ export function Z0Plane() {
   const focusedNode = usePosaStore((s) => s.focusedNode);
   const setFocus = usePosaStore((s) => s.setFocus);
   const descendToAttribute = usePosaStore((s) => s.descendToAttribute);
+  const components = useActiveComponentDefs();
 
   const slotCountByAttribute = useMemo(() => {
     const m: Record<string, number> = {};
-    for (const slotId of enumerateActiveSlotIds(ir)) {
+    for (const slotId of enumerateActiveSlotIds(components, ir)) {
       const attr = getAttributeFromSlotId(slotId);
       m[attr] = (m[attr] ?? 0) + 1;
     }
     return m;
-  }, [ir]);
+  }, [components, ir]);
 
   return (
     <div className="mx-auto max-w-5xl space-y-10">
@@ -147,10 +149,11 @@ function AttributeRow({
   onDescend,
 }: AttributeRowProps) {
   const ir = usePosaStore((s) => s.ir);
+  const components = useActiveComponentDefs();
   const color = resolveAttributeColor(ir, attr.id);
   const directChildColors = useMemo(
-    () => getDirectChildColorsForAttribute(ir, attr.id),
-    [ir, attr.id],
+    () => getDirectChildColorsForAttribute(components, ir, attr.id),
+    [components, ir, attr.id],
   );
   // 모드 2: 하위 slot 중 직접 색이 명시된 게 1개 이상.
   // 클릭 = 즉시 descend. swatch는 분할 표시.

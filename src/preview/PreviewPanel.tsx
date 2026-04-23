@@ -1,8 +1,8 @@
 import { useMemo, type MouseEvent, type ReactNode } from 'react';
 import {
-  COMPONENT_DEFINITIONS,
   COMPONENT_GROUPS,
   findComponentBySlotId,
+  type ComponentDefinition,
   type ComponentGroupId,
 } from '../catalog/components';
 import {
@@ -14,6 +14,7 @@ import {
   type StateId,
   type SymbolId,
 } from '../ir/types';
+import { useActiveComponentDefs } from '../store/hooks';
 import { usePosaStore, type Layer } from '../store/posa-store';
 import { PosaPreviewRoot } from './PosaPreviewRoot';
 import { StateGroup } from './StateGroup';
@@ -270,20 +271,24 @@ function variantOf(slotId: SlotId): string | null {
 
 const DEFAULT_ONLY: StateId[] = ['default'];
 
-function fullScope(states: StateId[]): PreviewScope {
+function fullScope(
+  components: ComponentDefinition[],
+  states: StateId[],
+): PreviewScope {
   const m: PreviewScope = new Map();
-  for (const c of COMPONENT_DEFINITIONS) {
+  for (const c of components) {
     m.set(c.id, { variants: null, includeBase: true, states });
   }
   return m;
 }
 
 function scopeFromAttribute(
+  components: ComponentDefinition[],
   attrId: AttributeId,
   states: StateId[],
 ): PreviewScope {
   const m: PreviewScope = new Map();
-  for (const c of COMPONENT_DEFINITIONS) {
+  for (const c of components) {
     if (c.attributes.includes(attrId)) {
       m.set(c.id, { variants: null, includeBase: true, states });
     }
@@ -319,6 +324,7 @@ function scopeFromSlot(
  *     state 포커스가 있으면 해당 state 1개로 좁힘.
  */
 function derivePreviewScope(
+  components: ComponentDefinition[],
   layer: Layer,
   selectedAttributeId: AttributeId | null,
   selectedSlotId: SlotId | null,
@@ -327,6 +333,7 @@ function derivePreviewScope(
   selectedGroupId: ComponentGroupId | null,
 ): PreviewScope {
   const base = derivePreviewScopeRaw(
+    components,
     layer,
     selectedAttributeId,
     selectedSlotId,
@@ -336,9 +343,7 @@ function derivePreviewScope(
   if (!selectedGroupId) return base;
   // 그룹 멤버로 교집합. 현재 scope에 이미 담긴 컴포넌트 중 그룹에 속한 것만 남긴다.
   const groupMembers = new Set(
-    COMPONENT_DEFINITIONS.filter((c) => c.group === selectedGroupId).map(
-      (c) => c.id,
-    ),
+    components.filter((c) => c.group === selectedGroupId).map((c) => c.id),
   );
   const next: PreviewScope = new Map();
   base.forEach((sc, id) => {
@@ -348,6 +353,7 @@ function derivePreviewScope(
 }
 
 function derivePreviewScopeRaw(
+  components: ComponentDefinition[],
   layer: Layer,
   selectedAttributeId: AttributeId | null,
   selectedSlotId: SlotId | null,
@@ -370,15 +376,15 @@ function derivePreviewScopeRaw(
       const slotId = focusedNode.slice('slot:'.length);
       return scopeFromSlot(slotId, DEFAULT_ONLY);
     }
-    return scopeFromAttribute(selectedAttributeId, DEFAULT_ONLY);
+    return scopeFromAttribute(components, selectedAttributeId, DEFAULT_ONLY);
   }
 
   if (layer === 'z0' && focusedNode?.startsWith('attr:')) {
     const attrId = focusedNode.slice('attr:'.length) as AttributeId;
-    return scopeFromAttribute(attrId, DEFAULT_ONLY);
+    return scopeFromAttribute(components, attrId, DEFAULT_ONLY);
   }
 
-  return fullScope(DEFAULT_ONLY);
+  return fullScope(components, DEFAULT_ONLY);
 }
 
 function intersectVariants<V extends string>(
@@ -425,10 +431,12 @@ export function PreviewPanel() {
   );
   const selectGroup = usePosaStore((s) => s.selectGroup);
   const clearSelectedGroup = usePosaStore((s) => s.clearSelectedGroup);
+  const components = useActiveComponentDefs();
 
   const scope = useMemo(
     () =>
       derivePreviewScope(
+        components,
         layer,
         selectedAttributeId,
         selectedSlotId,
@@ -437,6 +445,7 @@ export function PreviewPanel() {
         selectedGroupId,
       ),
     [
+      components,
       layer,
       selectedAttributeId,
       selectedSlotId,
@@ -498,7 +507,7 @@ export function PreviewPanel() {
     (hasToast ? 1 : 0) +
     (hasAlert ? 1 : 0) +
     visibleSimpleEntries.length;
-  const totalCount = COMPONENT_DEFINITIONS.length;
+  const totalCount = components.length;
 
   return (
     <aside className="sticky top-20 flex h-[calc(100vh-6rem)] flex-col rounded-lg border border-stone-200 bg-white/70 backdrop-blur">
