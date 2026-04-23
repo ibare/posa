@@ -1,8 +1,5 @@
 import { ATTRIBUTE_DEFINITIONS } from '../../catalog/attributes';
-import {
-  COMPONENT_DEFINITIONS,
-  COMPONENT_GROUPS,
-} from '../../catalog/components';
+import { COMPONENT_GROUPS } from '../../catalog/components';
 import { getSlotDisplayName } from '../../ir/selectors';
 import { usePosaStore, type Layer } from '../../store/posa-store';
 
@@ -29,10 +26,6 @@ export function BreadcrumbStrip() {
     ATTRIBUTE_DEFINITIONS.find((a) => a.id === selectedAttributeId)?.label ??
     selectedAttributeId;
   const slotLabel = selectedSlotId ? getSlotDisplayName(selectedSlotId, ir) : null;
-  const componentLabel = selectedComponentId
-    ? COMPONENT_DEFINITIONS.find((c) => c.id === selectedComponentId)?.label ??
-      selectedComponentId
-    : null;
   const groupLabel = selectedGroupId
     ? COMPONENT_GROUPS.find((g) => g.id === selectedGroupId)?.label ??
       selectedGroupId
@@ -54,10 +47,6 @@ export function BreadcrumbStrip() {
         >
           {selectedGroupId ? groupLabel : 'symbols & attributes'}
         </button>
-        <Divider />
-        <span className="font-mono text-xs text-stone-900 px-2 py-1 bg-stone-100 rounded">
-          {componentLabel}
-        </span>
         <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
           ZX · component
         </span>
