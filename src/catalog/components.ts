@@ -301,6 +301,35 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     attributes: ['background', 'text', 'border', 'icon'],
     states: ['default'],
   },
+  // ===== Display 계열 =====
+  {
+    id: 'avatar',
+    label: 'Avatar',
+    description: 'Circular profile photo or initials',
+    attributes: ['background', 'text', 'border'],
+    states: ['default'],
+  },
+  {
+    id: 'spinner',
+    label: 'Spinner',
+    description: 'Rotating loading indicator',
+    attributes: ['icon'],
+    states: ['default'],
+  },
+  {
+    id: 'skeleton',
+    label: 'Skeleton',
+    description: 'Placeholder shape shown while content loads',
+    attributes: ['muted'],
+    states: ['default'],
+  },
+  {
+    id: 'kbd',
+    label: 'Kbd',
+    description: 'Inline keyboard key hint',
+    attributes: ['background', 'text', 'border'],
+    states: ['default'],
+  },
 ];
 
 export function findComponent(componentId: ComponentId): ComponentDefinition | undefined {

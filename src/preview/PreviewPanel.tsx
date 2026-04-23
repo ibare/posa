@@ -19,6 +19,7 @@ import {
   AccordionShape,
   AlertDialogShape,
   AlertShape,
+  AvatarShape,
   BadgeShape,
   BreadcrumbShape,
   ButtonShape,
@@ -34,6 +35,7 @@ import {
   InputGroupShape,
   InputOTPShape,
   InputShape,
+  KbdShape,
   MenubarShape,
   NativeSelectShape,
   NavigationMenuShape,
@@ -44,7 +46,9 @@ import {
   SelectShape,
   SheetShape,
   SidebarShape,
+  SkeletonShape,
   SliderShape,
+  SpinnerShape,
   SwitchShape,
   TabsShape,
   TextareaShape,
@@ -205,6 +209,11 @@ const SIMPLE_ENTRIES: SimplePreviewEntry[] = [
     title: 'Collapsible',
     render: (state) => <CollapsibleShape state={state} />,
   },
+  // Display 4종 (state 축 없음)
+  { id: 'avatar', title: 'Avatar', render: () => <AvatarShape /> },
+  { id: 'spinner', title: 'Spinner', render: () => <SpinnerShape /> },
+  { id: 'skeleton', title: 'Skeleton', render: () => <SkeletonShape /> },
+  { id: 'kbd', title: 'Kbd', render: () => <KbdShape /> },
 ];
 
 type ComponentScope = {

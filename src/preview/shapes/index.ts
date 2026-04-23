@@ -33,3 +33,7 @@ export { SidebarShape } from './SidebarShape';
 export { AccordionShape } from './AccordionShape';
 export { CollapsibleShape } from './CollapsibleShape';
 export { AlertShape, type AlertVariant } from './AlertShape';
+export { AvatarShape } from './AvatarShape';
+export { SpinnerShape } from './SpinnerShape';
+export { SkeletonShape } from './SkeletonShape';
+export { KbdShape } from './KbdShape';
