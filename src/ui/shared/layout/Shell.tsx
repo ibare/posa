@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
-import { SYMBOL_IDS } from '../../../ir/types';
 import { usePosaStore, type Phase } from '../../../store/posa-store';
-import { ProgressBadge } from '../ProgressBadge';
+import { PaletteRibbon } from '../PaletteRibbon';
 
 type Props = { children: ReactNode };
 
@@ -10,9 +9,6 @@ export function Shell({ children }: Props) {
   const ir = usePosaStore((s) => s.ir);
   const startFresh = usePosaStore((s) => s.startFresh);
   const goToPhase = usePosaStore((s) => s.goToPhase);
-
-  const totalSymbols = SYMBOL_IDS.length;
-  const filledSymbols = SYMBOL_IDS.filter((id) => ir.symbols[id] !== null).length;
 
   return (
     <div className="min-h-screen bg-cream text-stone-900 font-body antialiased">
@@ -44,11 +40,7 @@ export function Shell({ children }: Props) {
           />
         </nav>
         <div className="flex-1" />
-        <ProgressBadge
-          filled={filledSymbols}
-          total={totalSymbols}
-          label="defined symbols"
-        />
+        <PaletteRibbon ir={ir} />
         <button
           type="button"
           onClick={startFresh}

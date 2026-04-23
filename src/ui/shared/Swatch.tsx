@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { isInSrgbGamut, oklchToHex } from '../../color/oklch';
 import type { OKLCH } from '../../ir/types';
 
@@ -9,6 +10,25 @@ const SIZE_CLASS: Record<SwatchSize, string> = {
   md: 'w-10 h-10',
   lg: 'w-16 h-16',
 };
+
+const CHECKER_TILE_PX: Record<SwatchSize, number> = {
+  xs: 4,
+  sm: 6,
+  md: 8,
+  lg: 10,
+};
+
+/** 이미지 에디터 스타일 체스판 패턴 — 색 미지정 시 "비어있음"을 시각적으로 명확히 전달. */
+export function checkerboardStyle(tile = 8): CSSProperties {
+  const half = tile / 2;
+  return {
+    backgroundColor: '#ffffff',
+    backgroundImage:
+      'linear-gradient(45deg, #d6d3d1 25%, transparent 25%), linear-gradient(-45deg, #d6d3d1 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #d6d3d1 75%), linear-gradient(-45deg, transparent 75%, #d6d3d1 75%)',
+    backgroundSize: `${tile}px ${tile}px`,
+    backgroundPosition: `0 0, 0 ${half}px, ${half}px -${half}px, -${half}px 0`,
+  };
+}
 
 const BADGE_TEXT_CLASS: Record<SwatchSize, string> = {
   xs: 'text-[7px]',
@@ -43,9 +63,10 @@ export function Swatch({
   if (!color) {
     return (
       <div
-        className={`${SIZE_CLASS[size]} rounded-md border border-dashed border-stone-300 ${
+        className={`${SIZE_CLASS[size]} rounded-md ring-1 ring-stone-300/70 ${
           dim ? 'opacity-40' : ''
         }`}
+        style={checkerboardStyle(CHECKER_TILE_PX[size])}
         title={title ?? 'no color'}
         aria-label={title ?? 'no color'}
       />

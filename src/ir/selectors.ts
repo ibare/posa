@@ -58,6 +58,130 @@ export function enumerateActiveSlotIds(ir: IR): SlotId[] {
   return enumerateAllSlotIds().filter((id) => isSlotActive(id, ir));
 }
 
+export type PaletteRibbonSegment = {
+  primitiveId: PrimitiveId;
+  count: number;
+  /** 대표색 — 해당 primitive가 가장 자주 쓰인 shade의 OKLCH. */
+  color: OKLCH;
+};
+
+/**
+ * Palette ribbon용 집계:
+ *   - total: 컴포넌트·variant·attribute·state로 만들어지는 색 지정 가능 위치의 총수.
+ *     비활성 variant(symbol 미할당)는 제외.
+ *   - filled: 상속 체인(state → slot → attribute)을 따라 실제 primitive 색에 도달하는 위치 수.
+ *     attribute에 색을 지정하면 그 attribute를 쓰는 모든 슬롯이 함께 채워진다.
+ *   - segments: 도달한 primitive별 개수와 대표색(가장 자주 쓰인 shade).
+ */
+export function computePaletteRibbon(ir: IR): {
+  total: number;
+  filled: number;
+  segments: PaletteRibbonSegment[];
+} {
+  let total = 0;
+  let filled = 0;
+  const byPrim: Record<
+    PrimitiveId,
+    { count: number; shadeFreq: Map<ShadeIndex, number> }
+  > = {};
+
+  const bump = (primitive: PrimitiveId, shade: ShadeIndex) => {
+    let bucket = byPrim[primitive];
+    if (!bucket) {
+      bucket = { count: 0, shadeFreq: new Map() };
+      byPrim[primitive] = bucket;
+    }
+    bucket.count++;
+    bucket.shadeFreq.set(shade, (bucket.shadeFreq.get(shade) ?? 0) + 1);
+  };
+
+  for (const comp of COMPONENT_DEFINITIONS) {
+    const variantIds: (string | null)[] = comp.variants?.length
+      ? comp.variants.map((v) => v.id)
+      : [null];
+    for (const variantId of variantIds) {
+      if (variantId && SYMBOL_ID_SET.has(variantId)) {
+        if (ir.symbols[variantId as SymbolId] == null) continue;
+      }
+      for (const attr of comp.attributes) {
+        const slotId = variantId
+          ? `${comp.id}.${variantId}.${attr}`
+          : `${comp.id}.${attr}`;
+        for (const state of comp.states) {
+          total++;
+          const resolved = resolveEffectivePrimitiveShade(
+            ir,
+            slotId,
+            attr,
+            state,
+          );
+          if (!resolved) continue;
+          filled++;
+          bump(resolved.primitive, resolved.shade);
+        }
+      }
+    }
+  }
+
+  const segments: PaletteRibbonSegment[] = [];
+  for (const [primitiveId, { count, shadeFreq }] of Object.entries(byPrim)) {
+    let modeShade: ShadeIndex | null = null;
+    let modeCount = -1;
+    for (const [shade, n] of shadeFreq) {
+      if (n > modeCount) {
+        modeShade = shade;
+        modeCount = n;
+      }
+    }
+    if (modeShade == null) continue;
+    const color = ir.primitives[primitiveId]?.scale[modeShade];
+    if (!color) continue;
+    segments.push({ primitiveId, count, color });
+  }
+  segments.sort((a, b) => b.count - a.count);
+
+  return { total, filled, segments };
+}
+
+function resolveRefToPrimitiveShade(
+  ir: IR,
+  ref: ColorRef,
+): { primitive: PrimitiveId; shade: ShadeIndex } | null {
+  if (ref.kind === 'primitive') {
+    return { primitive: ref.primitive, shade: ref.shade };
+  }
+  const sym = ir.symbols[ref.symbol];
+  if (!sym) return null;
+  return { primitive: sym.primitive, shade: sym.shade };
+}
+
+/**
+ * resolveSlotStateColor의 primitive-shade 버전. 상속 체인은 동일:
+ *   state override → slot.ref → attribute.
+ */
+function resolveEffectivePrimitiveShade(
+  ir: IR,
+  slotId: SlotId,
+  attrId: AttributeId,
+  state: StateId,
+): { primitive: PrimitiveId; shade: ShadeIndex } | null {
+  const slot = ir.slots[slotId];
+
+  if (state !== 'default') {
+    const stateRef = slot?.states?.[state as Exclude<StateId, 'default'>];
+    if (stateRef) return resolveRefToPrimitiveShade(ir, stateRef);
+  }
+
+  if (slot?.ref) return resolveRefToPrimitiveShade(ir, slot.ref);
+
+  const attrAssignment = ir.attributes[attrId];
+  if (attrAssignment) {
+    return { primitive: attrAssignment.primitive, shade: attrAssignment.shade };
+  }
+
+  return null;
+}
+
 /** 주어진 attribute로 끝나는 활성 slot id만 골라낸다. Z1 리스트용. */
 export function getSlotsByAttribute(attrId: AttributeId, ir: IR): SlotId[] {
   return enumerateActiveSlotIds(ir).filter((id) => id.endsWith(`.${attrId}`));

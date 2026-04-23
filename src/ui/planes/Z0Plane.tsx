@@ -12,7 +12,7 @@ import {
 import type { AttributeId, SymbolId } from '../../ir/types';
 import { usePosaStore } from '../../store/posa-store';
 import { InspectorBody } from '../shared/InspectorBody';
-import { Swatch } from '../shared/Swatch';
+import { Swatch, checkerboardStyle } from '../shared/Swatch';
 
 /**
  * Z0 — 두 섹션 세로 배치.
@@ -96,7 +96,6 @@ type SymbolChipProps = {
 function SymbolChip({ symbol, focused, onFocusToggle }: SymbolChipProps) {
   const ir = usePosaStore((s) => s.ir);
   const color = resolveSymbolColor(ir, symbol.id);
-  const defined = ir.symbols[symbol.id] !== null;
   const hex = color ? oklchToHex(color.L, color.C, color.H) : null;
 
   return (
@@ -112,16 +111,10 @@ function SymbolChip({ symbol, focused, onFocusToggle }: SymbolChipProps) {
         ].join(' ')}
       >
         <div
-          className={[
-            'h-20 flex items-end px-3 py-2',
-            defined ? '' : 'border-b border-dashed border-stone-300 bg-stone-50',
-          ].join(' ')}
-          style={hex ? { backgroundColor: hex } : undefined}
-        >
-          {!defined && (
-            <span className="text-xs font-mono text-stone-400">—</span>
-          )}
-        </div>
+          className="h-20"
+          style={hex ? { backgroundColor: hex } : checkerboardStyle(12)}
+        />
+
         <div className="px-3 py-2 bg-white">
           <div className="font-mono text-sm text-stone-900">{symbol.id}</div>
           <div className="text-[11px] text-stone-500 leading-snug">
