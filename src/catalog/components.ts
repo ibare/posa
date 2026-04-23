@@ -330,6 +330,35 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     attributes: ['background', 'text', 'border'],
     states: ['default'],
   },
+  // ===== Data/기타 계열 =====
+  {
+    id: 'table',
+    label: 'Table',
+    description: 'Tabular data with header and rows',
+    attributes: ['background', 'text', 'border', 'muted'],
+    states: ['default', 'hover'],
+  },
+  {
+    id: 'calendar',
+    label: 'Calendar',
+    description: 'Month grid with selectable days',
+    attributes: ['background', 'text', 'border', 'muted'],
+    states: ['default', 'hover', 'active'],
+  },
+  {
+    id: 'separator',
+    label: 'Separator',
+    description: 'Horizontal or vertical divider line',
+    attributes: ['border'],
+    states: ['default'],
+  },
+  {
+    id: 'label',
+    label: 'Label',
+    description: 'Form field label text',
+    attributes: ['text'],
+    states: ['default', 'disabled'],
+  },
 ];
 
 export function findComponent(componentId: ComponentId): ComponentDefinition | undefined {

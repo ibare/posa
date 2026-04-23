@@ -23,6 +23,7 @@ import {
   BadgeShape,
   BreadcrumbShape,
   ButtonShape,
+  CalendarShape,
   CardShape,
   CheckboxShape,
   CollapsibleShape,
@@ -36,6 +37,7 @@ import {
   InputOTPShape,
   InputShape,
   KbdShape,
+  LabelShape,
   MenubarShape,
   NativeSelectShape,
   NavigationMenuShape,
@@ -44,12 +46,14 @@ import {
   ProgressShape,
   RadioGroupShape,
   SelectShape,
+  SeparatorShape,
   SheetShape,
   SidebarShape,
   SkeletonShape,
   SliderShape,
   SpinnerShape,
   SwitchShape,
+  TableShape,
   TabsShape,
   TextareaShape,
   ToastShape,
@@ -214,6 +218,15 @@ const SIMPLE_ENTRIES: SimplePreviewEntry[] = [
   { id: 'spinner', title: 'Spinner', render: () => <SpinnerShape /> },
   { id: 'skeleton', title: 'Skeleton', render: () => <SkeletonShape /> },
   { id: 'kbd', title: 'Kbd', render: () => <KbdShape /> },
+  // Data/기타 4종
+  { id: 'table', title: 'Table', render: (state) => <TableShape state={state} /> },
+  {
+    id: 'calendar',
+    title: 'Calendar',
+    render: (state) => <CalendarShape state={state} />,
+  },
+  { id: 'separator', title: 'Separator', render: () => <SeparatorShape /> },
+  { id: 'label', title: 'Label', render: (state) => <LabelShape state={state} /> },
 ];
 
 type ComponentScope = {

@@ -37,3 +37,7 @@ export { AvatarShape } from './AvatarShape';
 export { SpinnerShape } from './SpinnerShape';
 export { SkeletonShape } from './SkeletonShape';
 export { KbdShape } from './KbdShape';
+export { TableShape } from './TableShape';
+export { CalendarShape } from './CalendarShape';
+export { SeparatorShape } from './SeparatorShape';
+export { LabelShape } from './LabelShape';
