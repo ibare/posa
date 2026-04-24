@@ -8,6 +8,7 @@ import {
 import { SYMBOL_IDS } from '../../../ir/types';
 import type { ComponentId, IR, StateId, SymbolId } from '../../../ir/types';
 import { PosaPreviewRoot } from '../../../preview/PosaPreviewRoot';
+import { HtmlToSvg } from '../../../preview/svg-export';
 import {
   AccordionShape,
   AlertDialogShape,
@@ -163,7 +164,9 @@ function GalleryTile({
         )}
       </div>
       <div className="flex min-h-[88px] items-start">
-        <ComponentPreview component={component} ir={ir} />
+        <HtmlToSvg signature={ir}>
+          <ComponentPreview component={component} ir={ir} />
+        </HtmlToSvg>
       </div>
     </div>
   );
