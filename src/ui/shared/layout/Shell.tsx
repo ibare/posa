@@ -32,6 +32,9 @@ export function Shell({ children }: Props) {
       <header className="sticky top-0 z-10 border-b border-stone-200/80 bg-cream/90 backdrop-blur px-6 py-3 flex items-center gap-4">
         <h1 className="font-display italic text-2xl leading-none tracking-tight select-none">
           {t('app.title')}
+          <sup className="relative top-[10px] ml-0.5 align-top font-mono not-italic text-[9px] uppercase tracking-[0.15em] text-stone-400">
+            {t('app.beta')}
+          </sup>
         </h1>
         <nav className="flex items-center gap-1">
           {NAV.map(({ to, key }) => (

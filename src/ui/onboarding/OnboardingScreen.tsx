@@ -150,6 +150,9 @@ export function OnboardingScreen() {
             <div className="flex items-baseline gap-3">
               <h1 className="font-display italic text-4xl leading-none tracking-tight">
                 {t('common:app.title')}
+                <sup className="relative top-[10px] ml-0.5 align-top font-mono not-italic text-[11px] uppercase tracking-[0.15em] text-stone-400">
+                  {t('common:app.beta')}
+                </sup>
               </h1>
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
                 {t('caption')}

@@ -1,6 +1,7 @@
 {
   "app": {
-    "title": "Posa"
+    "title": "Posa",
+    "beta": "beta"
   },
   "nav": {
     "explore": "탐색",
