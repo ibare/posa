@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  getDirectChildColorsForAttribute,
   getSlotsByAttribute,
   resolveAttributeColor,
 } from '../../ir/selectors';
@@ -26,14 +27,27 @@ export function Z1Plane() {
     return getSlotsByAttribute(components, selectedAttributeId, ir);
   }, [components, selectedAttributeId, ir]);
 
+  const directChildColors = useMemo(
+    () =>
+      selectedAttributeId
+        ? getDirectChildColorsForAttribute(components, ir, selectedAttributeId)
+        : [],
+    [components, ir, selectedAttributeId],
+  );
+
   if (!selectedAttributeId) return null;
 
   const attrColor = resolveAttributeColor(ir, selectedAttributeId);
+  const isMultiMode = directChildColors.length > 0;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <header className="flex items-center gap-4 px-1">
-        <Swatch color={attrColor} size="lg" />
+        {isMultiMode ? (
+          <Swatch colors={directChildColors} size="lg" />
+        ) : (
+          <Swatch color={attrColor} size="lg" />
+        )}
         <div className="min-w-0">
           <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
             {t('z1.label')}
