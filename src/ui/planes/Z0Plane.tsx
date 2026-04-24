@@ -79,7 +79,7 @@ export function Z0Plane() {
           <div className="text-xs text-stone-500 mb-3">
             {t('z0.attributesHint')}
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
             {activeAttributes.map((attr) => (
               <AttributeRow
                 key={attr.id}
@@ -183,7 +183,7 @@ function AttributeRow({
       <div
         ref={setAnchorEl}
         className={[
-          'flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/80 border transition-all duration-150 cursor-pointer',
+          'flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/80 border transition-all duration-150 cursor-pointer md:h-[76px]',
           focused && !isMultiMode
             ? 'border-stone-900 -translate-y-px'
             : 'border-stone-200 hover:border-stone-400 hover:-translate-y-px',
@@ -196,18 +196,15 @@ function AttributeRow({
           <Swatch color={color} size="md" />
         )}
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-sm text-stone-900">
-              {tCat(`attributes.${attr.id}.label`)}
-            </span>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
-              {attr.id}
-            </span>
+          <div className="font-mono text-sm text-stone-900 truncate">
+            {tCat(`attributes.${attr.id}.label`)}
           </div>
-          <div className="text-xs text-stone-500 leading-snug mt-0.5">
-            {isMultiMode
-              ? `${t('z0.directColor', { count: directChildColors.length })} ${t('z0.acrossSlots')}`
-              : tCat(`attributes.${attr.id}.description`)}
+          <div className="hidden md:block mt-0.5">
+            <div className="text-xs text-stone-500 leading-snug line-clamp-2">
+              {isMultiMode
+                ? `${t('z0.directColor', { count: directChildColors.length })} ${t('z0.acrossSlots')}`
+                : tCat(`attributes.${attr.id}.description`)}
+            </div>
           </div>
         </div>
         <button
@@ -216,11 +213,11 @@ function AttributeRow({
             e.stopPropagation();
             onDescend();
           }}
-          className="flex-none inline-flex items-center gap-2 text-xs font-mono text-stone-600 px-2.5 py-1.5 rounded border border-stone-200 hover:border-stone-500 hover:text-stone-900 transition"
+          className="flex-none inline-flex items-center gap-1 text-xs font-mono text-stone-600 px-1.5 py-1 rounded border border-stone-200 hover:border-stone-500 hover:text-stone-900 transition"
           title={t('z0.descendToSlot')}
+          aria-label={`${slotCount} ${t('z0.slotsLabel')}`}
         >
           <span className="tabular-nums">{slotCount}</span>
-          <span className="text-stone-400">{t('z0.slotsLabel')}</span>
           <svg
             viewBox="0 0 12 12"
             className="w-3 h-3"
