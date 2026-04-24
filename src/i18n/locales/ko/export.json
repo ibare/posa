@@ -6,5 +6,5 @@
   "primitives": "프리미티브",
   "symbols": "심볼",
   "attributes": "어트리뷰트",
-  "slotsAssigned": "할당된 슬롯"
+  "slotsAssigned": "활성 슬롯"
 }

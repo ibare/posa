@@ -1,14 +1,18 @@
 import { oklchToCssString } from '../color/oklch';
 import { countPrimitiveReferences } from '../color/primitive-ops';
 import {
-  enumerateAllSlotIds,
+  enumerateActiveSlotIds,
   getActiveAttributeIds,
-  getActiveSymbolIds,
-  resolveAttributeColor,
-  resolveSlotStateColor,
-  resolveSymbolColor,
+  getAttributeFromSlotId,
 } from '../ir/selectors';
-import { SHADE_INDICES } from '../ir/types';
+import {
+  SHADE_INDICES,
+  SYSTEM_SYMBOL_COLORS,
+  SYSTEM_SYMBOL_IDS,
+  type ColorRef,
+  type IR,
+  type SlotId,
+} from '../ir/types';
 import type { Compiler } from './types';
 
 function toDashName(id: string): string {
@@ -19,12 +23,27 @@ function primitiveVar(primId: string, shade: number): string {
   return `--${primId}-${shade}`;
 }
 
+function refToAlias(ir: IR, ref: ColorRef): string | null {
+  if (ref.kind === 'primitive') {
+    if (!ir.primitives[ref.primitive]) return null;
+    return `var(${primitiveVar(ref.primitive, ref.shade)})`;
+  }
+  return `var(--symbol-${ref.symbol})`;
+}
+
+function slotDefaultAlias(ir: IR, slotId: SlotId): string | null {
+  const slot = ir.slots[slotId];
+  if (slot?.ref) return refToAlias(ir, slot.ref);
+  const attrId = getAttributeFromSlotId(slotId);
+  if (!ir.attributes[attrId]) return null;
+  return `var(--attr-${attrId})`;
+}
+
 export const cssVariablesCompiler: Compiler = {
   id: 'css-vars',
   compile: ({ ir, components }) => {
-    const activeSymbolIds = getActiveSymbolIds(components);
     const activeAttributeIds = getActiveAttributeIds(components);
-    const scopeSlotIds = new Set(enumerateAllSlotIds(components));
+    const activeSlotIds = enumerateActiveSlotIds(components, ir);
     const lines: string[] = [':root {'];
 
     const primEntries = Object.values(ir.primitives).sort(
@@ -49,10 +68,21 @@ export const cssVariablesCompiler: Compiler = {
     }
 
     const symbolLines: string[] = [];
-    for (const id of activeSymbolIds) {
-      const c = resolveSymbolColor(ir, id);
-      if (!c) continue;
-      symbolLines.push(`  --posa-symbol-${id}: ${oklchToCssString(c)};`);
+    for (const [id, sym] of Object.entries(ir.symbols)) {
+      if (!sym) continue;
+      if (sym.kind === 'primitive') {
+        if (!ir.primitives[sym.primitive]) continue;
+        symbolLines.push(
+          `  --symbol-${id}: var(${primitiveVar(sym.primitive, sym.shade)});`,
+        );
+      } else {
+        symbolLines.push(`  --symbol-${id}: ${oklchToCssString(sym.color)};`);
+      }
+    }
+    for (const id of SYSTEM_SYMBOL_IDS) {
+      symbolLines.push(
+        `  --symbol-${id}: ${oklchToCssString(SYSTEM_SYMBOL_COLORS[id])};`,
+      );
     }
     if (symbolLines.length > 0) {
       lines.push('  /* Symbols */');
@@ -62,9 +92,16 @@ export const cssVariablesCompiler: Compiler = {
 
     const attrLines: string[] = [];
     for (const id of activeAttributeIds) {
-      const c = resolveAttributeColor(ir, id);
-      if (!c) continue;
-      attrLines.push(`  --posa-attr-${id}: ${oklchToCssString(c)};`);
+      const attr = ir.attributes[id];
+      if (!attr) continue;
+      if (attr.kind === 'primitive') {
+        if (!ir.primitives[attr.primitive]) continue;
+        attrLines.push(
+          `  --attr-${id}: var(${primitiveVar(attr.primitive, attr.shade)});`,
+        );
+      } else {
+        attrLines.push(`  --attr-${id}: var(--symbol-${attr.name});`);
+      }
     }
     if (attrLines.length > 0) {
       lines.push('  /* Attributes */');
@@ -73,26 +110,23 @@ export const cssVariablesCompiler: Compiler = {
     }
 
     const slotLines: string[] = [];
-    for (const [slotId, slot] of Object.entries(ir.slots)) {
-      if (!scopeSlotIds.has(slotId)) continue;
+    for (const slotId of activeSlotIds) {
       const dash = toDashName(slotId);
-      if (slot.ref) {
-        const c = resolveSlotStateColor(ir, slotId, 'default');
-        if (c) slotLines.push(`  --posa-slot-${dash}: ${oklchToCssString(c)};`);
+      const defaultAlias = slotDefaultAlias(ir, slotId);
+      if (defaultAlias) {
+        slotLines.push(`  --slot-${dash}: ${defaultAlias};`);
       }
-      for (const state of Object.keys(slot.states)) {
-        const override = slot.states[state as keyof typeof slot.states];
+      const slot = ir.slots[slotId];
+      if (!slot) continue;
+      for (const [state, override] of Object.entries(slot.states)) {
         if (!override) continue;
-        const c = resolveSlotStateColor(ir, slotId, state as never);
-        if (c) {
-          slotLines.push(
-            `  --posa-slot-${dash}-${state}: ${oklchToCssString(c)};`,
-          );
-        }
+        const alias = refToAlias(ir, override);
+        if (!alias) continue;
+        slotLines.push(`  --slot-${dash}--${state}: ${alias};`);
       }
     }
     if (slotLines.length > 0) {
-      lines.push('  /* Slot overrides */');
+      lines.push('  /* Slots */');
       lines.push(...slotLines);
     }
 

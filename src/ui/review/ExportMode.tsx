@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { COMPILERS, type CompileResult, type Compiler } from '../../compilers';
+import { enumerateActiveSlotIds } from '../../ir/selectors';
+import { SYSTEM_SYMBOL_IDS } from '../../ir/types';
 import { useActiveComponentDefs } from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
 
@@ -20,11 +22,13 @@ export function ExportMode() {
   );
 
   const primitiveCount = Object.keys(ir.primitives).length;
-  const symbolCount = Object.keys(ir.symbols).length;
+  const symbolCount =
+    Object.keys(ir.symbols).length + SYSTEM_SYMBOL_IDS.length;
   const attributeCount = Object.keys(ir.attributes).length;
-  const slotCount = Object.values(ir.slots).filter(
-    (s) => s.ref !== null || Object.keys(s.states).length > 0,
-  ).length;
+  const slotCount = useMemo(
+    () => enumerateActiveSlotIds(components, ir).length,
+    [components, ir],
+  );
 
   const isEmpty = primitiveCount === 0;
 

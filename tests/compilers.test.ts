@@ -58,27 +58,62 @@ describe('COMPILERS 등록', () => {
 
 describe('cssVariablesCompiler', () => {
   it('빈 IR이어도 에러 없이 :root를 반환', () => {
-    const out = cssVariablesCompiler.compile({ ir: createEmptyIR(), components: EMPTY_COMPONENTS });
+    const out = cssVariablesCompiler.compile({
+      ir: createEmptyIR(),
+      components: EMPTY_COMPONENTS,
+    });
     expect(out.language).toBe('css');
     expect(out.filename).toBe('posa-tokens.css');
     expect(out.content).toMatch(/:root\s*{/);
     expect(out.content).toMatch(/}/);
   });
 
-  it('primitive + symbol + attribute + slot state를 포함한 IR을 올바르게 변환', () => {
+  it('시스템 심볼은 항상 raw oklch로 출력', () => {
+    const out = cssVariablesCompiler.compile({
+      ir: createEmptyIR(),
+      components: EMPTY_COMPONENTS,
+    });
+    expect(out.content).toMatch(/--symbol-white:\s*oklch\(/);
+    expect(out.content).toMatch(/--symbol-black:\s*oklch\(/);
+  });
+
+  it('primitive + symbol + attribute + slot state는 alias 체인으로 나간다', () => {
     const { ir, primitiveId } = seedIR();
-    const out = cssVariablesCompiler.compile({ ir, components: SEED_COMPONENTS });
-    expect(out.content).toContain(`--${primitiveId}-500`);
-    expect(out.content).toMatch(/--posa-symbol-primary:\s*oklch\(/);
-    expect(out.content).toMatch(/--posa-attr-text:\s*oklch\(/);
-    // attribute가 symbol 참조여도 CSS 상에선 resolved color로 나감
-    expect(out.content).toMatch(/--posa-attr-background:\s*oklch\(/);
+    const out = cssVariablesCompiler.compile({
+      ir,
+      components: SEED_COMPONENTS,
+    });
+    // primitive는 raw OKLCH
     expect(out.content).toMatch(
-      /--posa-slot-button-primary-background:\s*oklch\(/,
+      new RegExp(`--${primitiveId}-500:\\s*oklch\\(`),
     );
-    expect(out.content).toMatch(
-      /--posa-slot-button-primary-background-hover:\s*oklch\(/,
+    // user symbol → primitive var
+    expect(out.content).toContain(
+      `--symbol-primary: var(--${primitiveId}-500);`,
     );
+    // attribute → primitive var
+    expect(out.content).toContain(`--attr-text: var(--${primitiveId}-900);`);
+    expect(out.content).toContain(
+      `--attr-background: var(--${primitiveId}-500);`,
+    );
+    // slot default → primitive var (slot.ref 있는 경우)
+    expect(out.content).toContain(
+      `--slot-button-primary-background: var(--${primitiveId}-500);`,
+    );
+    // slot state override (state 이름 앞에 `--`)
+    expect(out.content).toContain(
+      `--slot-button-primary-background--hover: var(--${primitiveId}-600);`,
+    );
+  });
+
+  it('slot.ref가 없으면 attribute var로 자동 상속된다', () => {
+    const { ir } = seedIR();
+    const out = cssVariablesCompiler.compile({
+      ir,
+      components: COMPONENT_DEFINITIONS.filter((c) => c.id === 'card'),
+    });
+    expect(out.content).toContain(`--slot-card-background: var(--attr-background);`);
+    expect(out.content).toContain(`--slot-card-text: var(--attr-text);`);
   });
 
   it('고아 primitive는 주석 처리되어 나감', () => {
@@ -98,63 +133,91 @@ describe('cssVariablesCompiler', () => {
 
 describe('tailwindConfigCompiler', () => {
   it('빈 IR에서 colors 블록을 안전하게 반환', () => {
-    const out = tailwindConfigCompiler.compile({ ir: createEmptyIR(), components: EMPTY_COMPONENTS });
+    const out = tailwindConfigCompiler.compile({
+      ir: createEmptyIR(),
+      components: EMPTY_COMPONENTS,
+    });
     expect(out.language).toBe('javascript');
     expect(out.content).toContain('export default');
     expect(out.content).toContain('colors:');
   });
 
-  it('primitive 11단이 모두 출력되고 symbol/attribute/slot은 CSS var 참조', () => {
+  it('primitive 11단은 var alias로, symbol/attr/slot도 var alias로', () => {
     const { ir, primitiveId } = seedIR();
-    const out = tailwindConfigCompiler.compile({ ir, components: SEED_COMPONENTS });
+    const out = tailwindConfigCompiler.compile({
+      ir,
+      components: SEED_COMPONENTS,
+    });
     expect(out.content).toContain(`'${primitiveId}': {`);
+    // 11단 shade 전부 var alias
     for (const shade of [50, 100, 500, 900, 950]) {
-      expect(out.content).toContain(`'${shade}':`);
+      expect(out.content).toContain(
+        `'${shade}': 'var(--${primitiveId}-${shade})'`,
+      );
     }
+    expect(out.content).toContain(`'symbol-primary': 'var(--symbol-primary)'`);
+    expect(out.content).toContain(`'symbol-white': 'var(--symbol-white)'`);
+    expect(out.content).toContain(`'attr-text': 'var(--attr-text)'`);
     expect(out.content).toContain(
-      `'symbol-primary': 'var(--posa-symbol-primary)'`,
+      `'slot-button-primary-background': 'var(--slot-button-primary-background)'`,
     );
-    expect(out.content).toContain(`'attr-text': 'var(--posa-attr-text)'`);
+    // state 토큰은 single-dash (Tailwind 이름 규약), CSS var는 double-dash
     expect(out.content).toContain(
-      `'slot-button-primary-background': 'var(--posa-slot-button-primary-background)'`,
-    );
-    expect(out.content).toContain(
-      `'slot-button-primary-background-hover': 'var(--posa-slot-button-primary-background-hover)'`,
+      `'slot-button-primary-background-hover': 'var(--slot-button-primary-background--hover)'`,
     );
   });
 });
 
 describe('dtcgCompiler', () => {
   it('빈 IR에서도 parse 가능한 JSON', () => {
-    const out = dtcgCompiler.compile({ ir: createEmptyIR(), components: EMPTY_COMPONENTS });
+    const out = dtcgCompiler.compile({
+      ir: createEmptyIR(),
+      components: EMPTY_COMPONENTS,
+    });
     expect(out.language).toBe('json');
     expect(out.filename).toBe('posa-tokens.json');
     expect(() => JSON.parse(out.content)).not.toThrow();
   });
 
-  it('symbol은 primitive leaf를 alias로, attribute는 항상 primitive를 alias로', () => {
+  it('$value는 resolved OKLCH, $extensions.posa.alias에 체인 보존', () => {
     const { ir, primitiveId } = seedIR();
     const out = dtcgCompiler.compile({ ir, components: SEED_COMPONENTS });
     const parsed = JSON.parse(out.content);
+
+    // primitive — raw OKLCH, alias 없음
     expect(parsed.color[primitiveId]['500'].$value).toMatch(/^oklch\(/);
-    expect(parsed.color.symbols.primary.$value).toBe(
-      `{color.${primitiveId}.500}`,
-    );
-    expect(parsed.color.attributes.text.$value).toBe(
+    expect(parsed.color[primitiveId]['500'].$extensions).toBeUndefined();
+
+    // user symbol — OKLCH + alias
+    const sym = parsed.color.symbols.primary;
+    expect(sym.$value).toMatch(/^oklch\(/);
+    expect(sym.$extensions.posa.alias).toBe(`{color.${primitiveId}.500}`);
+
+    // system symbol — OKLCH, alias 없음
+    expect(parsed.color.symbols.white.$value).toMatch(/^oklch\(/);
+    expect(parsed.color.symbols.white.$extensions).toBeUndefined();
+
+    // attribute — OKLCH + alias
+    const attrText = parsed.color.attributes.text;
+    expect(attrText.$value).toMatch(/^oklch\(/);
+    expect(attrText.$extensions.posa.alias).toBe(
       `{color.${primitiveId}.900}`,
-    );
-    expect(parsed.color.attributes.background.$value).toBe(
-      `{color.${primitiveId}.500}`,
     );
   });
 
-  it('slot.ref와 slot state override가 alias로 들어간다', () => {
+  it('slot default와 state override 모두 OKLCH + alias', () => {
     const { ir, primitiveId } = seedIR();
     const out = dtcgCompiler.compile({ ir, components: SEED_COMPONENTS });
     const parsed = JSON.parse(out.content);
     const slotNode = parsed.color.slots.button.primary.background;
-    expect(slotNode.default.$value).toBe(`{color.${primitiveId}.500}`);
-    expect(slotNode.hover.$value).toBe(`{color.${primitiveId}.600}`);
+    expect(slotNode.default.$value).toMatch(/^oklch\(/);
+    expect(slotNode.default.$extensions.posa.alias).toBe(
+      `{color.${primitiveId}.500}`,
+    );
+    expect(slotNode.hover.$value).toMatch(/^oklch\(/);
+    expect(slotNode.hover.$extensions.posa.alias).toBe(
+      `{color.${primitiveId}.600}`,
+    );
   });
 
   it('생성된 모든 alias는 실제 존재하는 키를 가리킨다', () => {
@@ -180,51 +243,58 @@ describe('dtcgCompiler', () => {
 });
 
 describe('compiler 스코프 격리', () => {
-  // card는 background/text/border만 선언. IR에 있는 text·background는 포함,
-  // button.primary.background slot과 primary symbol은 card 스코프 밖이므로 누락.
-  it('스코프 밖 symbol/slot은 출력에 포함되지 않는다', () => {
+  // 심볼/attribute는 IR 축이므로 스코프와 무관하게 항상 emit.
+  // slot만 components 스코프로 제한된다.
+  it('스코프 밖 slot은 출력에 포함되지 않는다', () => {
     const { ir } = seedIR();
     const cardOnly: ComponentDefinition[] = COMPONENT_DEFINITIONS.filter(
       (c) => c.id === 'card',
     );
 
     const css = cssVariablesCompiler.compile({ ir, components: cardOnly });
-    expect(css.content).not.toContain('--posa-symbol-primary');
-    expect(css.content).not.toContain(
-      '--posa-slot-button-primary-background',
-    );
-    expect(css.content).toContain('--posa-attr-text');
-    expect(css.content).toContain('--posa-attr-background');
+    // button slot은 card 스코프 밖
+    expect(css.content).not.toContain('--slot-button-primary-background');
+    // card slot은 들어있어야 함
+    expect(css.content).toContain('--slot-card-background');
+    expect(css.content).toContain('--slot-card-text');
+    // symbol은 IR 축이라 스코프 무관하게 emit
+    expect(css.content).toContain('--symbol-primary');
 
     const tw = tailwindConfigCompiler.compile({ ir, components: cardOnly });
-    expect(tw.content).not.toContain("'symbol-primary'");
     expect(tw.content).not.toContain("'slot-button-primary-background'");
+    expect(tw.content).toContain("'slot-card-background'");
 
     const dtcg = dtcgCompiler.compile({ ir, components: cardOnly });
     const parsed = JSON.parse(dtcg.content);
-    expect(parsed.color.symbols).toBeUndefined();
-    expect(parsed.color.slots).toBeUndefined();
-    expect(parsed.color.attributes.text).toBeDefined();
+    expect(parsed.color.slots.button).toBeUndefined();
+    expect(parsed.color.slots.card).toBeDefined();
+    expect(parsed.color.symbols.primary).toBeDefined();
   });
 
-  it('빈 스코프면 primitive만 남고 상위 alias는 전부 생략', () => {
+  it('빈 스코프면 slot·attribute는 생략, 심볼과 primitive는 유지', () => {
     const { ir } = seedIR();
 
     const css = cssVariablesCompiler.compile({
       ir,
       components: EMPTY_COMPONENTS,
     });
-    expect(css.content).not.toContain('--posa-symbol-');
-    expect(css.content).not.toContain('--posa-attr-');
-    expect(css.content).not.toContain('--posa-slot-');
+    // slot/attr 없음
+    expect(css.content).not.toContain('--slot-');
+    expect(css.content).not.toContain('--attr-');
+    // 심볼은 여전히 IR 축으로 출력
+    expect(css.content).toContain('--symbol-primary');
+    expect(css.content).toContain('--symbol-white');
 
     const dtcg = dtcgCompiler.compile({
       ir,
       components: EMPTY_COMPONENTS,
     });
     const parsed = JSON.parse(dtcg.content);
-    expect(parsed.color.symbols).toBeUndefined();
-    expect(parsed.color.attributes).toBeUndefined();
     expect(parsed.color.slots).toBeUndefined();
+    expect(parsed.color.attributes).toBeUndefined();
+    // 심볼은 유지 (system + user)
+    expect(parsed.color.symbols.primary).toBeDefined();
+    expect(parsed.color.symbols.white).toBeDefined();
+    expect(parsed.color.symbols.black).toBeDefined();
   });
 });
