@@ -26,7 +26,7 @@ export function DrawerShape({
   const handleColor = `var(--${slotVarName('drawer.border', 'default')})`;
   const stageClass = fill
     ? 'relative w-full h-full overflow-hidden'
-    : 'relative w-[320px] h-[200px] rounded-md overflow-hidden';
+    : 'relative w-full max-w-[320px] h-[200px] rounded-md overflow-hidden';
 
   return (
     <div

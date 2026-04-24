@@ -39,7 +39,7 @@ export function MenuPanel({
 
   return (
     <div
-      className="w-[220px] rounded-md p-1 shadow-md"
+      className="w-full max-w-[220px] rounded-md p-1 shadow-md"
       style={panelStyle}
       data-posa-slot={`${componentId}.background`}
       data-posa-state={state}

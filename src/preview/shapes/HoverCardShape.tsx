@@ -18,7 +18,7 @@ export function HoverCardShape({
 
   return (
     <div
-      className="w-[240px] rounded-md p-4 shadow-md"
+      className="w-full max-w-[240px] rounded-md p-4 shadow-md"
       style={style}
       data-posa-slot="hover-card.background"
       data-posa-state="default"

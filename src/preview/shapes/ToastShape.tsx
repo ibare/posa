@@ -24,7 +24,7 @@ export function ToastShape({
 
   return (
     <div
-      className="w-[320px] rounded-md p-4"
+      className="w-full max-w-[320px] rounded-md p-4"
       style={style}
       data-posa-slot={`${slotBase}.background`}
       data-posa-state="default"

@@ -16,7 +16,7 @@ export function CardShape({ title = 'Card title', body = 'Card body copy goes he
 
   return (
     <div
-      className="w-[240px] rounded-lg p-6 shadow-sm"
+      className="w-full max-w-[240px] rounded-lg p-6 shadow-sm"
       style={style}
       data-posa-slot="card.background"
       data-posa-state="default"

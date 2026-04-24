@@ -25,7 +25,7 @@ export function SliderShape({ state = 'default' }: Props) {
 
   return (
     <div
-      className="relative flex h-5 w-[160px] items-center"
+      className="relative flex h-5 w-full max-w-[160px] items-center"
       data-posa-slot="slider.track"
       data-posa-state={state}
     >

@@ -16,7 +16,7 @@ export function ProgressShape({ value = 70 }: Props) {
 
   return (
     <div
-      className="relative h-2 w-[200px] overflow-hidden rounded-full"
+      className="relative h-2 w-full max-w-[200px] overflow-hidden rounded-full"
       style={trackStyle}
       data-posa-slot="progress.track"
       data-posa-state="default"

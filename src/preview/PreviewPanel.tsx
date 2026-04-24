@@ -638,7 +638,7 @@ export function PreviewPanel() {
         onClear={clearSelectedGroup}
       />
 
-      <div className="min-h-0 flex-1 overflow-auto p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4">
         {visibleCount === 0 ? (
           <div className="rounded-lg border border-dashed border-stone-300 p-8 text-center text-sm text-stone-500">
             No component declares this attribute yet.

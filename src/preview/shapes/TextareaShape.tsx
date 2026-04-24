@@ -29,7 +29,7 @@ export function TextareaShape({
 
   return (
     <div
-      className="w-[220px] h-[72px] rounded-md px-3 py-2 text-sm"
+      className="w-full max-w-[220px] h-[72px] rounded-md px-3 py-2 text-sm"
       style={style}
       data-posa-slot="textarea.background"
       data-posa-state={state}

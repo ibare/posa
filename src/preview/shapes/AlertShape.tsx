@@ -36,7 +36,7 @@ export function AlertShape({
 
   return (
     <div
-      className="inline-flex w-64 items-start gap-2 rounded-md px-3 py-2 text-xs"
+      className="flex w-full max-w-64 items-start gap-2 rounded-md px-3 py-2 text-xs"
       style={style}
       data-posa-slot={slotFor('background')}
       data-posa-state="default"

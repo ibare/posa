@@ -26,7 +26,7 @@ export function SheetShape({
   };
   const stageClass = fill
     ? 'relative w-full h-full overflow-hidden'
-    : 'relative w-[320px] h-[200px] rounded-md overflow-hidden';
+    : 'relative w-full max-w-[320px] h-[200px] rounded-md overflow-hidden';
 
   return (
     <div
@@ -36,7 +36,7 @@ export function SheetShape({
       data-posa-state="default"
     >
       <div
-        className="absolute right-0 top-0 bottom-0 w-[140px] p-4"
+        className="absolute right-0 top-0 bottom-0 w-[44%] max-w-[140px] p-4"
         style={panelStyle}
       >
         <div className="text-sm font-semibold mb-1">{title}</div>

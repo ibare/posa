@@ -28,7 +28,7 @@ export function AlertDialogShape({
   const buttonBorder = `1px solid var(--${slotVarName('alert-dialog.border', 'default')})`;
   const stageClass = fill
     ? 'relative w-full h-full overflow-hidden'
-    : 'relative w-[300px] h-[200px] rounded-md overflow-hidden';
+    : 'relative w-full max-w-[300px] h-[200px] rounded-md overflow-hidden';
 
   return (
     <div
@@ -38,7 +38,7 @@ export function AlertDialogShape({
       data-posa-state="default"
     >
       <div
-        className="absolute left-1/2 top-1/2 w-[240px] -translate-x-1/2 -translate-y-1/2 rounded-lg p-4 shadow-lg"
+        className="absolute left-1/2 top-1/2 w-[80%] max-w-[240px] -translate-x-1/2 -translate-y-1/2 rounded-lg p-4 shadow-lg"
         style={cardStyle}
       >
         <div className="text-sm font-semibold mb-1">{title}</div>
