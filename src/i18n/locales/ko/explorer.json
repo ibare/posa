@@ -4,8 +4,6 @@
   "suggestedHint": "타일을 클릭해 확정하세요.",
   "suggestedHintAlt": "이 스케일 밖을 고르면 새 프리미티브가 생성됩니다.",
   "referencesSymbol": "현재 심볼 참조 중",
-  "moreOptions": "다른 옵션",
-  "moreOptionsHint": "덜 일반적인 선택",
   "fineTune": "미세 조정",
   "fineTuneHint": "정밀 조정",
   "useSymbol": "심볼 사용",
@@ -43,6 +41,20 @@
     "title": "이전에 사용한 다른 {{family}}",
     "slotCount_one": "슬롯 {{count}}개",
     "slotCount_other": "슬롯 {{count}}개"
+  },
+  "rows": {
+    "inScope": {
+      "label": "사용 중인 색",
+      "hint": "이 프로젝트의 프리미티브에서 뽑은 후보"
+    },
+    "nearNeighbors": {
+      "label": "미세 조정",
+      "hint": "현재 색과 가까운 값"
+    },
+    "roleFit": {
+      "label": "역할에 맞는 색",
+      "hint": "이 용도에 자주 쓰이는 범위"
+    }
   },
   "grayscale": {
     "label": "그레이스케일",

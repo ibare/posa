@@ -19,20 +19,15 @@ import { useActiveSymbolIds } from '../../../store/hooks';
 import { FineTune } from './FineTune';
 import { MyPrimitive } from './MyPrimitive';
 import { OtherPrimitives } from './OtherPrimitives';
+import { collectRows } from './recommenders';
 import { Sea } from './Sea';
 import { findSameFamilyPrimitives } from './utils';
-import * as backgroundSea from './seas/background';
-import * as errorSea from './seas/error';
-import * as foregroundSea from './seas/foreground';
-import * as genericSea from './seas/generic';
-import * as primarySea from './seas/primary';
-import type { SeaModule } from './seas/shared';
-import * as warningSea from './seas/warning';
 
 export type ColorExplorerProps = {
   /**
-   * Sea 선택 키. symbolId(primary/error/warning/...) 혹은 attributeId
-   * (background/text/border/...) 를 받는다. 매칭이 없으면 generic sea.
+   * 추천을 구성할 때 role 축으로 사용하는 키. symbolId(primary/error/...) 또는
+   * attributeId(background/text/border/...). Recommender들은 이 값을 보고
+   * row를 생성한다.
    */
   seaKey: string;
   value: OKLCH | null;
@@ -49,35 +44,6 @@ export type ColorExplorerProps = {
   ir: IR;
 };
 
-const SEA_REGISTRY: Record<string, SeaModule> = {
-  // Symbol-inspired seas
-  primary: primarySea,
-  secondary: primarySea,
-  accent: primarySea,
-  info: primarySea,
-  success: primarySea,
-  warning: warningSea,
-  error: errorSea,
-
-  // Attribute-inspired seas
-  background: backgroundSea,
-  text: foregroundSea,
-  placeholder: foregroundSea,
-  border: genericSea,
-  outline: primarySea,
-  icon: foregroundSea,
-  mark: primarySea,
-  overlay: foregroundSea,
-  track: genericSea,
-  fill: primarySea,
-  thumb: genericSea,
-  muted: foregroundSea,
-};
-
-function getSea(seaKey: string): SeaModule {
-  return SEA_REGISTRY[seaKey] ?? genericSea;
-}
-
 export function ColorExplorer({
   seaKey,
   value,
@@ -91,12 +57,12 @@ export function ColorExplorer({
   ir,
 }: ColorExplorerProps) {
   const { t } = useTranslation('explorer');
-  const [moreOpen, setMoreOpen] = useState(false);
   const [fineOpen, setFineOpen] = useState(false);
 
-  const sea = getSea(seaKey);
-  const tierA = useMemo(() => sea.tierA(), [sea]);
-  const tierB = useMemo(() => sea.tierB(), [sea]);
+  const rows = useMemo(
+    () => collectRows({ role: seaKey, value, assignment, ir }),
+    [seaKey, value, assignment, ir],
+  );
 
   const primitiveRef =
     assignment && assignment.kind === 'primitive' ? assignment : null;
@@ -190,30 +156,23 @@ export function ColorExplorer({
         </>
       )}
 
-      <div>
-        <div className="flex items-baseline gap-2 mb-0.5">
-          <span className="text-[11px] uppercase tracking-[0.15em] text-stone-600 font-mono">
-            {suggestedHeading}
-          </span>
-        </div>
-        <div className="text-[10px] text-stone-400 italic mb-3">
-          {suggestedHint}
-        </div>
-        <Sea rows={tierA} value={value} onPick={onChange} />
-      </div>
+      {rows.length > 0 && (
+        <>
+          <div>
+            <div className="flex items-baseline gap-2 mb-0.5">
+              <span className="text-[11px] uppercase tracking-[0.15em] text-stone-600 font-mono">
+                {suggestedHeading}
+              </span>
+            </div>
+            <div className="text-[10px] text-stone-400 italic mb-3">
+              {suggestedHint}
+            </div>
+            <Sea rows={rows} value={value} onPick={onChange} />
+          </div>
 
-      <div className="border-t border-stone-100" />
-
-      <Collapsible
-        open={moreOpen}
-        onToggle={() => setMoreOpen((v) => !v)}
-        label={t('moreOptions')}
-        sublabel={t('moreOptionsHint')}
-      >
-        <Sea rows={tierB} value={value} onPick={onChange} />
-      </Collapsible>
-
-      <div className="border-t border-stone-100" />
+          <div className="border-t border-stone-100" />
+        </>
+      )}
 
       <Collapsible
         open={fineOpen}

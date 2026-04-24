@@ -1,10 +1,11 @@
+import { useTranslation } from 'react-i18next';
 import { oklchToHex } from '../../../color/oklch';
 import type { OKLCH } from '../../../ir/types';
-import type { SeaRow } from './seas/shared';
+import type { Row } from './recommenders/shared';
 import { matchesOKLCH } from './utils';
 
 type Props = {
-  rows: SeaRow[];
+  rows: Row[];
   value: OKLCH | null;
   onPick: (color: OKLCH) => void;
 };
@@ -13,21 +14,33 @@ export function Sea({ rows, value, onPick }: Props) {
   return (
     <div className="space-y-4">
       {rows.map((row) => (
-        <SeaRowView key={row.label} row={row} value={value} onPick={onPick} />
+        <SeaRowView key={row.id} row={row} value={value} onPick={onPick} />
       ))}
     </div>
   );
 }
 
-function SeaRowView({ row, value, onPick }: { row: SeaRow; value: OKLCH | null; onPick: (c: OKLCH) => void }) {
+function SeaRowView({
+  row,
+  value,
+  onPick,
+}: {
+  row: Row;
+  value: OKLCH | null;
+  onPick: (c: OKLCH) => void;
+}) {
+  const { t } = useTranslation('explorer');
   const cols = Math.min(row.tiles.length, 11);
+  const label = t(row.labelKey);
   return (
     <div>
       <div className="flex items-baseline gap-2 mb-1.5">
         <span className="text-[11px] uppercase tracking-[0.15em] text-stone-600 font-mono">
-          {row.label}
+          {label}
         </span>
-        <span className="text-[10px] text-stone-400 italic">{row.hint}</span>
+        <span className="text-[10px] text-stone-400 italic">
+          {t(row.hintKey)}
+        </span>
       </div>
       <div
         className="grid gap-1.5"
@@ -40,7 +53,7 @@ function SeaRowView({ row, value, onPick }: { row: SeaRow; value: OKLCH | null; 
             <button
               key={i}
               type="button"
-              aria-label={`${row.label} tile ${i + 1}`}
+              aria-label={`${label} tile ${i + 1}`}
               onClick={() => onPick(tile)}
               className={[
                 'aspect-square rounded-md transition transform',

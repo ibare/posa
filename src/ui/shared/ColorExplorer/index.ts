@@ -1,3 +1,3 @@
 export { ColorExplorer } from './ColorExplorer';
 export type { ColorExplorerProps } from './ColorExplorer';
-export type { SeaRow, SeaModule } from './seas/shared';
+export type { Row, RowContext, Recommender } from './recommenders/shared';

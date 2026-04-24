@@ -4,8 +4,6 @@
   "suggestedHint": "Click a tile to commit.",
   "suggestedHintAlt": "A new primitive will be created if you pick outside this scale.",
   "referencesSymbol": "Currently references symbol",
-  "moreOptions": "More options",
-  "moreOptionsHint": "Less typical choices",
   "fineTune": "Fine-tune",
   "fineTuneHint": "Precision adjustment",
   "useSymbol": "Use a symbol",
@@ -43,6 +41,20 @@
     "title": "Other {{family}}s you've used",
     "slotCount_one": "{{count}} slot",
     "slotCount_other": "{{count}} slots"
+  },
+  "rows": {
+    "inScope": {
+      "label": "Already in use",
+      "hint": "Candidates drawn from this project's primitives"
+    },
+    "nearNeighbors": {
+      "label": "Near neighbors",
+      "hint": "Close variations of the current color"
+    },
+    "roleFit": {
+      "label": "Fit for the role",
+      "hint": "Typical range for this use"
+    }
   },
   "grayscale": {
     "label": "Grayscale",
