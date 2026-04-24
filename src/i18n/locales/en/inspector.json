@@ -17,8 +17,8 @@
   "slotCard": {
     "setDirectly": "set directly",
     "inheritsAttribute": "inherits attribute",
-    "stateOverride_one": "{{count}} state override",
-    "stateOverride_other": "{{count}} state overrides",
+    "directColors_one": "{{count}} direct color",
+    "directColors_other": "{{count}} direct colors",
     "clickToDescend": "click to descend",
     "descendToState": "Descend to state layer",
     "states": "states"

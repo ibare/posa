@@ -138,7 +138,6 @@ function Divider() {
 
 function MiniZ0({ onClick }: { onClick: () => void }) {
   const ir = usePosaStore((s) => s.ir);
-  const selectedAttributeId = usePosaStore((s) => s.selectedAttributeId);
   const symbols = useActiveSymbolDefs();
   const attributes = useActiveAttributeDefs();
   const { t } = useTranslation('planes');
@@ -172,18 +171,14 @@ function MiniZ0({ onClick }: { onClick: () => void }) {
       {symbolDots.length > 0 && (
         <div className="flex gap-0.5">
           {symbolDots.map((d) => (
-            <Dot key={`sym:${d.id}`} color={d.color} focused={false} />
+            <Dot key={`sym:${d.id}`} color={d.color} />
           ))}
         </div>
       )}
       {attributeDots.length > 0 && (
         <div className="flex gap-0.5">
           {attributeDots.map((d) => (
-            <Dot
-              key={`attr:${d.id}`}
-              color={d.color}
-              focused={d.id === selectedAttributeId}
-            />
+            <Dot key={`attr:${d.id}`} color={d.color} />
           ))}
         </div>
       )}
@@ -192,8 +187,7 @@ function MiniZ0({ onClick }: { onClick: () => void }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// MiniZ1 — selectedAttribute의 slot들을 가로 막대 stack으로.
-// selectedSlotId에 해당 막대 링 강조.
+// MiniZ1 — selectedAttribute의 slot들을 3행 그리드 히트맵으로.
 // ──────────────────────────────────────────────────────────────────────────
 
 function MiniZ1({
@@ -204,7 +198,6 @@ function MiniZ1({
   onClick: () => void;
 }) {
   const ir = usePosaStore((s) => s.ir);
-  const selectedSlotId = usePosaStore((s) => s.selectedSlotId);
   const components = useActiveComponentDefs();
   const { t } = useTranslation('planes');
 
@@ -225,33 +218,24 @@ function MiniZ1({
       type="button"
       onClick={onClick}
       title={t('breadcrumb.backToZ1')}
-      className="flex items-stretch gap-px p-1 rounded border border-stone-200 bg-white/60 hover:border-stone-500 hover:-translate-y-px transition h-[22px]"
+      className="grid grid-rows-3 grid-flow-col gap-px p-1 rounded border border-stone-200 bg-white/60 hover:border-stone-500 hover:-translate-y-px transition h-[26px]"
     >
-      {bars.map((b) => {
-        const active = b.id === selectedSlotId;
-        return (
-          <span
-            key={b.id}
-            className={[
-              'block w-1 rounded-[1px]',
-              active ? 'outline outline-[1.5px] outline-stone-900' : '',
-            ].join(' ')}
-            style={{ backgroundColor: b.color ?? '#e7e5e4' }}
-          />
-        );
-      })}
+      {bars.map((b) => (
+        <span
+          key={b.id}
+          className="block w-1 rounded-[1px]"
+          style={{ backgroundColor: b.color ?? '#e7e5e4' }}
+        />
+      ))}
     </button>
   );
 }
 
-function Dot({ color, focused }: { color: { L: number; C: number; H: number } | null; focused: boolean }) {
+function Dot({ color }: { color: { L: number; C: number; H: number } | null }) {
   const hex = color ? oklchToHex(color.L, color.C, color.H) : null;
   return (
     <span
-      className={[
-        'block w-2 h-2 rounded-full',
-        focused ? 'outline outline-[1.5px] outline-stone-900' : '',
-      ].join(' ')}
+      className="block w-2 h-2 rounded-[2px]"
       style={{ backgroundColor: hex ?? '#e7e5e4' }}
     />
   );

@@ -24,6 +24,7 @@ export function ExplorationView() {
     (s) => s.clearSelectedComponent,
   );
   const clearSelectedGroup = usePosaStore((s) => s.clearSelectedGroup);
+  const previewPanelWidth = usePosaStore((s) => s.previewPanelWidth);
   const { t } = useTranslation('planes');
 
   useEffect(() => {
@@ -88,7 +89,12 @@ export function ExplorationView() {
       : `${layer}-${selectedAttributeId ?? ''}-${selectedSlotId ?? ''}`;
 
   return (
-    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+    <div
+      className="grid gap-6"
+      style={{
+        gridTemplateColumns: `minmax(0, 1fr) ${previewPanelWidth}px`,
+      }}
+    >
       <div className="min-w-0">
         <BreadcrumbStrip />
         <div key={planeKey} className={animClass}>
@@ -105,9 +111,7 @@ export function ExplorationView() {
           )}
         </div>
       </div>
-      <div className="hidden xl:block">
-        <PreviewPanel />
-      </div>
+      <PreviewPanel />
     </div>
   );
 }

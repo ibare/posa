@@ -316,15 +316,8 @@ export function getAttributeFromSlotId(slotId: SlotId): AttributeId {
   return parts[parts.length - 1] as AttributeId;
 }
 
-/**
- * Slot의 표시 이름.
- *   - 명시적 slot.ref가 symbol이면 `${slotId}.${symbol}` 접미사.
- *   - 그 외에는 base slot id 그대로.
- * (설계: slot 엔터티 자체는 단일 존재. 이름만 유저에게 보일 때 확장된다.)
- */
-export function getSlotDisplayName(slotId: SlotId, ir: IR): string {
-  const slot = ir.slots[slotId];
-  if (slot?.ref?.kind === 'symbol') return `${slotId}.${slot.ref.symbol}`;
+/** Slot의 표시 이름. base slot id 그대로. */
+export function getSlotDisplayName(slotId: SlotId, _ir: IR): string {
   return slotId;
 }
 
@@ -422,19 +415,24 @@ export function getDirectChildColorsForAttribute(
 
 /**
  * Z1 slot row의 "모드 2" 판정 + 분할 swatch 표시용.
- * slot.states에 override된 색들의 distinct 목록.
+ * slot에 직접 할당된 색들의 distinct 목록.
+ * - slot.ref: default state의 직접 할당
+ * - slot.states[*]: 그 외 state의 직접 할당
  */
 export function getDirectChildColorsForSlot(ir: IR, slotId: SlotId): OKLCH[] {
   const slot = ir.slots[slotId];
   if (!slot) return [];
   const out: OKLCH[] = [];
+  const pushColor = (c: OKLCH | null) => {
+    if (!c) return;
+    if (!out.some((x) => x.L === c.L && x.C === c.C && x.H === c.H)) {
+      out.push(c);
+    }
+  };
+  if (slot.ref) pushColor(resolveColorRef(ir, slot.ref));
   for (const ref of Object.values(slot.states)) {
     if (!ref) continue;
-    const color = resolveColorRef(ir, ref);
-    if (!color) continue;
-    if (!out.some((c) => c.L === color.L && c.C === color.C && c.H === color.H)) {
-      out.push(color);
-    }
+    pushColor(resolveColorRef(ir, ref));
   }
   return out;
 }

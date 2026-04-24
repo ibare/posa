@@ -17,8 +17,8 @@
   "slotCard": {
     "setDirectly": "직접 설정됨",
     "inheritsAttribute": "어트리뷰트 상속",
-    "stateOverride_one": "상태 오버라이드 {{count}}개",
-    "stateOverride_other": "상태 오버라이드 {{count}}개",
+    "directColors_one": "직접 할당 {{count}}개",
+    "directColors_other": "직접 할당 {{count}}개",
     "clickToDescend": "클릭해서 내려가기",
     "descendToState": "상태 레이어로 내려가기",
     "states": "상태"

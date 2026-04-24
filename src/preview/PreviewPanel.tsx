@@ -1,4 +1,10 @@
-import { useMemo, type MouseEvent, type ReactNode } from 'react';
+import {
+  useMemo,
+  useRef,
+  type MouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from 'react';
 import {
   COMPONENT_GROUPS,
   findComponentBySlotId,
@@ -613,7 +619,8 @@ export function PreviewPanel() {
   const totalCount = components.length;
 
   return (
-    <aside className="sticky top-20 flex h-[calc(100vh-6rem)] flex-col rounded-lg border border-stone-200 bg-white/70 backdrop-blur">
+    <aside className="relative sticky top-20 flex h-[calc(100vh-6rem)] flex-col rounded-lg border border-stone-200 bg-white/70 backdrop-blur">
+      <PreviewPanelResizeHandle />
       <header className="border-b border-stone-200 px-4 py-2.5">
         <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400">
           Live preview
@@ -885,6 +892,55 @@ function PreviewSection({
       </div>
       {children}
     </section>
+  );
+}
+
+/**
+ * Live Preview 패널의 왼쪽 보더 중앙에 붙는 리사이즈 핸들.
+ * 드래그하는 동안 문서 전체에 col-resize 커서를 강제하고 텍스트 선택을 억제해
+ * 패널 바깥에서도 움직임이 매끄럽게 이어지도록 한다.
+ */
+function PreviewPanelResizeHandle() {
+  const startRef = useRef<{ x: number; width: number } | null>(null);
+  const setPreviewPanelWidth = usePosaStore((s) => s.setPreviewPanelWidth);
+
+  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const currentWidth = usePosaStore.getState().previewPanelWidth;
+    startRef.current = { x: e.clientX, width: currentWidth };
+
+    const onMove = (ev: PointerEvent) => {
+      const start = startRef.current;
+      if (!start) return;
+      const dx = start.x - ev.clientX;
+      setPreviewPanelWidth(start.width + dx);
+    };
+    const end = () => {
+      startRef.current = null;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', end);
+      window.removeEventListener('pointercancel', end);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize live preview"
+      onPointerDown={onPointerDown}
+      className="group absolute left-0 top-1/2 z-10 flex h-11 w-4 -translate-x-1/2 -translate-y-1/2 cursor-col-resize items-center justify-center touch-none"
+    >
+      <div className="h-[35px] w-[10px] rounded-full border border-[#D2D2D2] bg-[#F5F5F5] transition-colors group-hover:border-stone-500 group-active:border-stone-700" />
+    </div>
   );
 }
 

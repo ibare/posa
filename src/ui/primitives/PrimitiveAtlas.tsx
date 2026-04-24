@@ -21,6 +21,7 @@ export function PrimitiveAtlas() {
   const ir = usePosaStore((s) => s.ir);
   const atlasSelection = usePosaStore((s) => s.atlasSelection);
   const clearAtlasSelection = usePosaStore((s) => s.clearAtlasSelection);
+  const previewPanelWidth = usePosaStore((s) => s.previewPanelWidth);
   const components = useActiveComponentDefs();
   const [mergeSource, setMergeSource] = useState<string | null>(null);
   const { t } = useTranslation(['primitives', 'common']);
@@ -96,7 +97,8 @@ export function PrimitiveAtlas() {
       {atlasSelection && (
         <div
           data-atlas-preview-overlay
-          className="fixed right-4 top-20 z-40 w-[22rem] max-w-[calc(100vw-2rem)]"
+          className="fixed right-4 top-20 z-40 max-w-[calc(100vw-2rem)]"
+          style={{ width: previewPanelWidth }}
         >
           <PreviewPanel />
         </div>

@@ -74,6 +74,12 @@ type PosaState = {
    */
   atlasSelection: { primitiveId: PrimitiveId; shade: ShadeIndex } | null;
 
+  /**
+   * Live Preview 패널의 폭(px). 사용자가 왼쪽 보더의 리사이즈 핸들을 드래그해 변경한다.
+   * 영속화되므로 다음 세션에서도 그대로 복원된다.
+   */
+  previewPanelWidth: number;
+
   // Lifecycle
   startFresh: () => void;
   addActiveComponents: (ids: ComponentId[]) => void;
@@ -165,7 +171,22 @@ type PosaState = {
   moveAtlasSelection: (shade: ShadeIndex) => void;
   /** 밖을 클릭했거나 명시적으로 해제할 때. */
   clearAtlasSelection: () => void;
+
+  /** Live Preview 패널 폭을 지정 폭으로 조정. 내부에서 clamp되어 저장된다. */
+  setPreviewPanelWidth: (width: number) => void;
 };
+
+export const PREVIEW_PANEL_MIN_WIDTH = 280;
+export const PREVIEW_PANEL_MAX_WIDTH = 720;
+export const PREVIEW_PANEL_DEFAULT_WIDTH = 380;
+
+function clampPreviewPanelWidth(w: number): number {
+  if (!Number.isFinite(w)) return PREVIEW_PANEL_DEFAULT_WIDTH;
+  return Math.max(
+    PREVIEW_PANEL_MIN_WIDTH,
+    Math.min(PREVIEW_PANEL_MAX_WIDTH, Math.round(w)),
+  );
+}
 
 const DEFAULT_SHADE: ShadeIndex = 500;
 const LAYER_INDEX: Record<Layer, number> = { z0: 0, z1: 1, z2: 2 };
@@ -238,6 +259,7 @@ export const usePosaStore = create<PosaState>()(
   lastDirection: 'neutral',
   locale: DEFAULT_LOCALE,
   atlasSelection: null,
+  previewPanelWidth: PREVIEW_PANEL_DEFAULT_WIDTH,
 
   setLocale: (locale) => {
     void i18n.changeLanguage(locale);
@@ -659,6 +681,12 @@ export const usePosaStore = create<PosaState>()(
   clearAtlasSelection: () => {
     set({ atlasSelection: null });
   },
+
+  setPreviewPanelWidth: (width) => {
+    const next = clampPreviewPanelWidth(width);
+    if (get().previewPanelWidth === next) return;
+    set({ previewPanelWidth: next });
+  },
     }),
     {
       name: 'posa-store',
@@ -670,6 +698,7 @@ export const usePosaStore = create<PosaState>()(
         activeComponentIds: s.activeComponentIds,
         ir: s.ir,
         locale: s.locale,
+        previewPanelWidth: s.previewPanelWidth,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) void i18n.changeLanguage(state.locale);

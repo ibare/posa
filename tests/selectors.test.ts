@@ -264,7 +264,7 @@ describe('resolveSlotStateColor 상속 체인', () => {
 });
 
 describe('getSlotDisplayName', () => {
-  it('명시적 symbol 참조 slot은 접미사가 붙는다', () => {
+  it('명시적 symbol 참조 slot도 base id 그대로(접미사 없음)', () => {
     const ir = createEmptyIR();
     const ir2: IR = {
       ...ir,
@@ -275,9 +275,7 @@ describe('getSlotDisplayName', () => {
         },
       },
     };
-    expect(getSlotDisplayName('card.background', ir2)).toBe(
-      'card.background.primary',
-    );
+    expect(getSlotDisplayName('card.background', ir2)).toBe('card.background');
   });
 
   it('명시적 ref가 없는 variant slot은 접미사 없이 base id', () => {

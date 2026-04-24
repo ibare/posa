@@ -37,7 +37,7 @@ export function SlotCard({ slotId, focused, onFocusToggle }: SlotCardProps) {
     () => (multiState ? getDirectChildColorsForSlot(ir, slotId) : []),
     [ir, slotId, multiState],
   );
-  const isMultiMode = multiState && directStateColors.length > 0;
+  const isMultiMode = multiState && directStateColors.length > 1;
 
   const onRowClick = isMultiMode ? () => descendToSlot(slotId) : onFocusToggle;
   const showInspector = focused && !isMultiMode;
@@ -64,7 +64,7 @@ export function SlotCard({ slotId, focused, onFocusToggle }: SlotCardProps) {
           </div>
           <div className="text-[10px] font-mono uppercase tracking-wider text-stone-400 mt-0.5">
             {isMultiMode
-              ? `${t('slotCard.stateOverride', { count: directStateColors.length })} — ${t('slotCard.clickToDescend')}`
+              ? `${t('slotCard.directColors', { count: directStateColors.length })} — ${t('slotCard.clickToDescend')}`
               : isDirect
                 ? t('slotCard.setDirectly')
                 : t('slotCard.inheritsAttribute')}
