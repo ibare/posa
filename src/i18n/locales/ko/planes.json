@@ -51,11 +51,7 @@
   "zx": {
     "component": "ZX · 컴포넌트",
     "close": "닫기",
-    "closeTitle": "ZX 닫기 · Z*로 돌아가기",
-    "noVariantsPrefix": "표시할 변형이 없습니다. Z0에서 해당 심볼을 정의하면 ",
-    "noVariantsExamples": "primary",
-    "noVariantsExamplesAlt": "secondary",
-    "noVariantsSuffix": " 등이 나타납니다."
+    "closeTitle": "ZX 닫기 · Z*로 돌아가기"
   },
   "empty": {
     "title": "선택한 컴포넌트가 없습니다",

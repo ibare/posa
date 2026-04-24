@@ -51,11 +51,7 @@
   "zx": {
     "component": "ZX · component",
     "close": "Close",
-    "closeTitle": "Close ZX · back to Z*",
-    "noVariantsPrefix": "No variants visible. Define the corresponding symbols in Z0 to expose ",
-    "noVariantsExamples": "primary",
-    "noVariantsExamplesAlt": "secondary",
-    "noVariantsSuffix": ", etc."
+    "closeTitle": "Close ZX · back to Z*"
   },
   "empty": {
     "title": "No components selected",

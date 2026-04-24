@@ -32,7 +32,6 @@ export function ComponentSlotGrid({
   setFocus: (nodeId: string | null) => void;
   ir: IR;
 }) {
-  const { t } = useTranslation('planes');
   const visibleVariants = getVisibleVariants(component, ir);
   const hasVariants = (component.variants?.length ?? 0) > 0;
 
@@ -47,18 +46,16 @@ export function ComponentSlotGrid({
       />
     );
   }
-  if (visibleVariants.length === 0) {
-    return (
-      <div className="p-6 text-center text-xs text-stone-500 border border-dashed border-stone-300 rounded-lg">
-        {t('zx.noVariantsPrefix')}
-        <span className="font-mono">{t('zx.noVariantsExamples')}</span>,{' '}
-        <span className="font-mono">{t('zx.noVariantsExamplesAlt')}</span>
-        {t('zx.noVariantsSuffix')}
-      </div>
-    );
-  }
   return (
     <div className="space-y-5">
+      <VariantSection
+        componentId={component.id}
+        variantId={null}
+        attributes={component.attributes}
+        focusedNode={focusedNode}
+        setFocus={setFocus}
+        showBaseLabel
+      />
       {visibleVariants.map((variant) => (
         <VariantSection
           key={variant.id}
@@ -142,24 +139,34 @@ function VariantSection({
   attributes,
   focusedNode,
   setFocus,
+  showBaseLabel = false,
 }: {
   componentId: string;
   variantId: string | null;
   attributes: AttributeId[];
   focusedNode: string | null;
   setFocus: (nodeId: string | null) => void;
+  showBaseLabel?: boolean;
 }) {
   const variantLabel = useVariantLabel(variantId ?? '');
   const { t } = useTranslation('catalog');
   return (
     <section className="space-y-2">
-      {variantId && (
+      {variantId ? (
         <div className="flex items-baseline gap-2 px-1">
           <span className="font-mono text-sm text-stone-900">{variantLabel}</span>
           <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
             {variantId}
           </span>
         </div>
+      ) : (
+        showBaseLabel && (
+          <div className="flex items-baseline gap-2 px-1">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400">
+              BASE
+            </span>
+          </div>
+        )
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
         {attributes.map((attr) => {
