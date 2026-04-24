@@ -1,13 +1,7 @@
 {
   "suggested": "Suggested",
-  "suggestedAlt": "Try a different direction",
   "suggestedHint": "Click a tile to commit.",
-  "suggestedHintAlt": "A new primitive will be created if you pick outside this scale.",
   "referencesSymbol": "Currently references symbol",
-  "fineTune": "Fine-tune",
-  "fineTuneHint": "Precision adjustment",
-  "useSymbol": "Use a symbol",
-  "useSymbolHint": "Reference a defined symbol instead of a raw color",
   "noSymbols": "No symbols defined yet. Define one in Z0 to reference it here.",
   "fine": {
     "lightness": "Lightness",
@@ -46,10 +40,6 @@
     "inScope": {
       "label": "Already in use",
       "hint": "Candidates drawn from this project's primitives"
-    },
-    "nearNeighbors": {
-      "label": "Near neighbors",
-      "hint": "Close variations of the current color"
     },
     "roleFit": {
       "label": "Fit for the role",

@@ -12,7 +12,7 @@ const PALETTE_ROLL_DURATION = 0.35;
 const PALETTE_ROLL_EASE = [0.4, 0, 0.2, 1] as const;
 
 type Props = {
-  value: OKLCH;
+  value: OKLCH | null;
   onChange: (color: OKLCH) => void;
 };
 
@@ -46,6 +46,20 @@ function buildGradient(
 }
 
 export function FineTune({ value, onChange }: Props) {
+  return (
+    <div className="space-y-4">
+      <FixedPaletteRow value={value} onChange={onChange} />
+      {value && <Sliders value={value} onChange={onChange} />}
+    </div>
+  );
+}
+
+type SlidersProps = {
+  value: OKLCH;
+  onChange: (color: OKLCH) => void;
+};
+
+function Sliders({ value, onChange }: SlidersProps) {
   const { t } = useTranslation('explorer');
   const lGradient = useMemo(
     () => buildGradient((t) => oklchToHex(t, value.C, value.H), 12),
@@ -69,8 +83,7 @@ export function FineTune({ value, onChange }: Props) {
   });
 
   return (
-    <div className="space-y-4">
-      <FixedPaletteRow value={value} onChange={onChange} />
+    <>
       <SliderRow
         label={t('fine.lightness')}
         sublabel={t('fine.lightnessSub')}
@@ -107,12 +120,12 @@ export function FineTune({ value, onChange }: Props) {
       <div className="pt-2 border-t border-stone-100 font-mono text-[10px] text-stone-400 tabular-nums">
         oklch({value.L.toFixed(3)} {value.C.toFixed(3)} {value.H.toFixed(1)})
       </div>
-    </div>
+    </>
   );
 }
 
 type FixedPaletteRowProps = {
-  value: OKLCH;
+  value: OKLCH | null;
   onChange: (color: OKLCH) => void;
 };
 
@@ -161,7 +174,7 @@ function FixedPaletteRow({ value, onChange }: FixedPaletteRowProps) {
             >
               {palette.tiles.map((tile, i) => {
                 const hex = oklchToHex(tile.L, tile.C, tile.H);
-                const isSelected = matchesOKLCH(tile, value);
+                const isSelected = value ? matchesOKLCH(tile, value) : false;
                 return (
                   <button
                     key={i}

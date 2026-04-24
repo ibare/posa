@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { oklchToHex } from '../../../color/oklch';
 import { hueFamily } from '../../../color/primitive-ops';
@@ -57,7 +57,6 @@ export function ColorExplorer({
   ir,
 }: ColorExplorerProps) {
   const { t } = useTranslation('explorer');
-  const [fineOpen, setFineOpen] = useState(false);
 
   const rows = useMemo(
     () => collectRows({ role: seaKey, value, assignment, ir }),
@@ -97,17 +96,8 @@ export function ColorExplorer({
     [activeSymbolIds, ir],
   );
 
-  const suggestedHeading = assignment
-    ? t('suggestedAlt')
-    : t('suggested');
-  const suggestedHint = assignment
-    ? t('suggestedHintAlt')
-    : t('suggestedHint');
-
-  const fineValue: OKLCH = value ?? { L: 0.58, C: 0.12, H: 220 };
-
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       {myPrimitive && primitiveRef && (
         <>
           <MyPrimitive
@@ -127,61 +117,47 @@ export function ColorExplorer({
               }}
             />
           )}
-          <div className="border-t border-stone-100" />
         </>
       )}
 
       {symbolRef && (
-        <>
-          <div className="rounded-md border border-stone-200 bg-stone-50 p-3">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono">
-              {t('referencesSymbol')}
-            </div>
-            <div className="font-mono text-sm text-stone-900 mt-0.5">
-              {symbolRef.symbol}
-            </div>
+        <div className="rounded-md border border-stone-200 bg-stone-50 p-3">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 font-mono">
+            {t('referencesSymbol')}
           </div>
-          <div className="border-t border-stone-100" />
-        </>
+          <div className="font-mono text-sm text-stone-900 mt-0.5">
+            {symbolRef.symbol}
+          </div>
+        </div>
       )}
 
       {onSelectSymbol && (
-        <>
-          <UseASymbol
-            symbols={definedSymbols}
-            activeSymbol={symbolRef?.symbol ?? null}
-            onSelect={onSelectSymbol}
-          />
-          <div className="border-t border-stone-100" />
-        </>
+        <UseASymbol
+          symbols={definedSymbols}
+          activeSymbol={symbolRef?.symbol ?? null}
+          onSelect={onSelectSymbol}
+        />
       )}
 
       {rows.length > 0 && (
-        <>
-          <div>
-            <div className="flex items-baseline gap-2 mb-0.5">
-              <span className="text-[11px] uppercase tracking-[0.15em] text-stone-600 font-mono">
-                {suggestedHeading}
-              </span>
-            </div>
-            <div className="text-[10px] text-stone-400 italic mb-3">
-              {suggestedHint}
-            </div>
-            <Sea rows={rows} value={value} onPick={onChange} />
-          </div>
-
-          <div className="border-t border-stone-100" />
-        </>
+        <div>
+          {!assignment && (
+            <>
+              <div className="flex items-baseline gap-2 mb-0.5">
+                <span className="text-[11px] uppercase tracking-[0.15em] text-stone-600 font-mono">
+                  {t('suggested')}
+                </span>
+              </div>
+              <div className="text-[10px] text-stone-400 italic mb-3">
+                {t('suggestedHint')}
+              </div>
+            </>
+          )}
+          <Sea rows={rows} value={value} onPick={onChange} />
+        </div>
       )}
 
-      <Collapsible
-        open={fineOpen}
-        onToggle={() => setFineOpen((v) => !v)}
-        label={t('fineTune')}
-        sublabel={t('fineTuneHint')}
-      >
-        <FineTune value={fineValue} onChange={onChange} />
-      </Collapsible>
+      <FineTune value={value} onChange={onChange} />
     </div>
   );
 }
@@ -196,14 +172,6 @@ function UseASymbol({ symbols, activeSymbol, onSelect }: UseASymbolProps) {
   const { t } = useTranslation('explorer');
   return (
     <div>
-      <div className="flex items-baseline gap-2 mb-1.5">
-        <span className="text-[11px] uppercase tracking-[0.15em] text-stone-600 font-mono">
-          {t('useSymbol')}
-        </span>
-        <span className="text-[10px] text-stone-400 italic">
-          {t('useSymbolHint')}
-        </span>
-      </div>
       {symbols.length === 0 ? (
         <div className="text-[11px] text-stone-500 italic px-1">
           {t('noSymbols')}
@@ -239,50 +207,3 @@ function UseASymbol({ symbols, activeSymbol, onSelect }: UseASymbolProps) {
   );
 }
 
-type CollapsibleProps = {
-  open: boolean;
-  onToggle: () => void;
-  label: string;
-  sublabel: string;
-  children: React.ReactNode;
-};
-
-function Collapsible({
-  open,
-  onToggle,
-  label,
-  sublabel,
-  children,
-}: CollapsibleProps) {
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full flex items-center justify-between gap-2 hover:bg-stone-50 -mx-1 px-1 py-1.5 rounded transition"
-      >
-        <div className="flex items-baseline gap-2">
-          <span className="text-[11px] uppercase tracking-[0.15em] text-stone-600 font-mono">
-            {label}
-          </span>
-          <span className="text-[10px] text-stone-400 italic">{sublabel}</span>
-        </div>
-        <svg
-          viewBox="0 0 12 12"
-          className={[
-            'w-3 h-3 text-stone-500 transition-transform',
-            open ? 'rotate-180' : '',
-          ].join(' ')}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="3,4.5 6,8 9,4.5" />
-        </svg>
-      </button>
-      {open && <div className="pt-3">{children}</div>}
-    </div>
-  );
-}
