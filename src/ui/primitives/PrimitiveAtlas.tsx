@@ -1,11 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { effectivePrimitiveReferenceCount } from '../../color/atlas-ops';
-import {
-  countPrimitiveReferences,
-  findOrphanPrimitives,
-  hueFamily,
-} from '../../color/primitive-ops';
+import { findOrphanPrimitives, hueFamily } from '../../color/primitive-ops';
 import type { PrimitiveScale } from '../../ir/types';
 import { PreviewPanel } from '../../preview/PreviewPanel';
 import { useActiveComponentDefs } from '../../store/hooks';
@@ -23,8 +19,7 @@ export function PrimitiveAtlas() {
   const clearAtlasSelection = usePosaStore((s) => s.clearAtlasSelection);
   const previewPanelWidth = usePosaStore((s) => s.previewPanelWidth);
   const components = useActiveComponentDefs();
-  const [mergeSource, setMergeSource] = useState<string | null>(null);
-  const { t } = useTranslation(['primitives', 'common']);
+  const { t } = useTranslation('primitives');
 
   // 선택 상태에서 atlas cell·preview overlay 바깥을 클릭하면 해제.
   // 다른 cell을 누르면 그 cell의 pointerdown에서 stopPropagation + selectAtlasShade가
@@ -70,13 +65,6 @@ export function PrimitiveAtlas() {
     }
     return map;
   }, [ir, components, primitives]);
-  const directRefCounts = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const p of primitives) {
-      map.set(p.id, countPrimitiveReferences(ir, p.id));
-    }
-    return map;
-  }, [ir, primitives]);
 
   const families = new Set(primitives.map((p) => hueFamily(p.anchor)));
   const hueSpread = computeHueSpread(primitives);
@@ -118,18 +106,6 @@ export function PrimitiveAtlas() {
             {t('atlas.hueFamilyCount', { count: families.size })}
           </div>
         </div>
-        {mergeSource && (
-          <div className="text-xs text-stone-600 font-mono">
-            {t('atlas.mergeTarget', { name: mergeSource })}
-            <button
-              type="button"
-              onClick={() => setMergeSource(null)}
-              className="ml-2 underline underline-offset-2 text-stone-500 hover:text-stone-900"
-            >
-              {t('common:action.cancel')}
-            </button>
-          </div>
-        )}
       </header>
 
       <div className="space-y-8">
@@ -144,11 +120,7 @@ export function PrimitiveAtlas() {
                   key={p.id}
                   primitive={p}
                   refCount={effectiveRefCounts.get(p.id) ?? 0}
-                  directRefCount={directRefCounts.get(p.id) ?? 0}
                   isOrphan={orphanIds.has(p.id)}
-                  mergeSource={mergeSource}
-                  onSelectAsMergeSource={() => setMergeSource(p.id)}
-                  onCancelMerge={() => setMergeSource(null)}
                 />
               ))}
             </div>

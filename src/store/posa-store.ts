@@ -1,10 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import {
-  mergePrimitive as mergePrimitiveOp,
-  rebindShade as rebindShadeOp,
-  removePrimitive as removePrimitiveOp,
-} from '../color/atlas-ops';
+import { rebindShade as rebindShadeOp } from '../color/atlas-ops';
 import {
   addPrimitive,
   findNearestPrimitive,
@@ -156,8 +152,6 @@ type PosaState = {
   clearSelectedGroup: () => void;
 
   // Atlas
-  removePrimitive: (primitiveId: PrimitiveId) => void;
-  mergePrimitive: (sourceId: PrimitiveId, targetId: PrimitiveId) => void;
   /**
    * 같은 primitive 내에서 fromShade를 참조하던 모든 소비자를 toShade로 일괄 이동.
    * Atlas의 참조 숫자 드래그가 hover를 바꿀 때마다 호출된다.
@@ -651,24 +645,6 @@ export const usePosaStore = create<PosaState>()(
   clearSelectedGroup: () => set({ selectedGroupId: null }),
 
   // ── Atlas ─────────────────────────────────────────────────────────────
-  removePrimitive: (primitiveId) => {
-    const { ir } = get();
-    try {
-      set({ ir: removePrimitiveOp(ir, primitiveId) });
-    } catch {
-      // UI가 사전 차단 중. 조용히 무시.
-    }
-  },
-
-  mergePrimitive: (sourceId, targetId) => {
-    const { ir } = get();
-    try {
-      set({ ir: mergePrimitiveOp(ir, sourceId, targetId) });
-    } catch {
-      // 존재하지 않거나 동일 — 무시.
-    }
-  },
-
   rebindPrimitiveShade: (primitiveId, fromShade, toShade) => {
     if (fromShade === toShade) return;
     const { ir } = get();

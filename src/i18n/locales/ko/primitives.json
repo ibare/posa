@@ -12,7 +12,6 @@
     "spreadAcross": "분포:",
     "hueFamilyCount_one": "색상 계열 {{count}}개",
     "hueFamilyCount_other": "색상 계열 {{count}}개",
-    "mergeTarget": "병합 대상 선택 중 · 소스: {{name}}",
     "variantCount_one": "변형 {{count}}개",
     "variantCount_other": "변형 {{count}}개"
   },
@@ -28,15 +27,6 @@
     "refSymbols": "심볼:",
     "refAttributes": "어트리뷰트:",
     "refSlots": "슬롯:",
-    "refSlotStates": "슬롯 상태:",
-    "mergeHere": "여기로 병합",
-    "mergeRequires": "병합하려면 다른 프리미티브가 필요합니다",
-    "startMerging": "다른 프리미티브로 병합 시작",
-    "cancelMerge": "병합 취소",
-    "merge": "병합…",
-    "remove": "삭제",
-    "stillInUse": "사용 중이라 삭제할 수 없습니다",
-    "confirmRemove": "{{id}}을(를) 삭제할까요?",
-    "confirmMerge": "{{source}}의 모든 참조가 {{target}}으로 이동되고 {{source}}은(는) 삭제됩니다. 계속할까요?"
+    "refSlotStates": "슬롯 상태:"
   }
 }

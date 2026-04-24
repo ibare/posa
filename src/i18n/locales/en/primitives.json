@@ -12,7 +12,6 @@
     "spreadAcross": "spread across",
     "hueFamilyCount_one": "{{count}} hue family",
     "hueFamilyCount_other": "{{count}} hue families",
-    "mergeTarget": "Selecting merge target · source: {{name}}",
     "variantCount_one": "{{count}} variant",
     "variantCount_other": "{{count}} variants"
   },
@@ -28,15 +27,6 @@
     "refSymbols": "symbols:",
     "refAttributes": "attributes:",
     "refSlots": "slots:",
-    "refSlotStates": "slot states:",
-    "mergeHere": "Merge here",
-    "mergeRequires": "Merging requires another primitive",
-    "startMerging": "Start merging into another primitive",
-    "cancelMerge": "Cancel merge",
-    "merge": "Merge…",
-    "remove": "Remove",
-    "stillInUse": "Still in use (cannot remove)",
-    "confirmRemove": "Remove {{id}}?",
-    "confirmMerge": "All references from {{source}} will be moved to {{target}}, and {{source}} will be removed. Continue?"
+    "refSlotStates": "slot states:"
   }
 }

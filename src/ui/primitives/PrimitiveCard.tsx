@@ -20,26 +20,15 @@ type Props = {
   primitive: PrimitiveScale;
   /** 화면 표시용 effective 사용처 수 (상속 체인 resolve 결과 합). */
   refCount: number;
-  /** 삭제 가드용 direct 배정 수. effective와 어긋날 수 있다(예: symbol 배정만 있고 소비 slot 없음). */
-  directRefCount: number;
   isOrphan: boolean;
-  mergeSource: string | null;
-  onSelectAsMergeSource: () => void;
-  onCancelMerge: () => void;
 };
 
 export function PrimitiveCard({
   primitive,
   refCount,
-  directRefCount,
   isOrphan,
-  mergeSource,
-  onSelectAsMergeSource,
-  onCancelMerge,
 }: Props) {
   const ir = usePosaStore((s) => s.ir);
-  const removePrimitive = usePosaStore((s) => s.removePrimitive);
-  const mergePrimitive = usePosaStore((s) => s.mergePrimitive);
   const atlasSelection = usePosaStore((s) => s.atlasSelection);
   const selectAtlasShade = usePosaStore((s) => s.selectAtlasShade);
   const moveAtlasSelection = usePosaStore((s) => s.moveAtlasSelection);
@@ -65,16 +54,6 @@ export function PrimitiveCard({
     () => shadeUsage(ir, components, primitive.id),
     [ir, components, primitive.id],
   );
-
-  const isMergeTargetCandidate =
-    mergeSource !== null && mergeSource !== primitive.id;
-  const isMergeSource = mergeSource === primitive.id;
-
-  const handleRemove = () => {
-    if (directRefCount > 0) return;
-    if (!window.confirm(t('card.confirmRemove', { id: primitive.id }))) return;
-    removePrimitive(primitive.id);
-  };
 
   const isSelectedThisCard =
     atlasSelection !== null && atlasSelection.primitiveId === primitive.id;
@@ -126,23 +105,10 @@ export function PrimitiveCard({
     };
   }, [draggingShade, primitive.id, rebindPrimitiveShade, moveAtlasSelection]);
 
-  const handleMergeInto = () => {
-    if (!mergeSource) return;
-    const ok = window.confirm(
-      t('card.confirmMerge', { source: mergeSource, target: primitive.id }),
-    );
-    if (!ok) return;
-    mergePrimitive(mergeSource, primitive.id);
-    onCancelMerge();
-  };
-
   return (
     <div
       className={[
-        'rounded-lg border bg-white/80 p-4 space-y-3 transition',
-        isMergeSource
-          ? 'border-stone-900 ring-2 ring-stone-900/30'
-          : 'border-stone-200',
+        'rounded-lg border border-stone-200 bg-white/80 p-4 space-y-3 transition',
         isOrphan ? 'opacity-60' : '',
       ].join(' ')}
     >
@@ -298,43 +264,6 @@ export function PrimitiveCard({
           )}
         </div>
       )}
-
-      <footer className="flex items-center gap-2 pt-1">
-        {isMergeTargetCandidate ? (
-          <button
-            type="button"
-            onClick={handleMergeInto}
-            className="text-xs px-3 py-1.5 rounded border border-stone-900 bg-stone-900 text-cream hover:opacity-90 transition"
-          >
-            {t('card.mergeHere')}
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={
-              isMergeSource ? onCancelMerge : onSelectAsMergeSource
-            }
-            disabled={Object.keys(ir.primitives).length < 2}
-            className="text-xs px-3 py-1.5 rounded border border-stone-200 text-stone-700 hover:border-stone-500 hover:text-stone-900 disabled:opacity-40 disabled:cursor-not-allowed transition"
-            title={
-              Object.keys(ir.primitives).length < 2
-                ? t('card.mergeRequires')
-                : t('card.startMerging')
-            }
-          >
-            {isMergeSource ? t('card.cancelMerge') : t('card.merge')}
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={handleRemove}
-          disabled={directRefCount > 0}
-          className="text-xs px-3 py-1.5 rounded border border-stone-200 text-stone-700 hover:border-red-400 hover:text-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
-          title={directRefCount > 0 ? t('card.stillInUse') : t('card.remove')}
-        >
-          {t('card.remove')}
-        </button>
-      </footer>
     </div>
   );
 }
