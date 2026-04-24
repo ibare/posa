@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { findComponentBySlotId } from '../../catalog/components';
 import {
@@ -9,6 +9,7 @@ import {
 import type { SlotId } from '../../ir/types';
 import { usePosaStore } from '../../store/posa-store';
 import { InspectorBody } from './InspectorBody';
+import { InspectorPopover } from './InspectorPopover';
 import { Swatch } from './Swatch';
 
 /**
@@ -26,6 +27,7 @@ export function SlotCard({ slotId, focused, onFocusToggle }: SlotCardProps) {
   const ir = usePosaStore((s) => s.ir);
   const descendToSlot = usePosaStore((s) => s.descendToSlot);
   const { t } = useTranslation('inspector');
+  const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
 
   const color = resolveSlotStateColor(ir, slotId, 'default');
   const component = findComponentBySlotId(slotId);
@@ -43,8 +45,9 @@ export function SlotCard({ slotId, focused, onFocusToggle }: SlotCardProps) {
   const showInspector = focused && !isMultiMode;
 
   return (
-    <div className="relative">
+    <div>
       <div
+        ref={setAnchorEl}
         className={[
           'flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/80 border transition-all duration-150 cursor-pointer',
           focused && !isMultiMode
@@ -95,11 +98,9 @@ export function SlotCard({ slotId, focused, onFocusToggle }: SlotCardProps) {
           </button>
         )}
       </div>
-      {showInspector && (
-        <div className="absolute left-0 right-0 top-full mt-2 z-20 max-w-[26rem] max-h-[calc(100vh-10rem)] overflow-y-auto bg-white border border-stone-200 shadow-lg rounded-lg p-4">
-          <InspectorBody />
-        </div>
-      )}
+      <InspectorPopover anchor={anchorEl} open={showInspector}>
+        <InspectorBody />
+      </InspectorPopover>
     </div>
   );
 }

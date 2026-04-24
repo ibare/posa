@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { AttributeDefinition } from '../../catalog/attributes';
 import type { SymbolDefinition } from '../../catalog/symbols';
@@ -17,6 +17,7 @@ import {
 } from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
 import { InspectorBody } from '../shared/InspectorBody';
+import { InspectorPopover } from '../shared/InspectorPopover';
 import { Swatch, checkerboardStyle } from '../shared/Swatch';
 
 /**
@@ -111,10 +112,12 @@ function SymbolChip({ symbol, focused, onFocusToggle }: SymbolChipProps) {
   const color = resolveSymbolColor(ir, symbol.id);
   const hex = color ? oklchToHex(color.L, color.C, color.H) : null;
   const { t } = useTranslation('catalog');
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   return (
-    <div className="relative">
+    <div>
       <button
+        ref={setAnchorEl}
         type="button"
         onClick={onFocusToggle}
         className={[
@@ -136,11 +139,9 @@ function SymbolChip({ symbol, focused, onFocusToggle }: SymbolChipProps) {
           </div>
         </div>
       </button>
-      {focused && (
-        <div className="absolute left-0 right-0 top-full mt-2 z-20 w-[26rem] max-h-[calc(100vh-10rem)] overflow-y-auto bg-white border border-stone-200 shadow-lg rounded-lg p-4">
-          <InspectorBody />
-        </div>
-      )}
+      <InspectorPopover anchor={anchorEl} open={focused}>
+        <InspectorBody />
+      </InspectorPopover>
     </div>
   );
 }
@@ -175,10 +176,12 @@ function AttributeRow({
 
   const onRowClick = isMultiMode ? onDescend : onFocusToggle;
   const showInspector = focused && !isMultiMode;
+  const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
 
   return (
-    <div className="relative">
+    <div>
       <div
+        ref={setAnchorEl}
         className={[
           'flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/80 border transition-all duration-150 cursor-pointer',
           focused && !isMultiMode
@@ -231,11 +234,9 @@ function AttributeRow({
           </svg>
         </button>
       </div>
-      {showInspector && (
-        <div className="absolute left-0 right-0 top-full mt-2 z-20 max-w-[26rem] max-h-[calc(100vh-10rem)] overflow-y-auto bg-white border border-stone-200 shadow-lg rounded-lg p-4">
-          <InspectorBody />
-        </div>
-      )}
+      <InspectorPopover anchor={anchorEl} open={showInspector}>
+        <InspectorBody />
+      </InspectorPopover>
     </div>
   );
 }

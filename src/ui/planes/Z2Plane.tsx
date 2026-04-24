@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { findComponentBySlotId } from '../../catalog/components';
 import {
@@ -8,6 +9,7 @@ import {
 import type { OKLCH, StateId } from '../../ir/types';
 import { usePosaStore } from '../../store/posa-store';
 import { InspectorBody } from '../shared/InspectorBody';
+import { InspectorPopover } from '../shared/InspectorPopover';
 import { Swatch } from '../shared/Swatch';
 
 export function Z2Plane() {
@@ -82,9 +84,11 @@ function StateCard({
   onFocusToggle,
 }: StateCardProps) {
   const { t } = useTranslation('planes');
+  const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
   return (
-    <div className="relative">
+    <div>
       <div
+        ref={setAnchorEl}
         className={[
           'flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/80 border transition-all duration-150 cursor-pointer',
           focused
@@ -109,11 +113,9 @@ function StateCard({
           {isDirect ? t('z2.set') : t('z2.inherit')}
         </span>
       </div>
-      {focused && (
-        <div className="absolute left-0 right-0 top-full mt-2 z-20 max-w-[26rem] max-h-[calc(100vh-10rem)] overflow-y-auto bg-white border border-stone-200 shadow-lg rounded-lg p-4">
-          <InspectorBody />
-        </div>
-      )}
+      <InspectorPopover anchor={anchorEl} open={focused}>
+        <InspectorBody />
+      </InspectorPopover>
     </div>
   );
 }
