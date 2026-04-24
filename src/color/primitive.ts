@@ -48,6 +48,24 @@ const CHROMA_MULT: Record<ShadeIndex, number> = {
 
 const NEUTRAL_CHROMA_THRESHOLD = 0.02;
 
+/**
+ * anchor.L에 가장 가까운 TARGET_L을 갖는 shade를 찾는다.
+ * 새 primitive 생성 시 anchorShade 결정에 사용 — anchorShade가 anchor.L과
+ * 동떨어지면 주변 shade 블렌드가 V자로 꺾여 scale monotonicity가 깨진다.
+ */
+export function nearestShadeForL(L: number): ShadeIndex {
+  let best: ShadeIndex = 500;
+  let bestDiff = Infinity;
+  for (const shade of SHADE_INDICES) {
+    const diff = Math.abs(TARGET_L[shade] - L);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      best = shade;
+    }
+  }
+  return best;
+}
+
 /** Anchor와 그 anchor의 shade 위치를 받아 11단 OKLCH scale을 파생한다. */
 export function deriveScale(
   anchor: OKLCH,

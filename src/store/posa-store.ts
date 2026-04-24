@@ -12,6 +12,7 @@ import {
   isWithinScale,
   pruneOrphanPrimitives,
 } from '../color/primitive-ops';
+import { nearestShadeForL } from '../color/primitive';
 import {
   COMPONENT_DEFINITIONS,
   type ComponentGroupId,
@@ -194,7 +195,6 @@ function clampPreviewPanelWidth(w: number): number {
   );
 }
 
-const DEFAULT_SHADE: ShadeIndex = 500;
 const LAYER_INDEX: Record<Layer, number> = { z0: 0, z1: 1, z2: 2 };
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -211,12 +211,13 @@ const LAYER_INDEX: Record<Layer, number> = { z0: 0, z1: 1, z2: 2 };
  *
  * 이렇게 해야 "원천이 바뀌면 참조한 모두가 바뀐다, 소비자가 바꾸면 자기 연결만 바뀐다"는
  * 분리가 유지된다. (이전엔 같은 scale 안의 색을 고르면 primitive anchor를 옮겨 cascade가 발생.)
+ *
+ * 새 primitive 생성 시 anchorShade는 color.L에 가장 가까운 TARGET_L의 shade로 결정한다.
+ * 이전엔 호출자의 fallback(직전 ref shade)을 썼지만, 그 shade의 TARGET_L과 color.L이
+ * 동떨어지면 주변 블렌드가 V자로 꺾여 50이 가장 밝지 않거나 hue가 튀어 보이는 scale이
+ * 생성되는 문제가 있었다.
  */
-function rebindColor(
-  ir: IR,
-  color: OKLCH,
-  fallbackShade: ShadeIndex,
-): { ir: IR; ref: ColorRef } {
+function rebindColor(ir: IR, color: OKLCH): { ir: IR; ref: ColorRef } {
   const nearest = findNearestPrimitive(ir, color);
   if (nearest && isWithinScale(color, nearest)) {
     const shade = findNearestShade(nearest, color.L);
@@ -225,10 +226,11 @@ function rebindColor(
       ref: { kind: 'primitive', primitive: nearest.id, shade },
     };
   }
-  const { ir: next, primitiveId } = addPrimitive(ir, color, fallbackShade);
+  const anchorShade = nearestShadeForL(color.L);
+  const { ir: next, primitiveId } = addPrimitive(ir, color, anchorShade);
   return {
     ir: next,
-    ref: { kind: 'primitive', primitive: primitiveId, shade: fallbackShade },
+    ref: { kind: 'primitive', primitive: primitiveId, shade: anchorShade },
   };
 }
 
@@ -361,8 +363,7 @@ export const usePosaStore = create<PosaState>()(
       return;
     }
 
-    const fallbackShade = ir.symbols[symbolId]?.shade ?? DEFAULT_SHADE;
-    const { ir: nextIr, ref } = rebindColor(ir, color, fallbackShade);
+    const { ir: nextIr, ref } = rebindColor(ir, color);
     if (ref.kind !== 'primitive') return; // 방어적
     const nextSymbols = {
       ...nextIr.symbols,
@@ -401,8 +402,7 @@ export const usePosaStore = create<PosaState>()(
       return;
     }
 
-    const fallbackShade = ir.attributes[attrId]?.shade ?? DEFAULT_SHADE;
-    const { ir: nextIr, ref } = rebindColor(ir, color, fallbackShade);
+    const { ir: nextIr, ref } = rebindColor(ir, color);
     if (ref.kind !== 'primitive') return; // 방어적: rebindColor는 항상 primitive ref 반환
     const nextAttrs = {
       ...nextIr.attributes,
@@ -453,9 +453,7 @@ export const usePosaStore = create<PosaState>()(
       return;
     }
 
-    const fallbackShade =
-      slot.ref?.kind === 'primitive' ? slot.ref.shade : DEFAULT_SHADE;
-    const { ir: nextIr, ref } = rebindColor(withShell, color, fallbackShade);
+    const { ir: nextIr, ref } = rebindColor(withShell, color);
     const nextSlots = {
       ...nextIr.slots,
       [slotId]: { ...nextIr.slots[slotId], ref },
@@ -515,10 +513,7 @@ export const usePosaStore = create<PosaState>()(
       return;
     }
 
-    const existing = slot.states[state];
-    const fallbackShade =
-      existing?.kind === 'primitive' ? existing.shade : DEFAULT_SHADE;
-    const { ir: nextIr, ref } = rebindColor(withShell, color, fallbackShade);
+    const { ir: nextIr, ref } = rebindColor(withShell, color);
 
     const nextSlots = {
       ...nextIr.slots,

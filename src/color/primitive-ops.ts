@@ -1,5 +1,4 @@
 import type {
-  ColorRef,
   IR,
   OKLCH,
   PrimitiveId,
@@ -209,31 +208,3 @@ export function findNearestShade(
   return bestShade;
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// ColorRef rebind helpers
-// ──────────────────────────────────────────────────────────────────────────
-
-/**
- * 사용자가 고른 색 → ColorRef를 돌려준다. 가까운 primitive를 찾으면 그 안 shade,
- * 없으면 새 primitive 생성 후 그것을 참조.
- * 호출자는 반환된 IR로 state를 갈아끼운 뒤 ColorRef를 symbol/attribute/slot에 꽂는다.
- */
-export function colorToRef(
-  ir: IR,
-  color: OKLCH,
-  fallbackShade: ShadeIndex,
-): { ir: IR; ref: ColorRef } {
-  const nearest = findNearestPrimitive(ir, color);
-  if (nearest) {
-    const shade = findNearestShade(nearest, color.L);
-    return {
-      ir,
-      ref: { kind: 'primitive', primitive: nearest.id, shade },
-    };
-  }
-  const { ir: next, primitiveId } = addPrimitive(ir, color, fallbackShade);
-  return {
-    ir: next,
-    ref: { kind: 'primitive', primitive: primitiveId, shade: fallbackShade },
-  };
-}

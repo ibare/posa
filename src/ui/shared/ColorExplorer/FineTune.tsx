@@ -151,10 +151,11 @@ function FixedPaletteRow({ value, onChange }: FixedPaletteRowProps) {
         style={{ gridTemplateColumns: 'repeat(12, minmax(0, 1fr))' }}
       >
         <div className="col-span-11 relative overflow-hidden">
-          {/* sizer: 보이지 않는 1칸으로 wrapper 높이를 tile 한 칸 높이에 맞춤 */}
+          {/* sizer: 보이지 않는 1칸으로 wrapper 높이를 tile 한 칸 높이에 맞춤.
+              py-1로 선택 ring(ring-offset-2 + ring-2 = 4px)이 상하로 삐져나갈 여유를 준다. */}
           <div
             aria-hidden
-            className="grid gap-1.5 invisible"
+            className="grid gap-1.5 invisible py-1.5"
             style={{ gridTemplateColumns: 'repeat(11, minmax(0, 1fr))' }}
           >
             <div className="aspect-square" />
@@ -169,7 +170,7 @@ function FixedPaletteRow({ value, onChange }: FixedPaletteRowProps) {
                 duration: PALETTE_ROLL_DURATION,
                 ease: PALETTE_ROLL_EASE,
               }}
-              className="absolute inset-0 grid gap-1.5"
+              className="absolute inset-0 grid gap-1.5 py-1.5"
               style={{ gridTemplateColumns: 'repeat(11, minmax(0, 1fr))' }}
             >
               {palette.tiles.map((tile, i) => {
@@ -205,7 +206,7 @@ function FixedPaletteRow({ value, onChange }: FixedPaletteRowProps) {
           aria-label={t('grayscale.cycleAria')}
           title={t('grayscale.cycle')}
           className={[
-            'aspect-square rounded-md flex items-center justify-center',
+            'aspect-square self-center rounded-md flex items-center justify-center',
             'text-stone-500 hover:text-stone-900 hover:bg-stone-100',
             'ring-1 ring-stone-200 transition',
           ].join(' ')}
