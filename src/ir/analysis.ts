@@ -67,15 +67,15 @@ export function computePrimitiveUsage(ir: IR): PrimitiveReferenceBucket[] {
       return;
     }
     const sym = ir.symbols[ref.symbol];
-    if (!sym) return;
+    if (!sym || sym.kind !== 'primitive') return;
     bump(sym.primitive, sym.shade);
   };
 
   for (const sym of Object.values(ir.symbols)) {
-    if (sym) bump(sym.primitive, sym.shade);
+    if (sym && sym.kind === 'primitive') bump(sym.primitive, sym.shade);
   }
   for (const attr of Object.values(ir.attributes)) {
-    if (attr) bump(attr.primitive, attr.shade);
+    if (attr && attr.kind === 'primitive') bump(attr.primitive, attr.shade);
   }
   for (const slot of Object.values(ir.slots)) {
     if (slot.ref) visit(slot.ref);

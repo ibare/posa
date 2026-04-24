@@ -6,14 +6,16 @@ import {
   countPrimitiveSlotReferences,
   resolveSymbolColor,
 } from '../../../ir/selectors';
-import type {
-  ColorRef,
-  IR,
-  OKLCH,
-  PrimitiveId,
-  PrimitiveScale,
-  ShadeIndex,
-  SymbolId,
+import {
+  SYSTEM_SYMBOL_COLORS,
+  SYSTEM_SYMBOL_IDS,
+  type ColorRef,
+  type IR,
+  type OKLCH,
+  type PrimitiveId,
+  type PrimitiveScale,
+  type ShadeIndex,
+  type SymbolId,
 } from '../../../ir/types';
 import { useActiveSymbolIds } from '../../../store/hooks';
 import { FineTune } from './FineTune';
@@ -85,16 +87,19 @@ export function ColorExplorer({
   }, [myPrimitive, primitives, ir]);
 
   const activeSymbolIds = useActiveSymbolIds();
-  const definedSymbols = useMemo(
-    () =>
-      activeSymbolIds
-        .filter((id) => ir.symbols[id] != null)
-        .map((id) => ({
-          id,
-          color: resolveSymbolColor(ir, id),
-        })),
-    [activeSymbolIds, ir],
-  );
+  const definedSymbols = useMemo(() => {
+    const userChips = activeSymbolIds
+      .filter((id) => ir.symbols[id] != null)
+      .map((id) => ({
+        id,
+        color: resolveSymbolColor(ir, id),
+      }));
+    const systemChips = SYSTEM_SYMBOL_IDS.map((id) => ({
+      id: id as SymbolId,
+      color: SYSTEM_SYMBOL_COLORS[id] as OKLCH,
+    }));
+    return [...userChips, ...systemChips];
+  }, [activeSymbolIds, ir]);
 
   return (
     <div className="space-y-3">

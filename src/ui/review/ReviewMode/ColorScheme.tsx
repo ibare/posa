@@ -198,6 +198,10 @@ function SymbolChip({ usage, ir }: { usage: SymbolUsage; ir: IR }) {
   const assignment = ir.symbols[usage.symbolId];
   if (!assignment) return null;
   const hex = oklchToHex(usage.color.L, usage.color.C, usage.color.H);
+  const refLabel =
+    assignment.kind === 'primitive'
+      ? `${assignment.primitive}·${assignment.shade}`
+      : 'literal';
   return (
     <div className="overflow-hidden rounded-md border border-stone-200">
       <div className="h-14 w-full" style={{ background: hex }} />
@@ -205,9 +209,7 @@ function SymbolChip({ usage, ir }: { usage: SymbolUsage; ir: IR }) {
         <div className="font-mono text-[12px] text-stone-900">
           {usage.symbolId}
         </div>
-        <div className="font-mono text-[10px] text-stone-500">
-          {assignment.primitive}·{assignment.shade}
-        </div>
+        <div className="font-mono text-[10px] text-stone-500">{refLabel}</div>
         <div className="font-mono text-[10px] text-stone-400">{hex}</div>
       </div>
     </div>
@@ -224,6 +226,10 @@ function AttributeChip({
   const assignment = ir.attributes[usage.attributeId];
   if (!assignment || !usage.color) return null;
   const hex = oklchToHex(usage.color.L, usage.color.C, usage.color.H);
+  const refLabel =
+    assignment.kind === 'primitive'
+      ? `${assignment.primitive}·${assignment.shade}`
+      : assignment.name;
   return (
     <div className="overflow-hidden rounded-md border border-stone-200">
       <div className="h-14 w-full" style={{ background: hex }} />
@@ -231,9 +237,7 @@ function AttributeChip({
         <div className="font-mono text-[12px] text-stone-900">
           {usage.attributeId}
         </div>
-        <div className="font-mono text-[10px] text-stone-500">
-          {assignment.primitive}·{assignment.shade}
-        </div>
+        <div className="font-mono text-[10px] text-stone-500">{refLabel}</div>
         <div className="font-mono text-[10px] text-stone-400">{hex}</div>
       </div>
     </div>

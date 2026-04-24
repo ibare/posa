@@ -18,11 +18,11 @@ describe('listPrimitiveReferences', () => {
       ...ir1,
       symbols: {
         ...ir1.symbols,
-        primary: { primitive: primitiveId, shade: 500 },
+        primary: { kind: 'primitive', primitive: primitiveId, shade: 500 },
       },
       attributes: {
         ...ir1.attributes,
-        background: { primitive: primitiveId, shade: 50 },
+        background: { kind: 'primitive', primitive: primitiveId, shade: 50 },
       },
       slots: {
         'button.primary.background': {
@@ -62,11 +62,11 @@ describe('shadeUsage', () => {
       ...ir1,
       symbols: {
         ...ir1.symbols,
-        primary: { primitive: primitiveId, shade: 500 },
+        primary: { kind: 'primitive', primitive: primitiveId, shade: 500 },
       },
       attributes: {
         ...ir1.attributes,
-        border: { primitive: primitiveId, shade: 700 },
+        border: { kind: 'primitive', primitive: primitiveId, shade: 700 },
       },
       slots: {
         'button.primary.background': {
@@ -98,7 +98,7 @@ describe('shadeUsage', () => {
       ...ir1,
       symbols: {
         ...ir1.symbols,
-        primary: { primitive: primitiveId, shade: 500 },
+        primary: { kind: 'primitive', primitive: primitiveId, shade: 500 },
       },
     };
     // 어떤 컴포넌트도 선택되지 않은 상태라도 symbol 배정 자체는 카운트된다.

@@ -99,7 +99,9 @@
     "success": { "label": "Success", "description": "긍정 확인" },
     "info": { "label": "Info", "description": "중립 정보" },
     "warning": { "label": "Warning", "description": "주의 또는 경고" },
-    "error": { "label": "Error", "description": "위험 또는 오류" }
+    "error": { "label": "Error", "description": "위험 또는 오류" },
+    "white": { "label": "White", "description": "순백 — 항상 제공" },
+    "black": { "label": "Black", "description": "순흑 — 항상 제공" }
   },
   "compilers": {
     "css-vars": { "label": "CSS 변수", "description": ":root 아래의 디자인 토큰 CSS 변수" },

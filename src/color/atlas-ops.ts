@@ -24,12 +24,12 @@ export function listPrimitiveReferences(
 ): PrimitiveReferenceLocation[] {
   const out: PrimitiveReferenceLocation[] = [];
   for (const [symId, assign] of Object.entries(ir.symbols)) {
-    if (assign && assign.primitive === primitiveId) {
+    if (assign && assign.kind === 'primitive' && assign.primitive === primitiveId) {
       out.push({ kind: 'symbol', symbolId: symId });
     }
   }
   for (const [attrId, assign] of Object.entries(ir.attributes)) {
-    if (assign && assign.primitive === primitiveId) {
+    if (assign && assign.kind === 'primitive' && assign.primitive === primitiveId) {
       out.push({ kind: 'attribute', attributeId: attrId });
     }
   }
@@ -66,15 +66,22 @@ export function rebindShade(
 
   const nextSymbols = { ...ir.symbols };
   for (const [symId, assign] of Object.entries(ir.symbols)) {
-    if (!assign || assign.primitive !== primitiveId || assign.shade !== fromShade) continue;
-    nextSymbols[symId as SymbolId] = { primitive: primitiveId, shade: toShade };
+    if (!assign || assign.kind !== 'primitive') continue;
+    if (assign.primitive !== primitiveId || assign.shade !== fromShade) continue;
+    nextSymbols[symId as SymbolId] = {
+      kind: 'primitive',
+      primitive: primitiveId,
+      shade: toShade,
+    };
     changed = true;
   }
 
   const nextAttributes = { ...ir.attributes };
   for (const [attrId, assign] of Object.entries(ir.attributes)) {
-    if (!assign || assign.primitive !== primitiveId || assign.shade !== fromShade) continue;
+    if (!assign || assign.kind !== 'primitive') continue;
+    if (assign.primitive !== primitiveId || assign.shade !== fromShade) continue;
     nextAttributes[attrId as keyof IR['attributes']] = {
+      kind: 'primitive',
       primitive: primitiveId,
       shade: toShade,
     };
@@ -150,7 +157,9 @@ export function shadeUsage(
     usage[shade] = 0;
   }
   for (const assign of Object.values(ir.symbols)) {
-    if (assign && assign.primitive === primitiveId) usage[assign.shade]++;
+    if (assign && assign.kind === 'primitive' && assign.primitive === primitiveId) {
+      usage[assign.shade]++;
+    }
   }
   const symbolIdSet: Set<string> = new Set(SYMBOL_IDS);
   for (const comp of components) {

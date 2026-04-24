@@ -11,6 +11,11 @@ import {
   resolveSymbolColor,
 } from '../../ir/selectors';
 import {
+  SYSTEM_SYMBOL_COLORS,
+  SYSTEM_SYMBOL_IDS,
+  type SystemSymbolId,
+} from '../../ir/types';
+import {
   useActiveAttributeDefs,
   useActiveComponentDefs,
   useActiveSymbolDefs,
@@ -46,30 +51,31 @@ export function Z0Plane() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-10">
-      {activeSymbols.length > 0 && (
-        <section>
-          <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400 mb-2">
-            {t('z0.symbols')}
-          </div>
-          <div className="text-xs text-stone-500 mb-3">
-            {t('z0.symbolsHint')}
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {activeSymbols.map((sym) => (
-              <SymbolChip
-                key={sym.id}
-                symbol={sym}
-                focused={focusedNode === `sym:${sym.id}`}
-                onFocusToggle={() =>
-                  setFocus(
-                    focusedNode === `sym:${sym.id}` ? null : `sym:${sym.id}`,
-                  )
-                }
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      <section>
+        <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-stone-400 mb-2">
+          {t('z0.symbols')}
+        </div>
+        <div className="text-xs text-stone-500 mb-3">
+          {t('z0.symbolsHint')}
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {activeSymbols.map((sym) => (
+            <SymbolChip
+              key={sym.id}
+              symbol={sym}
+              focused={focusedNode === `sym:${sym.id}`}
+              onFocusToggle={() =>
+                setFocus(
+                  focusedNode === `sym:${sym.id}` ? null : `sym:${sym.id}`,
+                )
+              }
+            />
+          ))}
+          {SYSTEM_SYMBOL_IDS.map((id) => (
+            <SystemSymbolChip key={id} id={id} />
+          ))}
+        </div>
+      </section>
 
       {activeAttributes.length > 0 && (
         <section>
@@ -142,6 +148,29 @@ function SymbolChip({ symbol, focused, onFocusToggle }: SymbolChipProps) {
       <InspectorPopover anchor={anchorEl} open={focused}>
         <InspectorBody />
       </InspectorPopover>
+    </div>
+  );
+}
+
+function SystemSymbolChip({ id }: { id: SystemSymbolId }) {
+  const color = SYSTEM_SYMBOL_COLORS[id];
+  const hex = oklchToHex(color.L, color.C, color.H);
+  const { t } = useTranslation('catalog');
+  return (
+    <div
+      className="rounded-lg border border-stone-200 overflow-hidden opacity-90"
+      title={t(`symbols.${id}.description`)}
+    >
+      <div
+        className="h-20 border-b"
+        style={{ backgroundColor: hex, borderBottomColor: '#f0f0f0' }}
+      />
+      <div className="px-3 py-2 bg-white">
+        <div className="font-mono text-sm text-stone-900">{id}</div>
+        <div className="text-[11px] text-stone-500 leading-snug">
+          {t(`symbols.${id}.description`)}
+        </div>
+      </div>
     </div>
   );
 }

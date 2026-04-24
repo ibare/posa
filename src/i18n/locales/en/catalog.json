@@ -99,7 +99,9 @@
     "success": { "label": "Success", "description": "Positive confirmation" },
     "info": { "label": "Info", "description": "Neutral information" },
     "warning": { "label": "Warning", "description": "Caution or attention" },
-    "error": { "label": "Error", "description": "Danger or error" }
+    "error": { "label": "Error", "description": "Danger or error" },
+    "white": { "label": "White", "description": "Pure white — always available" },
+    "black": { "label": "Black", "description": "Pure black — always available" }
   },
   "compilers": {
     "css-vars": { "label": "CSS Variables", "description": "Design token CSS variables under :root" },

@@ -92,11 +92,18 @@ export const dtcgCompiler: Compiler = {
     for (const id of activeSymbolIds) {
       const sym = ir.symbols[id];
       if (!sym) continue;
-      if (!ir.primitives[sym.primitive]) continue;
-      symbolsRoot[id] = {
-        $value: primitiveRef(sym.primitive, sym.shade),
-        $type: 'color',
-      } satisfies ColorNode;
+      if (sym.kind === 'primitive') {
+        if (!ir.primitives[sym.primitive]) continue;
+        symbolsRoot[id] = {
+          $value: primitiveRef(sym.primitive, sym.shade),
+          $type: 'color',
+        } satisfies ColorNode;
+      } else {
+        symbolsRoot[id] = {
+          $value: oklchToCssString(sym.color),
+          $type: 'color',
+        } satisfies ColorNode;
+      }
     }
     if (Object.keys(symbolsRoot).length > 0) {
       colorRoot.symbols = symbolsRoot;
@@ -106,11 +113,18 @@ export const dtcgCompiler: Compiler = {
     for (const id of activeAttributeIds) {
       const attr = ir.attributes[id];
       if (!attr) continue;
-      if (!ir.primitives[attr.primitive]) continue;
-      attributesRoot[id] = {
-        $value: primitiveRef(attr.primitive, attr.shade),
-        $type: 'color',
-      } satisfies ColorNode;
+      if (attr.kind === 'primitive') {
+        if (!ir.primitives[attr.primitive]) continue;
+        attributesRoot[id] = {
+          $value: primitiveRef(attr.primitive, attr.shade),
+          $type: 'color',
+        } satisfies ColorNode;
+      } else {
+        attributesRoot[id] = {
+          $value: symbolRef(attr.name),
+          $type: 'color',
+        } satisfies ColorNode;
+      }
     }
     if (Object.keys(attributesRoot).length > 0) {
       colorRoot.attributes = attributesRoot;

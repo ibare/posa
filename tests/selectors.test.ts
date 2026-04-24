@@ -11,7 +11,13 @@ import {
   resolveSlotStateColor,
   resolveSymbolColor,
 } from '../src/ir/selectors';
-import { ATTRIBUTE_IDS, createEmptyIR, type IR } from '../src/ir/types';
+import {
+  ATTRIBUTE_IDS,
+  BLACK_OKLCH,
+  WHITE_OKLCH,
+  createEmptyIR,
+  type IR,
+} from '../src/ir/types';
 
 function seed(): { ir: IR; pid: string } {
   const { ir: ir1, primitiveId: pid } = addPrimitive(
@@ -65,7 +71,7 @@ describe('getSlotsByAttribute', () => {
     const { ir: ir1, pid } = seed();
     const ir2: IR = {
       ...ir1,
-      symbols: { ...ir1.symbols, primary: { primitive: pid, shade: 500 } },
+      symbols: { ...ir1.symbols, primary: { kind: 'primitive', primitive: pid, shade: 500 } },
     };
     const slots = getSlotsByAttribute(COMPONENT_DEFINITIONS, 'background', ir2);
     expect(slots).toContain('button.primary.background');
@@ -82,7 +88,7 @@ describe('resolveSymbolColor', () => {
     const { ir: ir1, pid } = seed();
     const ir2: IR = {
       ...ir1,
-      symbols: { ...ir1.symbols, primary: { primitive: pid, shade: 500 } },
+      symbols: { ...ir1.symbols, primary: { kind: 'primitive', primitive: pid, shade: 500 } },
     };
     expect(resolveSymbolColor(ir2, 'primary')).toEqual(
       ir1.primitives[pid].scale[500],
@@ -93,9 +99,15 @@ describe('resolveSymbolColor', () => {
     const ir = createEmptyIR();
     const ir2: IR = {
       ...ir,
-      symbols: { ...ir.symbols, primary: { primitive: 'missing', shade: 500 } },
+      symbols: { ...ir.symbols, primary: { kind: 'primitive', primitive: 'missing', shade: 500 } },
     };
     expect(resolveSymbolColor(ir2, 'primary')).toBeNull();
+  });
+
+  it('system symbol white/black은 createEmptyIR에 항상 심겨 있다', () => {
+    const ir = createEmptyIR();
+    expect(resolveSymbolColor(ir, 'white')).toEqual(WHITE_OKLCH);
+    expect(resolveSymbolColor(ir, 'black')).toEqual(BLACK_OKLCH);
   });
 });
 
@@ -106,7 +118,7 @@ describe('resolveAttributeColor', () => {
       ...ir1,
       attributes: {
         ...ir1.attributes,
-        background: { primitive: pid, shade: 100 },
+        background: { kind: 'primitive', primitive: pid, shade: 100 },
       },
     };
     expect(resolveAttributeColor(ir2, 'background')).toEqual(
@@ -130,7 +142,7 @@ describe('resolveSlotStateColor 상속 체인', () => {
       ...ir1,
       attributes: {
         ...ir1.attributes,
-        background: { primitive: pid, shade: 50 },
+        background: { kind: 'primitive', primitive: pid, shade: 50 },
       },
       slots: {
         'button.primary.background': { ref: null, states: {} },
@@ -143,7 +155,7 @@ describe('resolveSlotStateColor 상속 체인', () => {
     // primary symbol을 할당해도 slot.ref가 비면 attribute로 폴백 (자동 바인딩 안 됨)
     const withSymbol: IR = {
       ...attrOnly,
-      symbols: { ...attrOnly.symbols, primary: { primitive: pid, shade: 300 } },
+      symbols: { ...attrOnly.symbols, primary: { kind: 'primitive', primitive: pid, shade: 300 } },
     };
     expect(
       resolveSlotStateColor(withSymbol, 'button.primary.background'),
@@ -216,10 +228,10 @@ describe('resolveSlotStateColor 상속 체인', () => {
     // 사용자가 button.primary.background에만 명시적으로 primary symbol 라이브 링크 설정
     const ir3: IR = {
       ...ir2,
-      symbols: { ...ir2.symbols, primary: { primitive: pidB, shade: 500 } },
+      symbols: { ...ir2.symbols, primary: { kind: 'primitive', primitive: pidB, shade: 500 } },
       attributes: {
         ...ir2.attributes,
-        background: { primitive: pidA, shade: 50 },
+        background: { kind: 'primitive', primitive: pidA, shade: 50 },
       },
       slots: {
         'button.primary.background': {
@@ -247,7 +259,7 @@ describe('resolveSlotStateColor 상속 체인', () => {
     // primary 변경
     const ir4: IR = {
       ...ir3,
-      symbols: { ...ir3.symbols, primary: { primitive: pidB, shade: 700 } },
+      symbols: { ...ir3.symbols, primary: { kind: 'primitive', primitive: pidB, shade: 700 } },
     };
     // 명시적 symbol ref만 변경
     expect(

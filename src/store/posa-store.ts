@@ -17,6 +17,8 @@ import { DEFAULT_LOCALE, i18n, type Locale } from '../i18n';
 import { FIXED_PALETTES } from '../color/fixed-palettes';
 import {
   createEmptyIR,
+  isSystemSymbolId,
+  SYSTEM_SYMBOL_COLORS,
   type AttributeId,
   type ColorRef,
   type ComponentId,
@@ -27,6 +29,7 @@ import {
   type SlotId,
   type StateId,
   type SymbolId,
+  type SystemSymbolId,
 } from '../ir/types';
 
 /**
@@ -211,7 +214,23 @@ const LAYER_INDEX: Record<Layer, number> = { z0: 0, z1: 1, z2: 2 };
  * 동떨어지면 주변 블렌드가 V자로 꺾여 50이 가장 밝지 않거나 hue가 튀어 보이는 scale이
  * 생성되는 문제가 있었다.
  */
+/**
+ * 순백/순흑 근처에 들어오면 system symbol로 식별.
+ * C<0.005, L≥0.99 → white. L≤0.01 → black.
+ * 어느 primitive scale도 이 근방에 앵커를 두지 않으므로 안전히 라우팅된다.
+ */
+function detectSystemSymbol(color: OKLCH): SystemSymbolId | null {
+  if (color.C >= 0.005) return null;
+  if (color.L >= 0.99) return 'white';
+  if (color.L <= 0.01) return 'black';
+  return null;
+}
+
 function rebindColor(ir: IR, color: OKLCH): { ir: IR; ref: ColorRef } {
+  const sys = detectSystemSymbol(color);
+  if (sys) {
+    return { ir, ref: { kind: 'symbol', symbol: sys } };
+  }
   const nearest = findNearestPrimitive(ir, color);
   if (nearest && isWithinScale(color, nearest)) {
     const shade = findNearestShade(nearest, color.L);
@@ -348,6 +367,7 @@ export const usePosaStore = create<PosaState>()(
   // ── Symbol ────────────────────────────────────────────────────────────
   setSymbolColor: (symbolId, color) => {
     const { ir } = get();
+    if (isSystemSymbolId(symbolId)) return;
 
     if (color === null) {
       if (!ir.symbols[symbolId]) return;
@@ -358,18 +378,28 @@ export const usePosaStore = create<PosaState>()(
     }
 
     const { ir: nextIr, ref } = rebindColor(ir, color);
-    if (ref.kind !== 'primitive') return; // 방어적
+    // 순백/순흑은 user symbol에 literal snapshot으로 꽂아 cascade에서 분리.
+    if (ref.kind === 'symbol') {
+      const systemColor = SYSTEM_SYMBOL_COLORS[ref.symbol as SystemSymbolId];
+      const nextSymbols = {
+        ...nextIr.symbols,
+        [symbolId]: { kind: 'literal' as const, color: systemColor },
+      };
+      set({ ir: pruneOrphanPrimitives(bumpMeta({ ...nextIr, symbols: nextSymbols })) });
+      return;
+    }
     const nextSymbols = {
       ...nextIr.symbols,
-      [symbolId]: { primitive: ref.primitive, shade: ref.shade },
+      [symbolId]: { kind: 'primitive' as const, primitive: ref.primitive, shade: ref.shade },
     };
     set({ ir: pruneOrphanPrimitives(bumpMeta({ ...nextIr, symbols: nextSymbols })) });
   },
 
   setSymbolShade: (symbolId, shade) => {
     const { ir } = get();
+    if (isSystemSymbolId(symbolId)) return;
     const current = ir.symbols[symbolId];
-    if (!current || current.shade === shade) return;
+    if (!current || current.kind !== 'primitive' || current.shade === shade) return;
     const nextSymbols = {
       ...ir.symbols,
       [symbolId]: { ...current, shade },
@@ -379,8 +409,12 @@ export const usePosaStore = create<PosaState>()(
 
   setSymbolAssignment: (symbolId, primitive, shade) => {
     const { ir } = get();
+    if (isSystemSymbolId(symbolId)) return;
     if (!ir.primitives[primitive]) return;
-    const nextSymbols = { ...ir.symbols, [symbolId]: { primitive, shade } };
+    const nextSymbols = {
+      ...ir.symbols,
+      [symbolId]: { kind: 'primitive' as const, primitive, shade },
+    };
     set({ ir: pruneOrphanPrimitives(bumpMeta({ ...ir, symbols: nextSymbols })) });
   },
 
@@ -397,10 +431,19 @@ export const usePosaStore = create<PosaState>()(
     }
 
     const { ir: nextIr, ref } = rebindColor(ir, color);
-    if (ref.kind !== 'primitive') return; // 방어적: rebindColor는 항상 primitive ref 반환
+    // 순백/순흑은 system symbol alias로. attribute는 user symbol 참조 금지(cascade)이지만
+    // system symbol은 불변이라 안전.
+    if (ref.kind === 'symbol') {
+      const nextAttrs = {
+        ...nextIr.attributes,
+        [attrId]: { kind: 'system' as const, name: ref.symbol as SystemSymbolId },
+      };
+      set({ ir: pruneOrphanPrimitives(bumpMeta({ ...nextIr, attributes: nextAttrs })) });
+      return;
+    }
     const nextAttrs = {
       ...nextIr.attributes,
-      [attrId]: { primitive: ref.primitive, shade: ref.shade },
+      [attrId]: { kind: 'primitive' as const, primitive: ref.primitive, shade: ref.shade },
     };
     set({ ir: pruneOrphanPrimitives(bumpMeta({ ...nextIr, attributes: nextAttrs })) });
   },
@@ -408,7 +451,7 @@ export const usePosaStore = create<PosaState>()(
   setAttributeShade: (attrId, shade) => {
     const { ir } = get();
     const current = ir.attributes[attrId];
-    if (!current || current.shade === shade) return;
+    if (!current || current.kind !== 'primitive' || current.shade === shade) return;
     const nextAttrs = { ...ir.attributes, [attrId]: { ...current, shade } };
     set({ ir: bumpMeta({ ...ir, attributes: nextAttrs }) });
   },
@@ -418,7 +461,7 @@ export const usePosaStore = create<PosaState>()(
     if (!ir.primitives[primitive]) return;
     const nextAttrs = {
       ...ir.attributes,
-      [attrId]: { primitive, shade },
+      [attrId]: { kind: 'primitive' as const, primitive, shade },
     };
     set({ ir: pruneOrphanPrimitives(bumpMeta({ ...ir, attributes: nextAttrs })) });
   },

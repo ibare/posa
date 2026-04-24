@@ -29,12 +29,12 @@ function seedIR(): { ir: IR; primitiveId: string } {
     ...ir1,
     symbols: {
       ...ir1.symbols,
-      primary: { primitive: primitiveId, shade: 500 },
+      primary: { kind: 'primitive', primitive: primitiveId, shade: 500 },
     },
     attributes: {
       ...ir1.attributes,
-      text: { primitive: primitiveId, shade: 900 },
-      background: { primitive: primitiveId, shade: 500 },
+      text: { kind: 'primitive', primitive: primitiveId, shade: 900 },
+      background: { kind: 'primitive', primitive: primitiveId, shade: 500 },
     },
     slots: {
       'button.primary.background': {

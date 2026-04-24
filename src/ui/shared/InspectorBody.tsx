@@ -120,9 +120,10 @@ export function InspectorBody() {
       if (focusedNode.startsWith('sym:')) {
         const symbolId = focusedNode.slice(4) as SymbolId;
         const assignment = ir.symbols[symbolId];
-        const ref: ColorRef | null = assignment
-          ? { kind: 'primitive', primitive: assignment.primitive, shade: assignment.shade }
-          : null;
+        const ref: ColorRef | null =
+          assignment && assignment.kind === 'primitive'
+            ? { kind: 'primitive', primitive: assignment.primitive, shade: assignment.shade }
+            : null;
         return {
           label: t('context.symbol'),
           nodeLabel: symbolId,
@@ -142,9 +143,10 @@ export function InspectorBody() {
       if (focusedNode.startsWith('attr:')) {
         const attrId = focusedNode.slice(5) as AttributeId;
         const assignment = ir.attributes[attrId];
-        const ref: ColorRef | null = assignment
-          ? { kind: 'primitive', primitive: assignment.primitive, shade: assignment.shade }
-          : null;
+        const ref: ColorRef | null =
+          assignment && assignment.kind === 'primitive'
+            ? { kind: 'primitive', primitive: assignment.primitive, shade: assignment.shade }
+            : null;
         return {
           label: t('context.attribute'),
           nodeLabel: attrId,
@@ -164,7 +166,12 @@ export function InspectorBody() {
           onSelectSymbol: (symbolId) => {
             const sa = ir.symbols[symbolId];
             if (!sa) return;
-            setAttributeAssignment(attrId, sa.primitive, sa.shade);
+            if (sa.kind === 'primitive') {
+              setAttributeAssignment(attrId, sa.primitive, sa.shade);
+              return;
+            }
+            // System symbol alias — rebindColor가 system symbol로 라우팅하도록 literal 색을 넘긴다.
+            setAttributeColor(attrId, sa.color);
           },
         };
       }

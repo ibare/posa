@@ -324,7 +324,7 @@ function scopeFromAtlasSelection(
 
   const matchedSymbols = new Set<SymbolId>();
   for (const [symId, assign] of Object.entries(ir.symbols)) {
-    if (!assign) continue;
+    if (!assign || assign.kind !== 'primitive') continue;
     if (assign.primitive === sel.primitiveId && assign.shade === sel.shade) {
       matchedSymbols.add(symId as SymbolId);
     }
@@ -355,7 +355,7 @@ function scopeFromAtlasSelection(
   }
 
   for (const [attrId, assign] of Object.entries(ir.attributes)) {
-    if (!assign) continue;
+    if (!assign || assign.kind !== 'primitive') continue;
     if (assign.primitive === sel.primitiveId && assign.shade === sel.shade) {
       for (const c of components) {
         if (c.attributes.includes(attrId as AttributeId)) impacted.add(c.id);

@@ -34,10 +34,10 @@ describe('computePrimitiveUsage', () => {
     const ir: IR = {
       ...base,
       symbols: {
-        primary: { primitive: pid, shade: 500 },
+        primary: { kind: 'primitive', primitive: pid, shade: 500 },
       },
       attributes: {
-        background: { primitive: pid, shade: 50 },
+        background: { kind: 'primitive', primitive: pid, shade: 50 },
       },
       slots: {
         'button.background': {
@@ -89,7 +89,7 @@ describe('computeSymbolUsage', () => {
     const ir: IR = {
       ...base,
       symbols: {
-        primary: { primitive: pid, shade: 500 },
+        primary: { kind: 'primitive', primitive: pid, shade: 500 },
       },
       slots: {
         'button.primary.background': {
@@ -116,7 +116,7 @@ describe('computeAttributeUsage', () => {
     const ir: IR = {
       ...base,
       attributes: {
-        background: { primitive: pid, shade: 50 },
+        background: { kind: 'primitive', primitive: pid, shade: 50 },
       },
       slots: {
         'card.background': { ref: null, states: {} },

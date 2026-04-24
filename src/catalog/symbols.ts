@@ -12,4 +12,6 @@ export const SYMBOL_DEFINITIONS: SymbolDefinition[] = [
   { id: 'info' },
   { id: 'warning' },
   { id: 'error' },
+  { id: 'white' },
+  { id: 'black' },
 ];

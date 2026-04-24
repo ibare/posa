@@ -125,11 +125,11 @@ describe('countPrimitiveReferences', () => {
       ...ir1,
       symbols: {
         ...ir1.symbols,
-        primary: { primitive: pid, shade: 500 },
+        primary: { kind: 'primitive', primitive: pid, shade: 500 },
       },
       attributes: {
         ...ir1.attributes,
-        background: { primitive: pid, shade: 50 },
+        background: { kind: 'primitive', primitive: pid, shade: 50 },
       },
       slots: {
         'button.primary.background': {
@@ -162,7 +162,7 @@ describe('findOrphanPrimitives', () => {
       ...ir2,
       symbols: {
         ...ir2.symbols,
-        primary: { primitive: p1, shade: 500 },
+        primary: { kind: 'primitive', primitive: p1, shade: 500 },
       },
     };
     expect(findOrphanPrimitives(ir3)).toEqual([p2]);

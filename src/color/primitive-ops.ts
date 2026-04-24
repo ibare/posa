@@ -125,13 +125,17 @@ function forEachDirectPrimitiveRef(
   ir: IR,
   visit: (ref: { primitive: PrimitiveId; shade: ShadeIndex }) => void,
 ) {
-  // Symbol은 primitive를 직접 가리킴.
+  // Symbol/attribute에서 primitive를 직접 가리키는 것만 센다.
+  // literal symbol·system attribute는 primitive를 참조하지 않으므로 제외.
   for (const sym of Object.values(ir.symbols)) {
-    if (sym) visit(sym);
+    if (sym && sym.kind === 'primitive') {
+      visit({ primitive: sym.primitive, shade: sym.shade });
+    }
   }
-  // Attribute는 항상 primitive 참조 (symbol live link 금지).
   for (const attr of Object.values(ir.attributes)) {
-    if (attr) visit(attr);
+    if (attr && attr.kind === 'primitive') {
+      visit({ primitive: attr.primitive, shade: attr.shade });
+    }
   }
   // Slot ref + state overrides. primitive kind만.
   for (const slot of Object.values(ir.slots)) {

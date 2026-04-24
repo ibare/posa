@@ -12,7 +12,9 @@ import {
 } from '../catalog/symbols';
 import {
   ATTRIBUTE_IDS,
-  SYMBOL_IDS,
+  SYSTEM_SYMBOL_COLORS,
+  USER_SYMBOL_IDS,
+  isSystemSymbolId,
   type AttributeId,
   type ColorRef,
   type IR,
@@ -24,7 +26,7 @@ import {
   type SymbolId,
 } from './types';
 
-const SYMBOL_ID_SET: Set<string> = new Set(SYMBOL_IDS);
+const USER_SYMBOL_ID_SET: Set<string> = new Set(USER_SYMBOL_IDS);
 
 // ──────────────────────────────────────────────────────────────────────────
 // Active scope 파생
@@ -44,10 +46,13 @@ export function getActiveAttributeIds(
 }
 
 /**
- * 스코프 컴포넌트의 variant 중 variant.id가 SymbolId와 일치하는 것의 합집합.
- * SYMBOL_IDS 원래 순서 유지. 어떤 컴포넌트도 variant를 쓰지 않으면 빈 배열.
+ * 스코프 컴포넌트의 variant 중 variant.id가 UserSymbolId와 일치하는 것의 합집합.
+ * USER_SYMBOL_IDS 원래 순서 유지. 어떤 컴포넌트도 variant를 쓰지 않으면 빈 배열.
  *
- * 근거: variant 이름이 SymbolId와 일치할 때만 Symbol 축과 결합 가능하고
+ * System symbol(white/black)은 variant로 노출될 대상이 아니므로 여기에 포함되지
+ * 않는다. 언제나 노출되는 상수이며 UI에서 별도로 append한다.
+ *
+ * 근거: variant 이름이 UserSymbolId와 일치할 때만 Symbol 축과 결합 가능하고
  * (catalog 정책), 그 외 경로로는 symbol 할당이 어떤 slot에도 영향을 주지 않아
  * 열거할 의미가 없다.
  */
@@ -57,10 +62,10 @@ export function getActiveSymbolIds(
   const seen = new Set<SymbolId>();
   for (const c of components) {
     for (const v of c.variants ?? []) {
-      if (SYMBOL_ID_SET.has(v.id)) seen.add(v.id as SymbolId);
+      if (USER_SYMBOL_ID_SET.has(v.id)) seen.add(v.id as SymbolId);
     }
   }
-  return SYMBOL_IDS.filter((id) => seen.has(id));
+  return USER_SYMBOL_IDS.filter((id) => seen.has(id));
 }
 
 const ATTRIBUTE_DEF_BY_ID: Record<AttributeId, AttributeDefinition> =
@@ -127,11 +132,12 @@ export function enumerateAllSlotIds(
 }
 
 /**
- * Variant가 symbol-bound인지 판정. 즉 variant.id가 SymbolId와 일치하고
- * 그 symbol에 할당이 없다면 이 variant는 "비활성 — symbol 정의 필요" 상태.
+ * Variant가 symbol-bound인지 판정. variant는 항상 user symbol에만 바인딩되므로
+ * system symbol(white/black)은 variant로 나타나지 않는다. 이 symbol에 할당이
+ * 없다면 "비활성 — symbol 정의 필요" 상태.
  */
 export function isSymbolVariantId(variantId: string): variantId is SymbolId {
-  return SYMBOL_ID_SET.has(variantId);
+  return USER_SYMBOL_ID_SET.has(variantId);
 }
 
 /**
@@ -160,7 +166,7 @@ export function isSlotActive(slotId: SlotId, ir: IR): boolean {
   const parts = slotId.split('.');
   if (parts.length !== 3) return true;
   const variant = parts[1];
-  if (!SYMBOL_ID_SET.has(variant)) return true;
+  if (!USER_SYMBOL_ID_SET.has(variant)) return true;
   return ir.symbols[variant as SymbolId] != null;
 }
 
@@ -217,7 +223,7 @@ export function computePaletteRibbon(
       ? comp.variants.map((v) => v.id)
       : [null];
     for (const variantId of variantIds) {
-      if (variantId && SYMBOL_ID_SET.has(variantId)) {
+      if (variantId && USER_SYMBOL_ID_SET.has(variantId)) {
         if (ir.symbols[variantId as SymbolId] == null) continue;
       }
       for (const attr of comp.attributes) {
@@ -268,7 +274,7 @@ function resolveRefToPrimitiveShade(
     return { primitive: ref.primitive, shade: ref.shade };
   }
   const sym = ir.symbols[ref.symbol];
-  if (!sym) return null;
+  if (!sym || sym.kind !== 'primitive') return null;
   return { primitive: sym.primitive, shade: sym.shade };
 }
 
@@ -292,7 +298,7 @@ export function resolveEffectivePrimitiveShade(
   if (slot?.ref) return resolveRefToPrimitiveShade(ir, slot.ref);
 
   const attrAssignment = ir.attributes[attrId];
-  if (attrAssignment) {
+  if (attrAssignment && attrAssignment.kind === 'primitive') {
     return { primitive: attrAssignment.primitive, shade: attrAssignment.shade };
   }
 
@@ -325,16 +331,27 @@ export function getSlotDisplayName(slotId: SlotId, _ir: IR): string {
 // ColorRef resolve
 // ──────────────────────────────────────────────────────────────────────────
 
+function resolveSymbolAssignmentColor(
+  ir: IR,
+  symbolId: SymbolId,
+): OKLCH | null {
+  const assignment = ir.symbols[symbolId];
+  if (!assignment) {
+    // System symbol은 IR에 누락되어 있어도 상수로 폴백 — persist 복원 중인 경우 보호.
+    if (isSystemSymbolId(symbolId)) return SYSTEM_SYMBOL_COLORS[symbolId];
+    return null;
+  }
+  if (assignment.kind === 'literal') return assignment.color;
+  return (
+    ir.primitives[assignment.primitive]?.scale[assignment.shade] ?? null
+  );
+}
+
 function resolveColorRef(ir: IR, ref: ColorRef): OKLCH | null {
   if (ref.kind === 'primitive') {
     return ir.primitives[ref.primitive]?.scale[ref.shade] ?? null;
   }
-  const symbolAssignment = ir.symbols[ref.symbol];
-  if (!symbolAssignment) return null;
-  return (
-    ir.primitives[symbolAssignment.primitive]?.scale[symbolAssignment.shade] ??
-    null
-  );
+  return resolveSymbolAssignmentColor(ir, ref.symbol);
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -342,14 +359,15 @@ function resolveColorRef(ir: IR, ref: ColorRef): OKLCH | null {
 // ──────────────────────────────────────────────────────────────────────────
 
 export function resolveSymbolColor(ir: IR, symbolId: SymbolId): OKLCH | null {
-  const assignment = ir.symbols[symbolId];
-  if (!assignment) return null;
-  return ir.primitives[assignment.primitive]?.scale[assignment.shade] ?? null;
+  return resolveSymbolAssignmentColor(ir, symbolId);
 }
 
 export function resolveAttributeColor(ir: IR, attrId: AttributeId): OKLCH | null {
   const assignment = ir.attributes[attrId];
   if (!assignment) return null;
+  if (assignment.kind === 'system') {
+    return SYSTEM_SYMBOL_COLORS[assignment.name];
+  }
   return ir.primitives[assignment.primitive]?.scale[assignment.shade] ?? null;
 }
 
@@ -380,14 +398,9 @@ export function resolveSlotStateColor(
 
   if (slot?.ref) return resolveColorRef(ir, slot.ref);
 
-  // Slot 명시적 ref 없음 → attribute에서 상속 (primitive 스냅샷)
+  // Slot 명시적 ref 없음 → attribute에서 상속 (primitive 스냅샷 또는 system 상수)
   const attrId = getAttributeFromSlotId(slotId);
-  const attrAssignment = ir.attributes[attrId];
-  if (attrAssignment) {
-    return ir.primitives[attrAssignment.primitive]?.scale[attrAssignment.shade] ?? null;
-  }
-
-  return null;
+  return resolveAttributeColor(ir, attrId);
 }
 
 /**
@@ -455,11 +468,17 @@ export function isSlotStateDirectlyAssigned(
 // ──────────────────────────────────────────────────────────────────────────
 
 function forEachColorRef(ir: IR, visit: (ref: ColorRef) => void) {
+  // Symbol/attribute의 primitive 할당만 ColorRef로 normalize 해서 넘긴다.
+  // literal symbol·system attribute는 primitive 참조가 아니므로 primitive 통계에서 제외.
   for (const sym of Object.values(ir.symbols)) {
-    if (sym) visit({ kind: 'primitive', primitive: sym.primitive, shade: sym.shade });
+    if (sym && sym.kind === 'primitive') {
+      visit({ kind: 'primitive', primitive: sym.primitive, shade: sym.shade });
+    }
   }
   for (const attr of Object.values(ir.attributes)) {
-    if (attr) visit({ kind: 'primitive', primitive: attr.primitive, shade: attr.shade });
+    if (attr && attr.kind === 'primitive') {
+      visit({ kind: 'primitive', primitive: attr.primitive, shade: attr.shade });
+    }
   }
   for (const slot of Object.values(ir.slots)) {
     if (slot.ref) visit(slot.ref);

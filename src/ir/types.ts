@@ -46,7 +46,11 @@ export type PrimitiveScale = {
 };
 
 // ===== Symbols — 상징색 =====
-export type SymbolId =
+/**
+ * User symbol — 스코프 컴포넌트의 variant에 바인딩되는 사용자 정의 상징색.
+ * IR에 할당된 경우에만 노출·사용되고 삭제 가능하다.
+ */
+export type UserSymbolId =
   | 'primary'
   | 'secondary'
   | 'accent'
@@ -55,7 +59,16 @@ export type SymbolId =
   | 'warning'
   | 'error';
 
-export const SYMBOL_IDS: SymbolId[] = [
+/**
+ * System symbol — Posa가 항상 제공하는 상수 색. 어떤 primitive에도 속하지
+ * 않고 literal OKLCH를 자체 보유한다. 사용자 편집·삭제 불가이며 UI에서도
+ * 사용자 심볼 뒤에 항상 노출된다. cascade 위험이 없어 attribute에서도 참조 가능.
+ */
+export type SystemSymbolId = 'white' | 'black';
+
+export type SymbolId = UserSymbolId | SystemSymbolId;
+
+export const USER_SYMBOL_IDS: UserSymbolId[] = [
   'primary',
   'secondary',
   'accent',
@@ -65,9 +78,27 @@ export const SYMBOL_IDS: SymbolId[] = [
   'error',
 ];
 
-export type SymbolAssignment = {
-  primitive: PrimitiveId;
-  shade: ShadeIndex;
+export const SYSTEM_SYMBOL_IDS: SystemSymbolId[] = ['white', 'black'];
+
+export const SYMBOL_IDS: SymbolId[] = [
+  ...USER_SYMBOL_IDS,
+  ...SYSTEM_SYMBOL_IDS,
+];
+
+export function isSystemSymbolId(id: string): id is SystemSymbolId {
+  return id === 'white' || id === 'black';
+}
+
+export type SymbolAssignment =
+  | { kind: 'primitive'; primitive: PrimitiveId; shade: ShadeIndex }
+  | { kind: 'literal'; color: OKLCH };
+
+export const WHITE_OKLCH: OKLCH = { L: 1, C: 0, H: 0 };
+export const BLACK_OKLCH: OKLCH = { L: 0, C: 0, H: 0 };
+
+export const SYSTEM_SYMBOL_COLORS: Record<SystemSymbolId, OKLCH> = {
+  white: WHITE_OKLCH,
+  black: BLACK_OKLCH,
 };
 
 // ===== Attributes — 컴포넌트 보편 속성 =====
@@ -101,16 +132,17 @@ export const ATTRIBUTE_IDS: AttributeId[] = [
 ];
 
 // ColorRef — 어떤 색을 가리키느냐. primitive 직접 참조, 아니면 symbol 경유.
-// 단 attribute는 symbol을 가리킬 수 없다 (cascade 차단). slot/slot-state만 가능.
+// User symbol은 attribute에서 가리킬 수 없다 (cascade 차단). slot/slot-state만 가능.
+// System symbol(white/black)은 불변이라 cascade 없음 → attribute 참조도 허용한다.
 export type ColorRef =
   | { kind: 'primitive'; primitive: PrimitiveId; shade: ShadeIndex }
   | { kind: 'symbol'; symbol: SymbolId };
 
-// Attribute는 항상 primitive 스냅샷. symbol live link 금지.
-export type AttributeAssignment = {
-  primitive: PrimitiveId;
-  shade: ShadeIndex;
-};
+// Attribute는 user symbol live link 금지. primitive 스냅샷 또는
+// system symbol(white/black) 상수 참조만 허용.
+export type AttributeAssignment =
+  | { kind: 'primitive'; primitive: PrimitiveId; shade: ShadeIndex }
+  | { kind: 'system'; name: SystemSymbolId };
 
 // ===== Slots — 컴포넌트 × attribute =====
 export type ComponentId = string;
@@ -165,8 +197,27 @@ export function createEmptyIR(): IR {
   return {
     meta: { version: '1.0', createdAt: now, updatedAt: now },
     primitives: {},
-    symbols: {},
+    symbols: {
+      white: { kind: 'literal', color: WHITE_OKLCH },
+      black: { kind: 'literal', color: BLACK_OKLCH },
+    },
     attributes: {},
     slots: {},
   };
+}
+
+/**
+ * Persist 복원 시점에 system symbol(white/black)이 누락된 IR을 보정한다.
+ * 신규 세션은 createEmptyIR에서 이미 심겨 있으므로 영향 없음.
+ */
+export function ensureSystemSymbols(ir: IR): IR {
+  const symbols = { ...ir.symbols };
+  let changed = false;
+  for (const id of SYSTEM_SYMBOL_IDS) {
+    if (!symbols[id]) {
+      symbols[id] = { kind: 'literal', color: SYSTEM_SYMBOL_COLORS[id] };
+      changed = true;
+    }
+  }
+  return changed ? { ...ir, symbols } : ir;
 }
