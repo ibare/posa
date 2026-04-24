@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   COMPONENT_GROUPS,
@@ -8,7 +8,7 @@ import {
 import { SYMBOL_IDS } from '../../../ir/types';
 import type { ComponentId, IR, StateId, SymbolId } from '../../../ir/types';
 import { PosaPreviewRoot } from '../../../preview/PosaPreviewRoot';
-import { HtmlToSvg } from '../../../preview/svg-export';
+import { domToSvg } from '../../../preview/svg-export';
 import {
   AccordionShape,
   AlertDialogShape,
@@ -153,9 +153,14 @@ function GalleryTile({
   const { t } = useTranslation('review');
   const { t: tc } = useTranslation('common');
   const variantCount = component.variants?.length ?? 0;
-  const [svg, setSvg] = useState<string | null>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
   const copySvg = useCopySvg();
-  const handleSvg = useCallback((s: string | null) => setSvg(s), []);
+  const handleCopy = useCallback(async () => {
+    const el = previewRef.current;
+    if (!el) return;
+    const svg = await domToSvg(el);
+    await copySvg(svg);
+  }, [copySvg]);
   return (
     <div className="group relative rounded-lg border border-stone-200 bg-stone-50/40 p-3">
       <div className="mb-2 flex items-center justify-between">
@@ -168,26 +173,22 @@ function GalleryTile({
           </div>
         )}
       </div>
-      <div className="flex min-h-[88px] items-start">
-        <HtmlToSvg signature={ir} onSvg={handleSvg}>
-          <ComponentPreview component={component} ir={ir} />
-        </HtmlToSvg>
+      <div ref={previewRef} className="flex min-h-[88px] items-start">
+        <ComponentPreview component={component} ir={ir} />
       </div>
-      {svg != null && (
-        <button
-          type="button"
-          onClick={() => copySvg(svg)}
-          aria-label={tc('svgCopy.label')}
-          className={[
-            'absolute right-2 top-2 rounded-md border border-stone-300 bg-white/90 px-2 py-0.5',
-            'font-mono text-[10px] uppercase tracking-wider text-stone-700 shadow-sm backdrop-blur-sm',
-            'opacity-0 transition-opacity hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900',
-            'group-hover:opacity-100 group-focus-within:opacity-100',
-          ].join(' ')}
-        >
-          {tc('svgCopy.label')}
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={handleCopy}
+        aria-label={tc('svgCopy.label')}
+        className={[
+          'absolute right-2 top-2 rounded-md border border-stone-300 bg-white/90 px-2 py-0.5',
+          'font-mono text-[10px] uppercase tracking-wider text-stone-700 shadow-sm backdrop-blur-sm',
+          'opacity-0 transition-opacity hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900',
+          'group-hover:opacity-100 group-focus-within:opacity-100',
+        ].join(' ')}
+      >
+        {tc('svgCopy.label')}
+      </button>
     </div>
   );
 }
