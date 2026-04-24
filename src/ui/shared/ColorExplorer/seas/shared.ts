@@ -30,6 +30,6 @@ export const hueSweep = (
   return out;
 };
 
-/** 색상환 전체를 12개로 샘플링 — primary용. */
+/** 색상환 전체를 11개로 샘플링 (Tailwind 11-step 규약에 맞춤). */
 export const fullHueRing = (L: number, C: number): OKLCH[] =>
-  hueSweep(0, 330, 12, L, C);
+  hueSweep(0, 330, 11, L, C);

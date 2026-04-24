@@ -1,25 +1,13 @@
 import { oklchToHex } from '../../../color/oklch';
 import type { OKLCH } from '../../../ir/types';
 import type { SeaRow } from './seas/shared';
+import { matchesOKLCH } from './utils';
 
 type Props = {
   rows: SeaRow[];
   value: OKLCH | null;
   onPick: (color: OKLCH) => void;
 };
-
-const EPS_L = 0.01;
-const EPS_C = 0.005;
-const EPS_H = 1;
-
-function matches(a: OKLCH, b: OKLCH | null): boolean {
-  if (!b) return false;
-  if (Math.abs(a.L - b.L) > EPS_L) return false;
-  if (Math.abs(a.C - b.C) > EPS_C) return false;
-  if (a.C < 0.01 && b.C < 0.01) return true;
-  const dh = Math.abs(((a.H - b.H) % 360) + 360) % 360;
-  return Math.min(dh, 360 - dh) < EPS_H;
-}
 
 export function Sea({ rows, value, onPick }: Props) {
   return (
@@ -32,7 +20,7 @@ export function Sea({ rows, value, onPick }: Props) {
 }
 
 function SeaRowView({ row, value, onPick }: { row: SeaRow; value: OKLCH | null; onPick: (c: OKLCH) => void }) {
-  const cols = Math.min(row.tiles.length, 12);
+  const cols = Math.min(row.tiles.length, 11);
   return (
     <div>
       <div className="flex items-baseline gap-2 mb-1.5">
@@ -47,7 +35,7 @@ function SeaRowView({ row, value, onPick }: { row: SeaRow; value: OKLCH | null; 
       >
         {row.tiles.map((tile, i) => {
           const hex = oklchToHex(tile.L, tile.C, tile.H);
-          const isSelected = matches(tile, value);
+          const isSelected = matchesOKLCH(tile, value);
           return (
             <button
               key={i}

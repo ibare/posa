@@ -17,6 +17,7 @@ import {
   type ComponentGroupId,
 } from '../catalog/components';
 import { DEFAULT_LOCALE, i18n, type Locale } from '../i18n';
+import { FIXED_PALETTES } from '../color/fixed-palettes';
 import {
   createEmptyIR,
   type AttributeId,
@@ -174,6 +175,11 @@ type PosaState = {
 
   /** Live Preview 패널 폭을 지정 폭으로 조정. 내부에서 clamp되어 저장된다. */
   setPreviewPanelWidth: (width: number) => void;
+
+  /** ColorExplorer Fine-Tune 상단 고정 팔레트 row의 현재 팔레트 index. */
+  finePaletteIndex: number;
+  /** 다음 팔레트로 순환. FIXED_PALETTES 길이 기준 modulo. */
+  cycleFinePalette: () => void;
 };
 
 export const PREVIEW_PANEL_MIN_WIDTH = 280;
@@ -260,6 +266,14 @@ export const usePosaStore = create<PosaState>()(
   locale: DEFAULT_LOCALE,
   atlasSelection: null,
   previewPanelWidth: PREVIEW_PANEL_DEFAULT_WIDTH,
+  finePaletteIndex: 0,
+
+  cycleFinePalette: () => {
+    set((s) => ({
+      finePaletteIndex:
+        (s.finePaletteIndex + 1) % FIXED_PALETTES.length,
+    }));
+  },
 
   setLocale: (locale) => {
     void i18n.changeLanguage(locale);
@@ -699,6 +713,7 @@ export const usePosaStore = create<PosaState>()(
         ir: s.ir,
         locale: s.locale,
         previewPanelWidth: s.previewPanelWidth,
+        finePaletteIndex: s.finePaletteIndex,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) void i18n.changeLanguage(state.locale);

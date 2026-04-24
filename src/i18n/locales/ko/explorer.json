@@ -43,5 +43,16 @@
     "title": "이전에 사용한 다른 {{family}}",
     "slotCount_one": "슬롯 {{count}}개",
     "slotCount_other": "슬롯 {{count}}개"
+  },
+  "grayscale": {
+    "label": "그레이스케일",
+    "cycle": "팔레트 전환",
+    "cycleAria": "다음 그레이스케일 팔레트로 전환",
+    "tileAria": "{{palette}} 팔레트 {{index}}번 타일",
+    "palettes": {
+      "gray": "Gray",
+      "zinc": "Zinc",
+      "neutral": "Neutral"
+    }
   }
 }

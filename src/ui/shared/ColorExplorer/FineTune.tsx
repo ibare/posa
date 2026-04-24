@@ -1,7 +1,15 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AnimatePresence, motion } from 'framer-motion';
+import { RotateCw } from 'lucide-react';
+import { FIXED_PALETTES } from '../../../color/fixed-palettes';
 import { oklchToHex } from '../../../color/oklch';
 import type { OKLCH } from '../../../ir/types';
+import { usePosaStore } from '../../../store/posa-store';
+import { matchesOKLCH } from './utils';
+
+const PALETTE_ROLL_DURATION = 0.35;
+const PALETTE_ROLL_EASE = [0.4, 0, 0.2, 1] as const;
 
 type Props = {
   value: OKLCH;
@@ -62,6 +70,7 @@ export function FineTune({ value, onChange }: Props) {
 
   return (
     <div className="space-y-4">
+      <FixedPaletteRow value={value} onChange={onChange} />
       <SliderRow
         label={t('fine.lightness')}
         sublabel={t('fine.lightnessSub')}
@@ -97,6 +106,108 @@ export function FineTune({ value, onChange }: Props) {
       />
       <div className="pt-2 border-t border-stone-100 font-mono text-[10px] text-stone-400 tabular-nums">
         oklch({value.L.toFixed(3)} {value.C.toFixed(3)} {value.H.toFixed(1)})
+      </div>
+    </div>
+  );
+}
+
+type FixedPaletteRowProps = {
+  value: OKLCH;
+  onChange: (color: OKLCH) => void;
+};
+
+function FixedPaletteRow({ value, onChange }: FixedPaletteRowProps) {
+  const { t } = useTranslation('explorer');
+  const idx = usePosaStore((s) => s.finePaletteIndex);
+  const cyclePalette = usePosaStore((s) => s.cycleFinePalette);
+  const palette = FIXED_PALETTES[idx % FIXED_PALETTES.length];
+  const paletteName = t(`grayscale.palettes.${palette.id}`);
+
+  return (
+    <div>
+      <div className="flex items-baseline gap-2 mb-1.5">
+        <span className="text-[11px] uppercase tracking-[0.15em] text-stone-600 font-mono">
+          {t('grayscale.label')}
+        </span>
+        <span className="text-[10px] text-stone-400 italic">
+          {paletteName}
+        </span>
+      </div>
+      <div
+        className="grid gap-1.5"
+        style={{ gridTemplateColumns: 'repeat(12, minmax(0, 1fr))' }}
+      >
+        <div className="col-span-11 relative overflow-hidden">
+          {/* sizer: 보이지 않는 1칸으로 wrapper 높이를 tile 한 칸 높이에 맞춤 */}
+          <div
+            aria-hidden
+            className="grid gap-1.5 invisible"
+            style={{ gridTemplateColumns: 'repeat(11, minmax(0, 1fr))' }}
+          >
+            <div className="aspect-square" />
+          </div>
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={palette.id}
+              initial={{ y: 'calc(100% + 2px)' }}
+              animate={{ y: 0 }}
+              exit={{ y: 'calc(-100% - 2px)' }}
+              transition={{
+                duration: PALETTE_ROLL_DURATION,
+                ease: PALETTE_ROLL_EASE,
+              }}
+              className="absolute inset-0 grid gap-1.5"
+              style={{ gridTemplateColumns: 'repeat(11, minmax(0, 1fr))' }}
+            >
+              {palette.tiles.map((tile, i) => {
+                const hex = oklchToHex(tile.L, tile.C, tile.H);
+                const isSelected = matchesOKLCH(tile, value);
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    aria-label={t('grayscale.tileAria', {
+                      palette: paletteName,
+                      index: i + 1,
+                    })}
+                    onClick={() => onChange(tile)}
+                    className={[
+                      'aspect-square rounded-md transition-transform',
+                      'hover:scale-[1.08] hover:z-10 relative',
+                      isSelected
+                        ? 'ring-2 ring-stone-900 ring-offset-2 ring-offset-white scale-105 z-10'
+                        : '',
+                    ].join(' ')}
+                    style={{ backgroundColor: hex }}
+                    title={hex}
+                  />
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+        <button
+          type="button"
+          onClick={cyclePalette}
+          aria-label={t('grayscale.cycleAria')}
+          title={t('grayscale.cycle')}
+          className={[
+            'aspect-square rounded-md flex items-center justify-center',
+            'text-stone-500 hover:text-stone-900 hover:bg-stone-100',
+            'ring-1 ring-stone-200 transition',
+          ].join(' ')}
+        >
+          <motion.span
+            animate={{ rotate: idx * 360 }}
+            transition={{
+              duration: PALETTE_ROLL_DURATION,
+              ease: PALETTE_ROLL_EASE,
+            }}
+            className="flex"
+          >
+            <RotateCw className="w-3 h-3" strokeWidth={1.75} />
+          </motion.span>
+        </button>
       </div>
     </div>
   );

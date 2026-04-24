@@ -43,5 +43,16 @@
     "title": "Other {{family}}s you've used",
     "slotCount_one": "{{count}} slot",
     "slotCount_other": "{{count}} slots"
+  },
+  "grayscale": {
+    "label": "Grayscale",
+    "cycle": "Switch palette",
+    "cycleAria": "Switch to next grayscale palette",
+    "tileAria": "{{palette}} palette tile {{index}}",
+    "palettes": {
+      "gray": "Gray",
+      "zinc": "Zinc",
+      "neutral": "Neutral"
+    }
   }
 }
