@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
@@ -8,10 +9,9 @@ type Props = { state?: StateId; label?: string };
  * shadcn Select — 트리거 버튼 부분만 정적 프리뷰.
  * `active`는 드롭다운이 열린 상태(트리거 강조색).
  */
-export function SelectShape({
-  state = 'default',
-  label = 'Choose a fruit',
-}: Props) {
+export function SelectShape({ state = 'default', label }: Props) {
+  const { t } = useTranslation('shapes');
+  const resolvedLabel = label ?? t('select.label');
   const style: CSSProperties = {
     backgroundColor: `var(--${slotVarName('select.background', state)})`,
     color: `var(--${slotVarName('select.text', state)})`,
@@ -30,7 +30,7 @@ export function SelectShape({
       data-posa-slot="select.background"
       data-posa-state={state}
     >
-      <span>{label}</span>
+      <span>{resolvedLabel}</span>
       <span style={{ color: iconColor }}>▾</span>
     </div>
   );

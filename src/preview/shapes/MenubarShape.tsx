@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
@@ -8,6 +9,7 @@ type Props = { state?: StateId };
  * shadcn Menubar — 상단 툴바 (File / Edit / View / …). 첫 항목이 현재 state로 강조.
  */
 export function MenubarShape({ state = 'default' }: Props) {
+  const { t } = useTranslation('shapes');
   const sv = (attr: string, s: StateId = 'default') =>
     `var(--${slotVarName(`menubar.${attr}`, s)})`;
 
@@ -29,12 +31,12 @@ export function MenubarShape({ state = 'default' }: Props) {
       data-posa-state={state}
     >
       <span className="rounded px-2 py-1" style={highlightedStyle}>
-        File
+        {t('menubar.file')}
       </span>
-      <span className="rounded px-2 py-1">Edit</span>
-      <span className="rounded px-2 py-1">View</span>
+      <span className="rounded px-2 py-1">{t('menubar.edit')}</span>
+      <span className="rounded px-2 py-1">{t('menubar.view')}</span>
       <span className="rounded px-2 py-1" style={{ color: sv('muted') }}>
-        Help
+        {t('menubar.help')}
       </span>
     </div>
   );

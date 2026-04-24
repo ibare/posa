@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { slotVarName } from '../slotVarName';
 
 type Props = {
@@ -8,11 +9,10 @@ type Props = {
   fill?: boolean;
 };
 
-export function DialogShape({
-  title = 'Dialog title',
-  description = 'Short description of the dialog.',
-  fill = false,
-}: Props) {
+export function DialogShape({ title, description, fill = false }: Props) {
+  const { t } = useTranslation('shapes');
+  const resolvedTitle = title ?? t('dialog.title');
+  const resolvedDescription = description ?? t('dialog.description');
   const stageStyle: CSSProperties = {
     backgroundColor: `var(--${slotVarName('dialog.overlay', 'default')})`,
   };
@@ -36,8 +36,8 @@ export function DialogShape({
         className="absolute left-1/2 top-1/2 w-[80%] max-w-[220px] -translate-x-1/2 -translate-y-1/2 rounded-lg p-4 shadow-lg"
         style={cardStyle}
       >
-        <div className="text-sm font-semibold mb-1">{title}</div>
-        <div className="text-xs opacity-80">{description}</div>
+        <div className="text-sm font-semibold mb-1">{resolvedTitle}</div>
+        <div className="text-xs opacity-80">{resolvedDescription}</div>
       </div>
     </div>
   );

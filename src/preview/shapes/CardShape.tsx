@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { slotVarName } from '../slotVarName';
 
 type Props = {
@@ -7,7 +8,10 @@ type Props = {
   children?: ReactNode;
 };
 
-export function CardShape({ title = 'Card title', body = 'Card body copy goes here.', children }: Props) {
+export function CardShape({ title, body, children }: Props) {
+  const { t } = useTranslation('shapes');
+  const resolvedTitle = title ?? t('card.title');
+  const resolvedBody = body ?? t('card.body');
   const style: CSSProperties = {
     backgroundColor: `var(--${slotVarName('card.background', 'default')})`,
     color: `var(--${slotVarName('card.text', 'default')})`,
@@ -21,8 +25,8 @@ export function CardShape({ title = 'Card title', body = 'Card body copy goes he
       data-posa-slot="card.background"
       data-posa-state="default"
     >
-      <div className="text-sm font-semibold mb-1">{title}</div>
-      <div className="text-xs opacity-80">{body}</div>
+      <div className="text-sm font-semibold mb-1">{resolvedTitle}</div>
+      <div className="text-xs opacity-80">{resolvedBody}</div>
       {children}
     </div>
   );

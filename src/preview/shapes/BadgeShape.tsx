@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { slotVarName } from '../slotVarName';
 
 export type BadgeVariant = 'secondary' | 'error';
@@ -9,7 +10,9 @@ type Props = {
   label?: string;
 };
 
-export function BadgeShape({ variant, label = 'Badge' }: Props) {
+export function BadgeShape({ variant, label }: Props) {
+  const { t } = useTranslation('shapes');
+  const resolvedLabel = label ?? t('badge.label');
   const slotBase = variant ? `badge.${variant}` : 'badge';
   const bgVar = `var(--${slotVarName(`${slotBase}.background`, 'default')})`;
   const textVar = `var(--${slotVarName(`${slotBase}.text`, 'default')})`;
@@ -28,7 +31,7 @@ export function BadgeShape({ variant, label = 'Badge' }: Props) {
       data-posa-slot={`${slotBase}.background`}
       data-posa-state="default"
     >
-      {label}
+      {resolvedLabel}
     </div>
   );
 }

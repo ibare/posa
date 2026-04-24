@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
@@ -22,6 +23,7 @@ export function MenuPanel({
   state = 'default',
   withSearchInput = false,
 }: Props) {
+  const { t } = useTranslation('shapes');
   const sv = (attr: string, s: StateId = 'default') =>
     `var(--${slotVarName(`${componentId}.${attr}`, s)})`;
 
@@ -53,7 +55,7 @@ export function MenuPanel({
           }}
         >
           <span style={{ color: iconColor }}>⌕</span>
-          Type a command…
+          {t('menuPanel.searchPlaceholder')}
         </div>
       )}
       <div
@@ -61,19 +63,19 @@ export function MenuPanel({
         style={highlightedStyle}
       >
         <span style={{ color: iconColor }}>◈</span>
-        <span>Selected item</span>
+        <span>{t('menuPanel.selected')}</span>
         <span className="ml-auto" style={{ color: mutedColor }}>
           ⌘K
         </span>
       </div>
       <div className="flex items-center gap-2 rounded px-2 py-1.5 text-xs">
         <span style={{ color: iconColor }}>◇</span>
-        <span>Another item</span>
+        <span>{t('menuPanel.another')}</span>
       </div>
       <div className="my-1 h-px" style={{ backgroundColor: mutedColor }} />
       <div className="flex items-center gap-2 rounded px-2 py-1.5 text-xs">
         <span style={{ color: iconColor }}>◎</span>
-        <span>More options</span>
+        <span>{t('menuPanel.more')}</span>
         <span className="ml-auto" style={{ color: mutedColor }}>
           ⌘M
         </span>

@@ -1,0 +1,155 @@
+{
+  "accordion": {
+    "section1": "Section 1",
+    "section2": "Section 2",
+    "section3": "Section 3",
+    "content": "Content panel body."
+  },
+  "alert": {
+    "title": "Notice",
+    "description": "Something to keep an eye on."
+  },
+  "alertDialog": {
+    "title": "Are you absolutely sure?",
+    "description": "This action cannot be undone.",
+    "cancel": "Cancel",
+    "continue": "Continue"
+  },
+  "avatar": {
+    "initials": "MK"
+  },
+  "badge": {
+    "label": "Badge"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "components": "Components",
+    "current": "Breadcrumb"
+  },
+  "button": {
+    "label": "Button"
+  },
+  "calendar": {
+    "monthYear": "April 2026"
+  },
+  "card": {
+    "title": "Card title",
+    "body": "Card body copy goes here."
+  },
+  "collapsible": {
+    "trigger": "Can I use this?",
+    "body": "Yes. It collapses and expands freely."
+  },
+  "dialog": {
+    "title": "Dialog title",
+    "description": "Short description of the dialog."
+  },
+  "drawer": {
+    "title": "Drawer title",
+    "description": "Short description."
+  },
+  "hoverCard": {
+    "title": "@shadcn",
+    "description": "The creator of shadcn/ui. Joined December 2021."
+  },
+  "input": {
+    "placeholder": "Enter text…"
+  },
+  "inputGroup": {
+    "placeholder": "Search…"
+  },
+  "label": {
+    "email": "Email address"
+  },
+  "menuPanel": {
+    "searchPlaceholder": "Type a command…",
+    "selected": "Selected item",
+    "another": "Another item",
+    "more": "More options"
+  },
+  "menubar": {
+    "file": "File",
+    "edit": "Edit",
+    "view": "View",
+    "help": "Help"
+  },
+  "nativeSelect": {
+    "label": "Select an option"
+  },
+  "navigationMenu": {
+    "gettingStarted": "Getting Started",
+    "components": "Components",
+    "blog": "Blog"
+  },
+  "popover": {
+    "title": "Popover title",
+    "description": "Short description of the content."
+  },
+  "radioGroup": {
+    "option1": "Option one",
+    "option2": "Option two",
+    "option3": "Option three"
+  },
+  "select": {
+    "label": "Choose a fruit"
+  },
+  "separator": {
+    "above": "Above",
+    "below": "Below"
+  },
+  "sheet": {
+    "title": "Sheet title",
+    "description": "Short description."
+  },
+  "sidebar": {
+    "workspace": "Workspace",
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "settings": "Settings"
+  },
+  "table": {
+    "colName": "Name",
+    "colRole": "Role",
+    "colStatus": "Status",
+    "row1Name": "Alice",
+    "row1Role": "Admin",
+    "row1Status": "Active",
+    "row2Name": "Bob",
+    "row2Role": "Editor",
+    "row2Status": "Active",
+    "row3Name": "Carol",
+    "row3Role": "Viewer",
+    "row3Status": "Idle"
+  },
+  "tabs": {
+    "overview": "Overview",
+    "analytics": "Analytics",
+    "reports": "Reports"
+  },
+  "textarea": {
+    "placeholder": "Type a message…"
+  },
+  "toast": {
+    "title": "Toast title",
+    "description": "Short description of the event."
+  },
+  "tooltip": {
+    "label": "Tooltip text"
+  },
+  "typography": {
+    "h1": "The Craft of Type",
+    "h2": "What Makes Writing Read",
+    "h3": "Hierarchy and Space",
+    "h4": "When body text does its job",
+    "paragraph": "Good typography goes unnoticed. Its job is to quietly make way, so readers can settle into the content without friction.",
+    "blockquote": "“When design does its work, people don’t notice it was there at all.” — from a designer’s notebook.",
+    "list1": "Headings make hierarchy legible",
+    "list2": "Body copy reads in one breath",
+    "list3": "Whitespace gives sentences rhythm",
+    "inlineCodePrefix": "Install it with ",
+    "inlineCodeSuffix": " in a single line.",
+    "lead": "A paragraph that never breaks the reader’s flow — that is what body copy should aspire to be.",
+    "large": "Use emphasis sparingly.",
+    "small": "Supporting note"
+  }
+}

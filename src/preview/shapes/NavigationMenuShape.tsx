@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
@@ -8,6 +9,7 @@ type Props = { state?: StateId };
  * shadcn NavigationMenu — 상단 사이트 네비. 링크 나열 + 현재 항목 하이라이트.
  */
 export function NavigationMenuShape({ state = 'default' }: Props) {
+  const { t } = useTranslation('shapes');
   const sv = (attr: string, s: StateId = 'default') =>
     `var(--${slotVarName(`navigation-menu.${attr}`, s)})`;
 
@@ -29,11 +31,11 @@ export function NavigationMenuShape({ state = 'default' }: Props) {
       data-posa-state={state}
     >
       <span className="rounded px-2.5 py-1" style={highlightedStyle}>
-        Getting Started
+        {t('navigationMenu.gettingStarted')}
       </span>
-      <span className="rounded px-2.5 py-1">Components</span>
+      <span className="rounded px-2.5 py-1">{t('navigationMenu.components')}</span>
       <span className="rounded px-2.5 py-1" style={{ color: sv('muted') }}>
-        Blog
+        {t('navigationMenu.blog')}
       </span>
     </nav>
   );

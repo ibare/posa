@@ -1,11 +1,14 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { slotVarName } from '../slotVarName';
 
 type Props = {
   label?: string;
 };
 
-export function TooltipShape({ label = 'Tooltip text' }: Props) {
+export function TooltipShape({ label }: Props) {
+  const { t } = useTranslation('shapes');
+  const resolvedLabel = label ?? t('tooltip.label');
   const style: CSSProperties = {
     backgroundColor: `var(--${slotVarName('tooltip.background', 'default')})`,
     color: `var(--${slotVarName('tooltip.text', 'default')})`,
@@ -19,7 +22,7 @@ export function TooltipShape({ label = 'Tooltip text' }: Props) {
       data-posa-slot="tooltip.background"
       data-posa-state="default"
     >
-      {label}
+      {resolvedLabel}
     </div>
   );
 }

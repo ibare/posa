@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
@@ -9,11 +10,9 @@ type Props = {
 };
 
 /** shadcn Input Group — 앞쪽에 icon addon이 붙은 Input. */
-export function InputGroupShape({
-  state = 'default',
-  placeholder = 'Search…',
-  value,
-}: Props) {
+export function InputGroupShape({ state = 'default', placeholder, value }: Props) {
+  const { t } = useTranslation('shapes');
+  const resolvedPlaceholder = placeholder ?? t('inputGroup.placeholder');
   const showValue = value !== undefined && value !== '';
   const bg = `var(--${slotVarName('input-group.background', state)})`;
   const textVar = `var(--${slotVarName('input-group.text', state)})`;
@@ -37,7 +36,7 @@ export function InputGroupShape({
       data-posa-state={state}
     >
       <span style={{ color: iconVar }}>⌕</span>
-      <span>{showValue ? value : placeholder}</span>
+      <span>{showValue ? value : resolvedPlaceholder}</span>
     </div>
   );
 }

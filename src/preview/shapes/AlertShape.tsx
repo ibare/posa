@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { slotVarName } from '../slotVarName';
 
 export type AlertVariant =
@@ -20,11 +21,10 @@ type Props = {
  * shadcn Alert — 배너 형태. icon + title + description 블록.
  * variant가 symbol 축과 결합해 색상을 결정. state는 default 하나.
  */
-export function AlertShape({
-  variant,
-  title = 'Notice',
-  description = 'Something to keep an eye on.',
-}: Props) {
+export function AlertShape({ variant, title, description }: Props) {
+  const { t } = useTranslation('shapes');
+  const resolvedTitle = title ?? t('alert.title');
+  const resolvedDescription = description ?? t('alert.description');
   const slotFor = (attr: string) =>
     variant ? `alert.${variant}.${attr}` : `alert.${attr}`;
   const style: CSSProperties = {
@@ -45,8 +45,8 @@ export function AlertShape({
         ⓘ
       </span>
       <div className="flex-1">
-        <div className="font-medium">{title}</div>
-        <div className="text-[11px] opacity-80">{description}</div>
+        <div className="font-medium">{resolvedTitle}</div>
+        <div className="text-[11px] opacity-80">{resolvedDescription}</div>
       </div>
     </div>
   );

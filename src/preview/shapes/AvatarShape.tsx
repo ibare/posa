@@ -1,10 +1,12 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { slotVarName } from '../slotVarName';
 
 /**
  * shadcn Avatar — 원형 프로필. 이미지 없을 때 initials를 보여주는 형태.
  */
 export function AvatarShape() {
+  const { t } = useTranslation('shapes');
   const style: CSSProperties = {
     backgroundColor: `var(--${slotVarName('avatar.background', 'default')})`,
     color: `var(--${slotVarName('avatar.text', 'default')})`,
@@ -17,7 +19,7 @@ export function AvatarShape() {
       data-posa-slot="avatar.background"
       data-posa-state="default"
     >
-      MK
+      {t('avatar.initials')}
     </div>
   );
 }

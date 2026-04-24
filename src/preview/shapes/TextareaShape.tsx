@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
@@ -8,11 +9,9 @@ type Props = {
   value?: string;
 };
 
-export function TextareaShape({
-  state = 'default',
-  placeholder = 'Type a message…',
-  value,
-}: Props) {
+export function TextareaShape({ state = 'default', placeholder, value }: Props) {
+  const { t } = useTranslation('shapes');
+  const resolvedPlaceholder = placeholder ?? t('textarea.placeholder');
   const showValue = value !== undefined && value !== '';
   const bg = `var(--${slotVarName('textarea.background', state)})`;
   const textVar = `var(--${slotVarName('textarea.text', state)})`;
@@ -34,7 +33,7 @@ export function TextareaShape({
       data-posa-slot="textarea.background"
       data-posa-state={state}
     >
-      {showValue ? value : placeholder}
+      {showValue ? value : resolvedPlaceholder}
     </div>
   );
 }

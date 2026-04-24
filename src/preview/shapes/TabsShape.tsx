@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
@@ -8,6 +9,7 @@ type Props = { state?: StateId };
  * shadcn Tabs — 수평 탭 리스트. 첫 탭이 현재 state로 강조 (active = 선택된 탭).
  */
 export function TabsShape({ state = 'default' }: Props) {
+  const { t } = useTranslation('shapes');
   const listStyle: CSSProperties = {
     backgroundColor: `var(--${slotVarName('tabs.background', 'default')})`,
     border: `1px solid var(--${slotVarName('tabs.border', 'default')})`,
@@ -26,13 +28,13 @@ export function TabsShape({ state = 'default' }: Props) {
       data-posa-state={state}
     >
       <span className="rounded px-3 py-1" style={activeTabStyle}>
-        Overview
+        {t('tabs.overview')}
       </span>
       <span className="rounded px-3 py-1" style={{ color: mutedColor }}>
-        Analytics
+        {t('tabs.analytics')}
       </span>
       <span className="rounded px-3 py-1" style={{ color: mutedColor }}>
-        Reports
+        {t('tabs.reports')}
       </span>
     </div>
   );

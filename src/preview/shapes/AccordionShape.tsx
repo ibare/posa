@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
@@ -9,6 +10,7 @@ type Props = { state?: StateId };
  * 나머지는 default 상태로 닫혀 있음.
  */
 export function AccordionShape({ state = 'default' }: Props) {
+  const { t } = useTranslation('shapes');
   const panelStyle: CSSProperties = {
     backgroundColor: `var(--${slotVarName('accordion.background', 'default')})`,
     border: `1px solid var(--${slotVarName('accordion.border', 'default')})`,
@@ -31,18 +33,18 @@ export function AccordionShape({ state = 'default' }: Props) {
       data-posa-state={state}
     >
       <div className="flex items-center justify-between px-3 py-2" style={activeHeaderStyle}>
-        <span>Section 1</span>
+        <span>{t('accordion.section1')}</span>
         <span>▾</span>
       </div>
       <div className="px-3 py-2 text-[11px] opacity-80">
-        Content panel body.
+        {t('accordion.content')}
       </div>
       <div className="flex items-center justify-between px-3 py-2" style={headerStyle}>
-        <span>Section 2</span>
+        <span>{t('accordion.section2')}</span>
         <span>▸</span>
       </div>
       <div className="flex items-center justify-between px-3 py-2" style={headerStyle}>
-        <span>Section 3</span>
+        <span>{t('accordion.section3')}</span>
         <span>▸</span>
       </div>
     </div>

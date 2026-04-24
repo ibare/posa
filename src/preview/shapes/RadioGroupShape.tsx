@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
@@ -10,15 +11,16 @@ type Props = { state?: StateId };
  * `checked` state일 때만 dot 마크가 보인다.
  */
 export function RadioGroupShape({ state = 'default' }: Props) {
+  const { t } = useTranslation('shapes');
   return (
     <div
       className="flex flex-col gap-2"
       data-posa-slot="radio-group.background"
       data-posa-state={state}
     >
-      <RadioRow state={state} label="Option one" />
-      <RadioRow state="default" label="Option two" />
-      <RadioRow state="default" label="Option three" />
+      <RadioRow state={state} label={t('radioGroup.option1')} />
+      <RadioRow state="default" label={t('radioGroup.option2')} />
+      <RadioRow state="default" label={t('radioGroup.option3')} />
     </div>
   );
 }

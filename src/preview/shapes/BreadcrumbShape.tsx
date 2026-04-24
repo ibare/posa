@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
@@ -9,6 +10,7 @@ type Props = { state?: StateId };
  * 이전 세그먼트와 구분자는 muted.
  */
 export function BreadcrumbShape({ state = 'default' }: Props) {
+  const { t } = useTranslation('shapes');
   const highlightedStyle: CSSProperties = {
     color: `var(--${slotVarName('breadcrumb.text', state)})`,
   };
@@ -20,11 +22,11 @@ export function BreadcrumbShape({ state = 'default' }: Props) {
       data-posa-slot="breadcrumb.background"
       data-posa-state={state}
     >
-      <span style={{ color: mutedColor }}>Home</span>
+      <span style={{ color: mutedColor }}>{t('breadcrumb.home')}</span>
       <span style={{ color: mutedColor }}>/</span>
-      <span style={{ color: mutedColor }}>Components</span>
+      <span style={{ color: mutedColor }}>{t('breadcrumb.components')}</span>
       <span style={{ color: mutedColor }}>/</span>
-      <span style={highlightedStyle}>Breadcrumb</span>
+      <span style={highlightedStyle}>{t('breadcrumb.current')}</span>
     </nav>
   );
 }

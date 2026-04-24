@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { slotVarName } from '../slotVarName';
 
 export type ToastVariant = 'error' | 'warning' | 'success';
@@ -10,11 +11,10 @@ type Props = {
   description?: string;
 };
 
-export function ToastShape({
-  variant,
-  title = 'Toast title',
-  description = 'Short description of the event.',
-}: Props) {
+export function ToastShape({ variant, title, description }: Props) {
+  const { t } = useTranslation('shapes');
+  const resolvedTitle = title ?? t('toast.title');
+  const resolvedDescription = description ?? t('toast.description');
   const slotBase = variant ? `toast.${variant}` : 'toast';
   const style: CSSProperties = {
     backgroundColor: `var(--${slotVarName(`${slotBase}.background`, 'default')})`,
@@ -29,8 +29,8 @@ export function ToastShape({
       data-posa-slot={`${slotBase}.background`}
       data-posa-state="default"
     >
-      <div className="text-sm font-semibold mb-0.5">{title}</div>
-      <div className="text-xs opacity-80">{description}</div>
+      <div className="text-sm font-semibold mb-0.5">{resolvedTitle}</div>
+      <div className="text-xs opacity-80">{resolvedDescription}</div>
     </div>
   );
 }

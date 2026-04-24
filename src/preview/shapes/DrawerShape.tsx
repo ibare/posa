@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { slotVarName } from '../slotVarName';
 
 type Props = {
@@ -10,11 +11,10 @@ type Props = {
 /**
  * shadcn Drawer(vaul) — 아래쪽에서 올라오는 패널. 상단에 grab handle.
  */
-export function DrawerShape({
-  title = 'Drawer title',
-  description = 'Short description.',
-  fill = false,
-}: Props) {
+export function DrawerShape({ title, description, fill = false }: Props) {
+  const { t } = useTranslation('shapes');
+  const resolvedTitle = title ?? t('drawer.title');
+  const resolvedDescription = description ?? t('drawer.description');
   const stageStyle: CSSProperties = {
     backgroundColor: `var(--${slotVarName('drawer.overlay', 'default')})`,
   };
@@ -43,8 +43,8 @@ export function DrawerShape({
           className="mx-auto mb-3 h-1 w-10 rounded-full"
           style={{ backgroundColor: handleColor }}
         />
-        <div className="text-sm font-semibold mb-1">{title}</div>
-        <div className="text-xs opacity-80">{description}</div>
+        <div className="text-sm font-semibold mb-1">{resolvedTitle}</div>
+        <div className="text-xs opacity-80">{resolvedDescription}</div>
       </div>
     </div>
   );

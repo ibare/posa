@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
@@ -12,7 +13,9 @@ type Props = {
  * InputShape — interactive 요소가 아닌 div. value가 있으면 text 색, 없으면 placeholder 색.
  * focus 상태는 CSS 변수로만 표현 (ring 색 포함).
  */
-export function InputShape({ state = 'default', placeholder = 'Enter text…', value }: Props) {
+export function InputShape({ state = 'default', placeholder, value }: Props) {
+  const { t } = useTranslation('shapes');
+  const resolvedPlaceholder = placeholder ?? t('input.placeholder');
   const bg = `var(--${slotVarName('input.background', state)})`;
   const textVar = `var(--${slotVarName('input.text', state)})`;
   const placeholderVar = `var(--${slotVarName('input.placeholder', state)})`;
@@ -34,7 +37,7 @@ export function InputShape({ state = 'default', placeholder = 'Enter text…', v
       data-posa-slot="input.background"
       data-posa-state={state}
     >
-      {showValue ? value : placeholder}
+      {showValue ? value : resolvedPlaceholder}
     </div>
   );
 }

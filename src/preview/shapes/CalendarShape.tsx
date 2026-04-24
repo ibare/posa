@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
@@ -11,6 +12,7 @@ const DAY_HEADERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
  * hover는 임의 한 날짜에 적용.
  */
 export function CalendarShape({ state = 'default' }: Props) {
+  const { t } = useTranslation('shapes');
   const containerStyle: CSSProperties = {
     border: `1px solid var(--${slotVarName('calendar.border', 'default')})`,
     color: `var(--${slotVarName('calendar.text', 'default')})`,
@@ -43,7 +45,7 @@ export function CalendarShape({ state = 'default' }: Props) {
       data-posa-state={state}
     >
       <div className="mb-1 flex items-center justify-between px-1">
-        <span className="font-medium">April 2026</span>
+        <span className="font-medium">{t('calendar.monthYear')}</span>
         <span className="flex items-center gap-1" style={{ color: headerColor }}>
           <span>‹</span>
           <span>›</span>

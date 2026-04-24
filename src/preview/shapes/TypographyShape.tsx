@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { slotVarName } from '../slotVarName';
 
 export type TypographyKind =
@@ -21,6 +22,7 @@ type Props = { kind: TypographyKind };
  * slot 하나만 살피고, shadcn docs의 대표 스타일(굵기/크기/장식)을 태그로 구현.
  */
 export function TypographyShape({ kind }: Props) {
+  const { t } = useTranslation('shapes');
   const slot = `typography-${kind}.text`;
   const style: CSSProperties = {
     color: `var(--${slotVarName(slot, 'default')})`,
@@ -35,32 +37,31 @@ export function TypographyShape({ kind }: Props) {
     case 'h1':
       return (
         <h1 {...common} className="text-3xl font-extrabold tracking-tight">
-          Taxing Laughter
+          {t('typography.h1')}
         </h1>
       );
     case 'h2':
       return (
         <h2 {...common} className="text-2xl font-semibold tracking-tight">
-          The People of the Kingdom
+          {t('typography.h2')}
         </h2>
       );
     case 'h3':
       return (
         <h3 {...common} className="text-xl font-semibold tracking-tight">
-          The Joke Tax
+          {t('typography.h3')}
         </h3>
       );
     case 'h4':
       return (
         <h4 {...common} className="text-base font-semibold tracking-tight">
-          People stopped telling jokes
+          {t('typography.h4')}
         </h4>
       );
     case 'p':
       return (
         <p {...common} className="max-w-sm text-sm leading-6">
-          The king, seeing how much happier his subjects were, realized the
-          error of his ways and repealed the joke tax.
+          {t('typography.paragraph')}
         </p>
       );
     case 'blockquote':
@@ -69,44 +70,43 @@ export function TypographyShape({ kind }: Props) {
           {...common}
           className="max-w-sm border-l-2 border-stone-300 pl-4 text-sm italic"
         >
-          "After all," he said, "everyone enjoys a good joke, so it's only fair
-          that they should be able to tell them without paying."
+          {t('typography.blockquote')}
         </blockquote>
       );
     case 'list':
       return (
         <ul {...common} className="ml-5 list-disc space-y-1 text-sm">
-          <li>1st level of puns: 5 gold coins</li>
-          <li>2nd level of jokes: 10 gold coins</li>
-          <li>3rd level of one-liners: 20 gold coins</li>
+          <li>{t('typography.list1')}</li>
+          <li>{t('typography.list2')}</li>
+          <li>{t('typography.list3')}</li>
         </ul>
       );
     case 'inline-code':
       return (
         <span {...common} className="text-sm">
-          Use the{' '}
+          {t('typography.inlineCodePrefix')}
           <code className="rounded bg-stone-200/60 px-1.5 py-0.5 font-mono text-[0.85em]">
             @radix-ui/react-dialog
-          </code>{' '}
-          package.
+          </code>
+          {t('typography.inlineCodeSuffix')}
         </span>
       );
     case 'lead':
       return (
         <p {...common} className="max-w-sm text-lg leading-7">
-          A modal dialog that interrupts the user with important content.
+          {t('typography.lead')}
         </p>
       );
     case 'large':
       return (
         <div {...common} className="text-lg font-semibold">
-          Are you absolutely sure?
+          {t('typography.large')}
         </div>
       );
     case 'small':
       return (
         <small {...common} className="text-xs font-medium leading-none">
-          Email address
+          {t('typography.small')}
         </small>
       );
   }

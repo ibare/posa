@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { slotVarName } from '../slotVarName';
 
 type Props = {
@@ -6,10 +7,10 @@ type Props = {
   description?: string;
 };
 
-export function HoverCardShape({
-  title = '@shadcn',
-  description = 'The creator of shadcn/ui. Joined December 2021.',
-}: Props) {
+export function HoverCardShape({ title, description }: Props) {
+  const { t } = useTranslation('shapes');
+  const resolvedTitle = title ?? t('hoverCard.title');
+  const resolvedDescription = description ?? t('hoverCard.description');
   const style: CSSProperties = {
     backgroundColor: `var(--${slotVarName('hover-card.background', 'default')})`,
     color: `var(--${slotVarName('hover-card.text', 'default')})`,
@@ -23,8 +24,8 @@ export function HoverCardShape({
       data-posa-slot="hover-card.background"
       data-posa-state="default"
     >
-      <div className="text-sm font-semibold mb-1">{title}</div>
-      <div className="text-xs opacity-80">{description}</div>
+      <div className="text-sm font-semibold mb-1">{resolvedTitle}</div>
+      <div className="text-xs opacity-80">{resolvedDescription}</div>
     </div>
   );
 }

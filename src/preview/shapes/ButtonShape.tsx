@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
@@ -14,7 +15,9 @@ type Props = {
 /**
  * ButtonShape — 치수/레이아웃은 단일 외형 하나. 색은 IR slot 할당으로 결정된다.
  */
-export function ButtonShape({ variant, state = 'default', label = 'Button' }: Props) {
+export function ButtonShape({ variant, state = 'default', label }: Props) {
+  const { t } = useTranslation('shapes');
+  const resolvedLabel = label ?? t('button.label');
   const slotBase = variant ? `button.${variant}` : 'button';
   const bgVar = `var(--${slotVarName(`${slotBase}.background`, state)})`;
   const textVar = `var(--${slotVarName(`${slotBase}.text`, state)})`;
@@ -33,7 +36,7 @@ export function ButtonShape({ variant, state = 'default', label = 'Button' }: Pr
       data-posa-slot={`${slotBase}.background`}
       data-posa-state={state}
     >
-      {label}
+      {resolvedLabel}
     </div>
   );
 }

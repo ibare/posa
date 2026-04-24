@@ -1,14 +1,14 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { StateId } from '../../ir/types';
 import { slotVarName } from '../slotVarName';
 
 type Props = { state?: StateId; label?: string };
 
 /** shadcn native select — Input과 거의 동일, 오른쪽에 chevron 아이콘. */
-export function NativeSelectShape({
-  state = 'default',
-  label = 'Select an option',
-}: Props) {
+export function NativeSelectShape({ state = 'default', label }: Props) {
+  const { t } = useTranslation('shapes');
+  const resolvedLabel = label ?? t('nativeSelect.label');
   const style: CSSProperties = {
     backgroundColor: `var(--${slotVarName('native-select.background', state)})`,
     color: `var(--${slotVarName('native-select.text', state)})`,
@@ -27,7 +27,7 @@ export function NativeSelectShape({
       data-posa-slot="native-select.background"
       data-posa-state={state}
     >
-      <span>{label}</span>
+      <span>{resolvedLabel}</span>
       <span style={{ color: iconColor }}>▾</span>
     </div>
   );

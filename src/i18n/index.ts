@@ -9,6 +9,7 @@ import onboardingEn from './locales/en/onboarding.json';
 import planesEn from './locales/en/planes.json';
 import primitivesEn from './locales/en/primitives.json';
 import reviewEn from './locales/en/review.json';
+import shapesEn from './locales/en/shapes.json';
 import catalogKo from './locales/ko/catalog.json';
 import commonKo from './locales/ko/common.json';
 import exportKo from './locales/ko/export.json';
@@ -18,6 +19,7 @@ import onboardingKo from './locales/ko/onboarding.json';
 import planesKo from './locales/ko/planes.json';
 import primitivesKo from './locales/ko/primitives.json';
 import reviewKo from './locales/ko/review.json';
+import shapesKo from './locales/ko/shapes.json';
 import { DEFAULT_LOCALE, LOCALES, type Locale } from './config';
 
 export const NAMESPACES = [
@@ -30,6 +32,7 @@ export const NAMESPACES = [
   'export',
   'review',
   'catalog',
+  'shapes',
 ] as const;
 export type Namespace = (typeof NAMESPACES)[number];
 
@@ -44,6 +47,7 @@ const RESOURCES = {
     export: exportEn,
     review: reviewEn,
     catalog: catalogEn,
+    shapes: shapesEn,
   },
   ko: {
     common: commonKo,
@@ -55,6 +59,7 @@ const RESOURCES = {
     export: exportKo,
     review: reviewKo,
     catalog: catalogKo,
+    shapes: shapesKo,
   },
 } as const satisfies Record<Locale, Record<Namespace, unknown>>;
 
