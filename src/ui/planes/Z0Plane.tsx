@@ -58,7 +58,7 @@ export function Z0Plane() {
         <div className="text-xs text-stone-500 mb-3">
           {t('z0.symbolsHint')}
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
           {activeSymbols.map((sym) => (
             <SymbolChip
               key={sym.id}
