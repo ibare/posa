@@ -1,15 +1,16 @@
 import type { OKLCH } from '../../../../ir/types';
-import {
-  TILE_COUNT,
-  c,
-  linspace,
-  type Recommender,
-} from './shared';
+import { TILE_COUNT, c, linspace, type Recommender } from './shared';
 
 /**
- * Phase A — 역할별 고정 팔레트를 각 1 row × 11 타일로 정규화.
- * 기존 SEA_REGISTRY의 분기를 하나의 파일로 이식. Phase C에서 role별 알고리즘을
- * 보다 정교하게 재설계 예정.
+ * role별 usable 팔레트 — "이 용도에 자주 쓰이는 범위" 한 행.
+ *
+ * 대분류:
+ * - Neutral (background/text/border/track/thumb/placeholder/icon/overlay/muted):
+ *   순수 gray 램프 7개 + warm/cool hint 4개. L 구간은 role별로 다르다.
+ * - Colorful (primary/secondary/accent/outline/mark/fill):
+ *   일정 L, C에서 hue를 11단계 순회 (0~330°).
+ * - Semantic (info/success/warning/error):
+ *   의미 색상 주위의 좁은 hue 밴드 11개.
  */
 export const roleFit: Recommender = ({ role }) => {
   const tiles = generateForRole(role);
@@ -23,70 +24,75 @@ export const roleFit: Recommender = ({ role }) => {
 
 function generateForRole(role: string): OKLCH[] {
   switch (role) {
-    // Attribute 역할
+    // Neutral
     case 'background':
-      return backgroundRamp();
+      return neutralRamp(1.0, 0.94, 0.01);
     case 'text':
+      return neutralRamp(0.15, 0.35, 0.016);
     case 'placeholder':
+      return neutralRamp(0.45, 0.65, 0.012);
     case 'icon':
+      return neutralRamp(0.2, 0.5, 0.014);
     case 'overlay':
+      return neutralRamp(0.15, 0.45, 0.012);
     case 'muted':
-      return textRamp();
+      return neutralRamp(0.45, 0.65, 0.012);
     case 'border':
+      return neutralRamp(0.78, 0.9, 0.008);
     case 'track':
+      return neutralRamp(0.78, 0.9, 0.008);
     case 'thumb':
-      // Phase A: 기존 "generic sea" 동작을 유지 (컬러풀 hue ring).
-      // 실제 border/track 용도엔 어울리지 않음 — Phase C에서 neutral ramp로 교체.
-      return hueRing(0.58, 0.18);
+      return neutralRamp(0.55, 0.75, 0.014);
 
-    // Symbol / "컬러풀" attribute 역할
+    // Colorful
     case 'outline':
     case 'mark':
     case 'fill':
+      return hueRing(0.55, 0.15);
     case 'primary':
-    case 'secondary':
     case 'accent':
-    case 'info':
-    case 'success':
-      return hueRing(0.55, 0.18);
+      return hueRing(0.58, 0.18);
+    case 'secondary':
+      return hueRing(0.6, 0.12);
 
+    // Semantic
+    case 'info':
+      return hueBand(0.6, 0.15, 220, 260);
+    case 'success':
+      return hueBand(0.58, 0.16, 130, 170);
     case 'warning':
-      return amberRamp();
+      return hueBand(0.72, 0.17, 55, 95);
     case 'error':
-      return redRamp();
+      return hueBand(0.55, 0.2, 0, 30);
 
     default:
       return hueRing(0.58, 0.18);
   }
 }
 
-/** 0~330° 사이 11개 hue 샘플 (fullHueRing 기존 규약과 동일 범위). */
+/** 0~330° 사이 11개 hue 순회. */
 function hueRing(L: number, C: number): OKLCH[] {
   return linspace(0, 330, TILE_COUNT).map((H) => c(L, C, H));
 }
 
-/** 앰버 영역을 다소 넓게(orange ~ yellow-green) 11 hue 샘플로 표시. */
-function amberRamp(): OKLCH[] {
-  return linspace(20, 85, TILE_COUNT).map((H) => c(0.7, 0.17, H));
+/** 좁은 hue 대역 11개 샘플 — semantic 색상용. */
+function hueBand(L: number, C: number, hLo: number, hHi: number): OKLCH[] {
+  return linspace(hLo, hHi, TILE_COUNT).map((H) => c(L, C, H));
 }
 
-/** 레드 영역 11 hue 샘플. */
-function redRamp(): OKLCH[] {
-  return linspace(0, 30, TILE_COUNT).map((H) => c(0.55, 0.2, H));
-}
-
-/** 배경용: 순수 화이트 램프 7개 + 웜 2개 + 쿨 2개. */
-function backgroundRamp(): OKLCH[] {
-  const pure = linspace(1.0, 0.94, 7).map((L) => c(L, 0, 0));
-  const warm = [c(0.99, 0.012, 70), c(0.97, 0.012, 70)];
-  const cool = [c(0.99, 0.012, 240), c(0.97, 0.012, 240)];
-  return [...pure, ...warm, ...cool];
-}
-
-/** 텍스트용: 순수 다크 램프 7개 + 웜 2개 + 쿨 2개. */
-function textRamp(): OKLCH[] {
-  const pure = linspace(0.15, 0.35, 7).map((L) => c(L, 0, 0));
-  const warm = [c(0.22, 0.018, 55), c(0.28, 0.018, 55)];
-  const cool = [c(0.22, 0.018, 240), c(0.28, 0.018, 240)];
-  return [...pure, ...warm, ...cool];
+/**
+ * 순수 gray 7개 + warm/cool 각 2개 = 11 타일.
+ * warm/cool은 L 구간 35%/65% 지점에 얹어 가운데 톤에만 색조를 준다.
+ */
+function neutralRamp(lLo: number, lHi: number, warmCoolC: number): OKLCH[] {
+  const pure = linspace(lLo, lHi, 7).map((L) => c(L, 0, 0));
+  const l1 = lLo + (lHi - lLo) * 0.35;
+  const l2 = lLo + (lHi - lLo) * 0.65;
+  return [
+    ...pure,
+    c(l1, warmCoolC, 70),
+    c(l2, warmCoolC, 70),
+    c(l1, warmCoolC, 240),
+    c(l2, warmCoolC, 240),
+  ];
 }
