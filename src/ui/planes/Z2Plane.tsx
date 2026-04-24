@@ -113,7 +113,11 @@ function StateCard({
           {isDirect ? t('z2.set') : t('z2.inherit')}
         </span>
       </div>
-      <InspectorPopover anchor={anchorEl} open={focused}>
+      <InspectorPopover
+        anchor={anchorEl}
+        open={focused}
+        onDismiss={onFocusToggle}
+      >
         <InspectorBody />
       </InspectorPopover>
     </div>

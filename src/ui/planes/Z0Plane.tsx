@@ -145,7 +145,11 @@ function SymbolChip({ symbol, focused, onFocusToggle }: SymbolChipProps) {
           </div>
         </div>
       </button>
-      <InspectorPopover anchor={anchorEl} open={focused}>
+      <InspectorPopover
+        anchor={anchorEl}
+        open={focused}
+        onDismiss={onFocusToggle}
+      >
         <InspectorBody />
       </InspectorPopover>
     </div>
@@ -260,7 +264,11 @@ function AttributeRow({
           </svg>
         </button>
       </div>
-      <InspectorPopover anchor={anchorEl} open={showInspector}>
+      <InspectorPopover
+        anchor={anchorEl}
+        open={showInspector}
+        onDismiss={onFocusToggle}
+      >
         <InspectorBody />
       </InspectorPopover>
     </div>

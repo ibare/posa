@@ -109,7 +109,11 @@ export function SlotCard({
           </button>
         )}
       </div>
-      <InspectorPopover anchor={anchorEl} open={showInspector}>
+      <InspectorPopover
+        anchor={anchorEl}
+        open={showInspector}
+        onDismiss={onFocusToggle}
+      >
         <InspectorBody />
       </InspectorPopover>
     </div>

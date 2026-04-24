@@ -6,12 +6,15 @@ import {
   offset,
   shift,
   size,
+  useDismiss,
   useFloating,
+  useInteractions,
 } from '@floating-ui/react';
 
 type Props = {
   anchor: HTMLElement | null;
   open: boolean;
+  onDismiss?: () => void;
   children: ReactNode;
 };
 
@@ -20,10 +23,14 @@ type Props = {
  * 기본 bottom-start, 공간이 부족하면 top-start로 flip, 좌우로 shift.
  * size middleware로 viewport 경계에 따라 max-height를 제한해 내부 스크롤.
  * FloatingPortal로 body에 렌더해 상위 overflow 클리핑을 우회한다.
+ * onDismiss가 주어지면 바깥 클릭/Esc로 닫힌다 (Floating UI useDismiss).
  */
-export function InspectorPopover({ anchor, open, children }: Props) {
-  const { refs, floatingStyles } = useFloating({
+export function InspectorPopover({ anchor, open, onDismiss, children }: Props) {
+  const { refs, floatingStyles, context } = useFloating({
     open,
+    onOpenChange: (next) => {
+      if (!next) onDismiss?.();
+    },
     strategy: 'fixed',
     placement: 'bottom-start',
     whileElementsMounted: autoUpdate,
@@ -42,6 +49,9 @@ export function InspectorPopover({ anchor, open, children }: Props) {
     ],
   });
 
+  const dismiss = useDismiss(context, { enabled: onDismiss != null });
+  const { getFloatingProps } = useInteractions([dismiss]);
+
   if (!open || !anchor) return null;
 
   return (
@@ -49,6 +59,7 @@ export function InspectorPopover({ anchor, open, children }: Props) {
       <div
         ref={refs.setFloating}
         style={floatingStyles}
+        {...getFloatingProps()}
         className="z-30 w-[26rem] max-w-[calc(100vw-1rem)] overflow-y-auto rounded-lg border border-stone-200 bg-white p-4 shadow-lg"
       >
         {children}
