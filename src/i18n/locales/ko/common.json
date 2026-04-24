@@ -17,7 +17,9 @@
     "copy": "복사",
     "copied": "복사됨!",
     "download": "다운로드",
-    "remove": "제거"
+    "remove": "제거",
+    "openPreview": "프리뷰 열기",
+    "closePreview": "프리뷰 닫기"
   },
   "toast": {
     "copiedHex": "{{hex}} 복사됨",

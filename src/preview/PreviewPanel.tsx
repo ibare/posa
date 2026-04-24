@@ -937,7 +937,7 @@ function PreviewPanelResizeHandle() {
       aria-orientation="vertical"
       aria-label="Resize live preview"
       onPointerDown={onPointerDown}
-      className="group absolute left-0 top-1/2 z-10 flex h-11 w-4 -translate-x-1/2 -translate-y-1/2 cursor-col-resize items-center justify-center touch-none"
+      className="group absolute left-0 top-1/2 z-10 hidden h-11 w-4 -translate-x-1/2 -translate-y-1/2 cursor-col-resize items-center justify-center touch-none md:flex"
     >
       <div className="h-[35px] w-[10px] rounded-full border border-[#D2D2D2] bg-[#F5F5F5] transition-colors group-hover:border-stone-500 group-active:border-stone-700" />
     </div>

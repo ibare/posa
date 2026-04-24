@@ -17,7 +17,9 @@
     "copy": "Copy",
     "copied": "Copied!",
     "download": "Download",
-    "remove": "Remove"
+    "remove": "Remove",
+    "openPreview": "Open preview",
+    "closePreview": "Close preview"
   },
   "toast": {
     "copiedHex": "Copied {{hex}}",

@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PreviewPanel } from '../../preview';
 import { usePosaStore } from '../../store/posa-store';
+import { useIsMobile } from '../shared/useMediaQuery';
 import { BreadcrumbStrip } from './BreadcrumbStrip';
 import { Z0Plane } from './Z0Plane';
 import { Z1Plane } from './Z1Plane';
@@ -26,6 +27,13 @@ export function ExplorationView() {
   const clearSelectedGroup = usePosaStore((s) => s.clearSelectedGroup);
   const previewPanelWidth = usePosaStore((s) => s.previewPanelWidth);
   const { t } = useTranslation('planes');
+  const { t: tCommon } = useTranslation();
+  const isMobile = useIsMobile();
+  const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isMobile) setMobilePreviewOpen(false);
+  }, [isMobile]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -88,6 +96,72 @@ export function ExplorationView() {
       ? `zxg-${selectedGroupId}`
       : `${layer}-${selectedAttributeId ?? ''}-${selectedSlotId ?? ''}`;
 
+  const main = (
+    <div className="min-w-0">
+      <BreadcrumbStrip />
+      <div key={planeKey} className={animClass}>
+        {inZxComponent ? (
+          <ZXPlane />
+        ) : inZxGroup ? (
+          <ZXGroupPlane />
+        ) : (
+          <>
+            {layer === 'z0' && <Z0Plane />}
+            {layer === 'z1' && <Z1Plane />}
+            {layer === 'z2' && <Z2Plane />}
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        {main}
+        <button
+          type="button"
+          onClick={() => setMobilePreviewOpen(true)}
+          aria-label={tCommon('action.openPreview')}
+          className="fixed bottom-4 right-4 z-30 inline-flex items-center gap-2 rounded-full border border-stone-300 bg-stone-900 text-cream px-4 py-2.5 text-xs font-mono shadow-lg active:scale-[0.98] transition"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            aria-hidden="true"
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          >
+            <rect x="2" y="3" width="12" height="10" rx="1.5" />
+            <path d="M2 6h12" />
+          </svg>
+          {tCommon('action.openPreview')}
+        </button>
+        {mobilePreviewOpen && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="fixed inset-0 z-40 flex flex-col bg-cream"
+          >
+            <div className="sticky top-0 z-10 flex items-center justify-end border-b border-stone-200 bg-cream/95 backdrop-blur px-4 py-2.5">
+              <button
+                type="button"
+                onClick={() => setMobilePreviewOpen(false)}
+                className="text-xs text-stone-600 hover:text-stone-900 px-2.5 py-1 rounded border border-stone-200 hover:border-stone-400 transition"
+              >
+                {tCommon('action.closePreview')}
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <PreviewPanel />
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
   return (
     <div
       className="grid gap-6"
@@ -95,22 +169,7 @@ export function ExplorationView() {
         gridTemplateColumns: `minmax(0, 1fr) ${previewPanelWidth}px`,
       }}
     >
-      <div className="min-w-0">
-        <BreadcrumbStrip />
-        <div key={planeKey} className={animClass}>
-          {inZxComponent ? (
-            <ZXPlane />
-          ) : inZxGroup ? (
-            <ZXGroupPlane />
-          ) : (
-            <>
-              {layer === 'z0' && <Z0Plane />}
-              {layer === 'z1' && <Z1Plane />}
-              {layer === 'z2' && <Z2Plane />}
-            </>
-          )}
-        </div>
-      </div>
+      {main}
       <PreviewPanel />
     </div>
   );

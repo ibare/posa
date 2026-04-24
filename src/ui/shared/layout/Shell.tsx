@@ -29,8 +29,8 @@ export function Shell({ children }: Props) {
 
   return (
     <div className="min-h-screen bg-cream text-stone-900 font-body antialiased">
-      <header className="sticky top-0 z-10 border-b border-stone-200/80 bg-cream/90 backdrop-blur px-6 py-3 flex items-center gap-4">
-        <h1 className="font-display italic text-2xl leading-none tracking-tight select-none">
+      <header className="sticky top-0 z-10 border-b border-stone-200/80 bg-cream/90 backdrop-blur px-3 md:px-6 py-2 md:py-3 flex flex-wrap items-center gap-x-3 gap-y-2 md:gap-4">
+        <h1 className="font-display italic text-xl md:text-2xl leading-none tracking-tight select-none">
           {t('app.title')}
           <sup className="relative top-[10px] ml-0.5 align-top font-mono not-italic text-[9px] uppercase tracking-[0.15em] text-stone-400">
             {t('app.beta')}
@@ -55,12 +55,14 @@ export function Shell({ children }: Props) {
           ))}
         </nav>
         <div className="flex-1" />
-        <PaletteRibbon ir={ir} />
+        <div className="hidden md:block">
+          <PaletteRibbon ir={ir} />
+        </div>
         <LocaleToggle />
         <button
           type="button"
           onClick={() => navigate('/')}
-          className="text-xs text-stone-600 hover:text-stone-900 px-2.5 py-1 rounded border border-stone-200 hover:border-stone-400 transition"
+          className="hidden md:inline-flex text-xs text-stone-600 hover:text-stone-900 px-2.5 py-1 rounded border border-stone-200 hover:border-stone-400 transition"
         >
           {t('nav.editComponents')}
         </button>
@@ -92,7 +94,7 @@ export function Shell({ children }: Props) {
           </svg>
         </a>
       </header>
-      <main className="px-6 py-6">{children}</main>
+      <main className="px-3 py-4 md:px-6 md:py-6">{children}</main>
       <ConfirmDialog
         open={resetConfirmOpen}
         destructive
