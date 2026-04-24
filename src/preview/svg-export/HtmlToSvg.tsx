@@ -4,14 +4,16 @@ import { domToSvg } from './domToSvg';
 type Props = {
   children: ReactNode;
   signature: unknown;
+  onSvg?: (svg: string | null) => void;
 };
 
 /**
  * 자식 서브트리를 실제 DOM에 한 번 그린 뒤 domToSvg 로 변환해 SVG 로 표시한다.
  * HTML 측정용 루트는 `visibility: hidden` 로 남겨 레이아웃만 유지하고
  * 그 자리에 absolute 로 SVG 를 덮는다. signature 가 바뀌면 재측정한다.
+ * 생성된 SVG 문자열은 onSvg 로 상위에 전달되어 복사 등 UX 에 활용된다.
  */
-export function HtmlToSvg({ children, signature }: Props) {
+export function HtmlToSvg({ children, signature, onSvg }: Props) {
   const htmlRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string | null>(null);
 
@@ -28,6 +30,10 @@ export function HtmlToSvg({ children, signature }: Props) {
       cancelAnimationFrame(id);
     };
   }, [signature]);
+
+  useEffect(() => {
+    onSvg?.(svg);
+  }, [svg, onSvg]);
 
   return (
     <div className="relative inline-block">

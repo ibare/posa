@@ -20,7 +20,11 @@
   },
   "toast": {
     "copiedHex": "Copied {{hex}}",
+    "copiedSvg": "Copied SVG",
     "copyFailed": "Copy failed"
+  },
+  "svgCopy": {
+    "label": "Copy SVG"
   },
   "confirm": {
     "reset": {

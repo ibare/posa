@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   COMPONENT_GROUPS,
@@ -61,6 +61,7 @@ import {
   type TypographyKind,
 } from '../../../preview/shapes';
 import { useActiveComponentDefs, useGroupLabel } from '../../../store/hooks';
+import { useCopySvg } from '../../shared/toast';
 import { SectionCard } from './shared';
 
 type Props = { ir: IR };
@@ -150,9 +151,13 @@ function GalleryTile({
   ir: IR;
 }) {
   const { t } = useTranslation('review');
+  const { t: tc } = useTranslation('common');
   const variantCount = component.variants?.length ?? 0;
+  const [svg, setSvg] = useState<string | null>(null);
+  const copySvg = useCopySvg();
+  const handleSvg = useCallback((s: string | null) => setSvg(s), []);
   return (
-    <div className="rounded-lg border border-stone-200 bg-stone-50/40 p-3">
+    <div className="group relative rounded-lg border border-stone-200 bg-stone-50/40 p-3">
       <div className="mb-2 flex items-center justify-between">
         <div className="font-mono text-[11px] text-stone-700">
           {component.id}
@@ -164,10 +169,25 @@ function GalleryTile({
         )}
       </div>
       <div className="flex min-h-[88px] items-start">
-        <HtmlToSvg signature={ir}>
+        <HtmlToSvg signature={ir} onSvg={handleSvg}>
           <ComponentPreview component={component} ir={ir} />
         </HtmlToSvg>
       </div>
+      {svg != null && (
+        <button
+          type="button"
+          onClick={() => copySvg(svg)}
+          aria-label={tc('svgCopy.label')}
+          className={[
+            'absolute right-2 top-2 rounded-md border border-stone-300 bg-white/90 px-2 py-0.5',
+            'font-mono text-[10px] uppercase tracking-wider text-stone-700 shadow-sm backdrop-blur-sm',
+            'opacity-0 transition-opacity hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900',
+            'group-hover:opacity-100 group-focus-within:opacity-100',
+          ].join(' ')}
+        >
+          {tc('svgCopy.label')}
+        </button>
+      )}
     </div>
   );
 }

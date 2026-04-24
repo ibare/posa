@@ -20,7 +20,11 @@
   },
   "toast": {
     "copiedHex": "{{hex}} 복사됨",
+    "copiedSvg": "SVG 복사됨",
     "copyFailed": "복사에 실패했습니다"
+  },
+  "svgCopy": {
+    "label": "SVG 복사"
   },
   "confirm": {
     "reset": {

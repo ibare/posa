@@ -17,6 +17,22 @@ export const useToastStore = create<ToastState>((set) => ({
   clear: () => set({ message: null }),
 }));
 
+async function copyText(value: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+  const area = document.createElement('textarea');
+  area.value = value;
+  area.setAttribute('readonly', '');
+  area.style.position = 'fixed';
+  area.style.opacity = '0';
+  document.body.appendChild(area);
+  area.select();
+  document.execCommand('copy');
+  document.body.removeChild(area);
+}
+
 /**
  * 프리미티브 색 박스 클릭용 헬퍼.
  * hex 문자열(#rrggbb)을 클립보드에 복사하고, 결과를 토스트로 보여준다.
@@ -29,20 +45,25 @@ export function useCopyHex() {
     async (hex: string) => {
       const value = hex.toLowerCase();
       try {
-        if (navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(value);
-        } else {
-          const area = document.createElement('textarea');
-          area.value = value;
-          area.setAttribute('readonly', '');
-          area.style.position = 'fixed';
-          area.style.opacity = '0';
-          document.body.appendChild(area);
-          area.select();
-          document.execCommand('copy');
-          document.body.removeChild(area);
-        }
+        await copyText(value);
         show(t('toast.copiedHex', { hex: value }));
+      } catch {
+        show(t('toast.copyFailed'));
+      }
+    },
+    [show, t],
+  );
+}
+
+/** SVG 문자열을 클립보드에 쓰고 토스트로 결과를 알린다. */
+export function useCopySvg() {
+  const show = useToastStore((s) => s.show);
+  const { t } = useTranslation('common');
+  return useCallback(
+    async (svg: string) => {
+      try {
+        await copyText(svg);
+        show(t('toast.copiedSvg'));
       } catch {
         show(t('toast.copyFailed'));
       }
