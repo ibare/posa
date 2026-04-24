@@ -1,5 +1,8 @@
+import type { ComponentDefinition } from '../catalog/components';
+import { resolveEffectivePrimitiveShade } from '../ir/selectors';
 import {
   SHADE_INDICES,
+  SYMBOL_IDS,
   type AttributeAssignment,
   type ColorRef,
   type IR,
@@ -237,35 +240,73 @@ export function rebindShade(
   };
 }
 
+/**
+ * 각 shade의 소비자 수를 집계한다. 두 소스를 합산한다:
+ *   1) Symbol 배정 — symbol 자체가 팔레트 토큰이자 소비자. variant 활성화의 근거이고
+ *      slot 참조와 독립적으로 존재한다. "symbol이 유일한 소비자"인 primitive도
+ *      최소 1은 계산되어야 한다.
+ *   2) 활성 slot × state의 상속 체인 해결 결과(state override → slot.ref → attribute).
+ *      attribute에 배정만 있고 상속하는 slot이 없으면 집계에 잡히지 않는다.
+ *      slot이 {kind:'symbol'}로 symbol을 참조하면 그 symbol의 shade로 추가 카운트되며,
+ *      symbol 배정 카운트(1)와 중복이 아니라 별도 소비 경로다.
+ */
 export function shadeUsage(
   ir: IR,
+  components: ComponentDefinition[],
   primitiveId: PrimitiveId,
 ): Record<ShadeIndex, number> {
   const usage = {} as Record<ShadeIndex, number>;
-  const p = ir.primitives[primitiveId];
-  if (!p) return usage;
+  if (!ir.primitives[primitiveId]) return usage;
   for (const shade of SHADE_INDICES) {
     usage[shade] = 0;
   }
   for (const assign of Object.values(ir.symbols)) {
     if (assign && assign.primitive === primitiveId) usage[assign.shade]++;
   }
-  for (const assign of Object.values(ir.attributes)) {
-    if (assign && assign.primitive === primitiveId) {
-      usage[assign.shade]++;
-    }
-  }
-  for (const slot of Object.values(ir.slots)) {
-    if (slot.ref && slot.ref.kind === 'primitive' && slot.ref.primitive === primitiveId) {
-      usage[slot.ref.shade]++;
-    }
-    for (const override of Object.values(slot.states)) {
-      if (override && override.kind === 'primitive' && override.primitive === primitiveId) {
-        usage[override.shade]++;
+  const symbolIdSet: Set<string> = new Set(SYMBOL_IDS);
+  for (const comp of components) {
+    const variantIds: (string | null)[] = comp.variants?.length
+      ? comp.variants.map((v) => v.id)
+      : [null];
+    for (const variantId of variantIds) {
+      // variant.id가 SymbolId와 일치하고 그 symbol에 할당이 없으면 해당 slot은 비활성.
+      if (variantId && symbolIdSet.has(variantId)) {
+        if (ir.symbols[variantId as SymbolId] == null) continue;
+      }
+      for (const attr of comp.attributes) {
+        const slotId = variantId
+          ? `${comp.id}.${variantId}.${attr}`
+          : `${comp.id}.${attr}`;
+        for (const state of comp.states) {
+          const resolved = resolveEffectivePrimitiveShade(
+            ir,
+            slotId,
+            attr,
+            state,
+          );
+          if (!resolved) continue;
+          if (resolved.primitive !== primitiveId) continue;
+          usage[resolved.shade]++;
+        }
       }
     }
   }
   return usage;
+}
+
+/**
+ * shade별 effective usage의 총합. Atlas 카드 상단 "Used in N places" 표시용.
+ * 삭제 가드·orphan 판정은 primitive-ops의 countPrimitiveReferences(direct)를 계속 사용한다.
+ */
+export function effectivePrimitiveReferenceCount(
+  ir: IR,
+  components: ComponentDefinition[],
+  primitiveId: PrimitiveId,
+): number {
+  const usage = shadeUsage(ir, components, primitiveId);
+  let total = 0;
+  for (const shade of SHADE_INDICES) total += usage[shade] ?? 0;
+  return total;
 }
 
 export type { PrimitiveScale };

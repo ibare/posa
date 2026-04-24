@@ -18,6 +18,10 @@
     "download": "다운로드",
     "remove": "제거"
   },
+  "toast": {
+    "copiedHex": "{{hex}} 복사됨",
+    "copyFailed": "복사에 실패했습니다"
+  },
   "confirm": {
     "reset": {
       "title": "모두 초기화할까요?",

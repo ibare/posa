@@ -276,7 +276,7 @@ function resolveRefToPrimitiveShade(
  * resolveSlotStateColor의 primitive-shade 버전. 상속 체인은 동일:
  *   state override → slot.ref → attribute.
  */
-function resolveEffectivePrimitiveShade(
+export function resolveEffectivePrimitiveShade(
   ir: IR,
   slotId: SlotId,
   attrId: AttributeId,

@@ -15,6 +15,7 @@ import {
   type ShadeIndex,
 } from '../../../ir/types';
 import { useActiveComponentDefs } from '../../../store/hooks';
+import { useCopyHex } from '../../shared/toast';
 import { SectionCard, SubCard } from './shared';
 
 type Props = { ir: IR };
@@ -115,6 +116,7 @@ function PrimitiveRow({
   usedShades: Set<ShadeIndex>;
 }) {
   const { t } = useTranslation('review');
+  const copyHex = useCopyHex();
   const familyName = primitiveId.split('-')[0];
   const displayName =
     familyName.charAt(0).toUpperCase() + familyName.slice(1);
@@ -154,10 +156,16 @@ function PrimitiveRow({
               });
           return (
             <div key={shade} className="flex flex-col items-stretch">
-              <div
-                className={['relative', used ? '' : 'mt-2'].join(' ')}
+              <button
+                type="button"
+                onClick={() => copyHex(hex)}
+                className={[
+                  'relative rounded-[3px] cursor-copy focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900',
+                  used ? '' : 'mt-2',
+                ].join(' ')}
                 style={{ height: used ? 56 : 40 }}
                 title={title}
+                aria-label={`${displayName} ${shade} ${hex}`}
               >
                 <div
                   className="h-full w-full rounded-[3px]"
@@ -169,7 +177,7 @@ function PrimitiveRow({
                 {used && (
                   <div className="absolute left-1/2 top-1 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-black/60" />
                 )}
-              </div>
+              </button>
               <div
                 className={[
                   'mt-1 text-center font-mono text-[9px] tabular-nums',

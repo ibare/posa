@@ -12,11 +12,16 @@ import {
   type PrimitiveScale,
   type ShadeIndex,
 } from '../../ir/types';
+import { useActiveComponentDefs } from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
+import { useCopyHex } from '../shared/toast';
 
 type Props = {
   primitive: PrimitiveScale;
+  /** 화면 표시용 effective 사용처 수 (상속 체인 resolve 결과 합). */
   refCount: number;
+  /** 삭제 가드용 direct 배정 수. effective와 어긋날 수 있다(예: symbol 배정만 있고 소비 slot 없음). */
+  directRefCount: number;
   isOrphan: boolean;
   mergeSource: string | null;
   onSelectAsMergeSource: () => void;
@@ -26,6 +31,7 @@ type Props = {
 export function PrimitiveCard({
   primitive,
   refCount,
+  directRefCount,
   isOrphan,
   mergeSource,
   onSelectAsMergeSource,
@@ -38,6 +44,8 @@ export function PrimitiveCard({
   const selectAtlasShade = usePosaStore((s) => s.selectAtlasShade);
   const moveAtlasSelection = usePosaStore((s) => s.moveAtlasSelection);
   const rebindPrimitiveShade = usePosaStore((s) => s.rebindPrimitiveShade);
+  const components = useActiveComponentDefs();
+  const copyHex = useCopyHex();
   const [expanded, setExpanded] = useState(false);
   // draggingShade가 null이 아니면 현재 pointer가 눌린 상태(드래그 이동 중).
   // selection은 store가 보유하지만, drag 제스처 수명은 pointerdown~pointerup으로 짧아
@@ -53,14 +61,17 @@ export function PrimitiveCard({
     [ir, primitive.id],
   );
   const refGroups = useMemo(() => groupRefs(refs), [refs]);
-  const usage = useMemo(() => shadeUsage(ir, primitive.id), [ir, primitive.id]);
+  const usage = useMemo(
+    () => shadeUsage(ir, components, primitive.id),
+    [ir, components, primitive.id],
+  );
 
   const isMergeTargetCandidate =
     mergeSource !== null && mergeSource !== primitive.id;
   const isMergeSource = mergeSource === primitive.id;
 
   const handleRemove = () => {
-    if (refCount > 0) return;
+    if (directRefCount > 0) return;
     if (!window.confirm(t('card.confirmRemove', { id: primitive.id }))) return;
     removePrimitive(primitive.id);
   };
@@ -166,13 +177,16 @@ export function PrimitiveCard({
             const isSelected =
               isSelectedThisCard && atlasSelection?.shade === shade;
             return (
-              <span
+              <button
                 key={shade}
+                type="button"
                 data-atlas-primitive={primitive.id}
                 data-atlas-shade={shade}
-                className="flex-1 h-7 relative"
+                onClick={() => copyHex(hex)}
+                className="flex-1 h-7 relative cursor-copy focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-stone-900"
                 style={{ backgroundColor: hex }}
                 title={`${shade} · ${hex} · ${usage[shade] ?? 0}x`}
+                aria-label={`${primitive.id} ${shade} ${hex}`}
               >
                 {isAnchor && (
                   <span
@@ -183,7 +197,7 @@ export function PrimitiveCard({
                 {isSelected && (
                   <span className="absolute inset-0 pointer-events-none ring-2 ring-inset ring-white" />
                 )}
-              </span>
+              </button>
             );
           })}
         </div>
@@ -314,9 +328,9 @@ export function PrimitiveCard({
         <button
           type="button"
           onClick={handleRemove}
-          disabled={refCount > 0}
+          disabled={directRefCount > 0}
           className="text-xs px-3 py-1.5 rounded border border-stone-200 text-stone-700 hover:border-red-400 hover:text-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
-          title={refCount > 0 ? t('card.stillInUse') : t('card.remove')}
+          title={directRefCount > 0 ? t('card.stillInUse') : t('card.remove')}
         >
           {t('card.remove')}
         </button>

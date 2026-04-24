@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { effectivePrimitiveReferenceCount } from '../../color/atlas-ops';
 import {
   countPrimitiveReferences,
   findOrphanPrimitives,
@@ -7,6 +8,7 @@ import {
 } from '../../color/primitive-ops';
 import type { PrimitiveScale } from '../../ir/types';
 import { PreviewPanel } from '../../preview/PreviewPanel';
+import { useActiveComponentDefs } from '../../store/hooks';
 import { usePosaStore } from '../../store/posa-store';
 import { PrimitiveCard } from './PrimitiveCard';
 
@@ -19,6 +21,7 @@ export function PrimitiveAtlas() {
   const ir = usePosaStore((s) => s.ir);
   const atlasSelection = usePosaStore((s) => s.atlasSelection);
   const clearAtlasSelection = usePosaStore((s) => s.clearAtlasSelection);
+  const components = useActiveComponentDefs();
   const [mergeSource, setMergeSource] = useState<string | null>(null);
   const { t } = useTranslation(['primitives', 'common']);
 
@@ -59,6 +62,20 @@ export function PrimitiveAtlas() {
 
   const orphanIds = useMemo(() => new Set(findOrphanPrimitives(ir)), [ir]);
   const usedCount = primitives.length - orphanIds.size;
+  const effectiveRefCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const p of primitives) {
+      map.set(p.id, effectivePrimitiveReferenceCount(ir, components, p.id));
+    }
+    return map;
+  }, [ir, components, primitives]);
+  const directRefCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const p of primitives) {
+      map.set(p.id, countPrimitiveReferences(ir, p.id));
+    }
+    return map;
+  }, [ir, primitives]);
 
   const families = new Set(primitives.map((p) => hueFamily(p.anchor)));
   const hueSpread = computeHueSpread(primitives);
@@ -124,7 +141,8 @@ export function PrimitiveAtlas() {
                 <PrimitiveCard
                   key={p.id}
                   primitive={p}
-                  refCount={countPrimitiveReferences(ir, p.id)}
+                  refCount={effectiveRefCounts.get(p.id) ?? 0}
+                  directRefCount={directRefCounts.get(p.id) ?? 0}
                   isOrphan={orphanIds.has(p.id)}
                   mergeSource={mergeSource}
                   onSelectAsMergeSource={() => setMergeSource(p.id)}

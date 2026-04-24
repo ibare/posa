@@ -18,6 +18,10 @@
     "download": "Download",
     "remove": "Remove"
   },
+  "toast": {
+    "copiedHex": "Copied {{hex}}",
+    "copyFailed": "Copy failed"
+  },
   "confirm": {
     "reset": {
       "title": "Reset everything?",
